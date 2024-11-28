@@ -15,6 +15,13 @@ export const GPT_MODELS: OpenAIModel[] = [
     trainingData: "Up to Jan 2024",
   },
   {
+    id: "chatgpt-4o-latest",
+    name: "chatgpt-4o-latest",
+    description: "Latest version of ChatGPT-4 Opus with continuous updates",
+    contextWindow: 128000,
+    trainingData: "Continuous updates",
+  },
+  {
     id: "gpt-4o",
     name: "gpt-4o",
     description: "Standard GPT-4 Opus model for general use",
@@ -28,14 +35,6 @@ export const GPT_MODELS: OpenAIModel[] = [
     contextWindow: 8192,
     trainingData: "Up to Nov 2024",
   },
-  {
-    id: "chatgpt-4o-latest",
-    name: "chatgpt-4o-latest",
-    description: "Latest version of ChatGPT-4 Opus with continuous updates",
-    contextWindow: 128000,
-    trainingData: "Continuous updates",
-  },
-
   {
     id: "o1-preview",
     name: "o1-preview",
