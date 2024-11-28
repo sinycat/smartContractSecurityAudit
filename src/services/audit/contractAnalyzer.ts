@@ -8,16 +8,19 @@ import { SECURITY_AUDIT_PROMPT } from "./prompts";
 function formatAIResponse(content: string): string {
   if (!content) return '';
   
-  // 1. Remove redundant Title lines and Title fields
+  // Remove redundant Title lines and Title fields
   let formatted = content
     .replace(/### Title:.*\n/g, "")
     .replace(/- Title:.*\n/g, "");
 
-  // 2. Add dashes only to fields without them
+  // Add dashes only to fields without them
   formatted = formatted.replace(
     /^(?!- )(Severity|Description|Impact|Location|Recommendation):/gm,
     "- $1:"
   );
+
+  // Remove "```markdown"
+  formatted = formatted.replace(/```markdown/g, "");
 
   return formatted;
 }
