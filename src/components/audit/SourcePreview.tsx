@@ -291,18 +291,20 @@ export default function SourcePreview({
       setIsAnalyzing(true);
       setShowAIConfig(false);
 
-      // Perform analysis
-      const result = await analyzeContract({
-        files,
-        contractName,
-        chain: chainId,
-      });
+      // // Perform analysis
+      // const result = await analyzeContract({
+      //   files,
+      //   contractName,
+      //   chain: chainId,
+      // });
 
-      // Check if there's a main title, if not add it
-      let analysisContent = result.report.analysis;
-      if (!analysisContent.match(/^#\s+/m)) {
-        analysisContent = `# Smart Contract Security Analysis Report\n\n${analysisContent}`;
-      }
+      // // Check if there's a main title, if not add it
+      // let analysisContent = result.report.analysis;
+      // if (!analysisContent.match(/^#\s+/m)) {
+      //   analysisContent = `# Smart Contract Security Analysis Report\n\n${analysisContent}`;
+      // }
+
+      let analysisContent ="123";
 
       // Remove duplicate titles
       analysisContent = removeDuplicateHeaders(analysisContent);
@@ -326,15 +328,18 @@ export default function SourcePreview({
         path: reportFileName,
         content: analysisContent,
       };
+      
+      setFiles(prevFiles => {
+        // Delete old reports for the same model
+        const filesWithoutCurrentModelReport = prevFiles.filter(
+          f => f.path !== reportFileName
+        );
+        
+        // Append new report file
+        return [...filesWithoutCurrentModelReport, reportFile];
+      });
 
-      // Update file list - remove old report files first
-      const newFiles = files.filter(
-        (f) => !f.path.endsWith(".md") || f.path === "README.md"
-      );
-      newFiles.push(reportFile);
-
-      // Update state and display report
-      setFiles(newFiles);
+      // Display new report
       setSelectedFile(reportFile);
 
       toast.success("Analysis completed");

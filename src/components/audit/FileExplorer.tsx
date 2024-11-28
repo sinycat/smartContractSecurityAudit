@@ -179,7 +179,7 @@ export default function FileExplorer({
 
   // Modify file filtering logic
   const filteredFiles = files.filter(file => {
-
+    // Always keep .md files
     if (file.path.endsWith(".md")) {
       return true;
     }
@@ -273,14 +273,13 @@ export default function FileExplorer({
 
   // Build allFiles array with deduplication for report files
   const allFiles = [
-    ...filteredFiles.filter(f => !f.path.startsWith('report-')), // Filter out existing report files
+    // Keep non-report files
+    ...filteredFiles.filter(f => !f.path.startsWith('report-')),
     readmeFile,
     configFile,
     abiFile,
-    // Add report files (if exist) with Set deduplication
-    ...Array.from(new Set(files.filter(f => f.path.startsWith('report-')).map(f => f.path)))
-      .map(path => files.find(f => f.path === path))
-      .filter((f): f is ContractFile => f !== undefined)
+    // Keep all report files without deduplication
+    ...files.filter(f => f.path.startsWith('report-'))
   ];
 
   // Build file tree
