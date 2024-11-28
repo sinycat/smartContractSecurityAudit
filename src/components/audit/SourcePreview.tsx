@@ -21,9 +21,7 @@ import toast from "react-hot-toast";
 import { analyzeContract } from "@/services/audit/contractAnalyzer";
 import { getExplorerUrl } from "@/utils/chainServices";
 import { CHAINS } from "@/utils/constants";
-import { useAIConfig } from "@/utils/ai";
-import { getModelById } from "@/utils/openai-models";
-import { getClaudeModelById } from "@/utils/claude-models";
+import { useAIConfig, getModelName, getAIConfig } from "@/utils/ai";
 import type { AIConfig } from "@/utils/ai";
 
 interface ContractFile {
@@ -316,17 +314,13 @@ export default function SourcePreview({
 
       // Determine report file name based on contract type
       const reportContractName = isProxy
-        ? (tokenName || implementationInfo?.contractName || contractName)
+        ? tokenName || implementationInfo?.contractName || contractName
         : contractName;
 
-      let configTemp = config;
-      const savedConfig = localStorage.getItem("ai_config");
-      if (savedConfig) {
-        configTemp = JSON.parse(savedConfig);
-      }
-
       // Create report.md file with contract name
-      const reportFileName = `report-${reportContractName.toLowerCase()}-${getModelName(configTemp)}.md`;
+      const reportFileName = `report-${reportContractName.toLowerCase()}-${getModelName(
+        getAIConfig(config)
+      )}.md`;
       const reportFile: ContractFile = {
         name: reportFileName,
         path: reportFileName,
@@ -349,16 +343,6 @@ export default function SourcePreview({
       toast.error("Error during analysis");
     } finally {
       setIsAnalyzing(false);
-    }
-  };
-
-  const getModelName = (config: AIConfig) => {
-    if (config.provider === "claude") {
-      const model = getClaudeModelById(config.selectedModel);
-      return model?.name.toLowerCase().replace(/\s+/g, '-') || 'claude';
-    } else {
-      const model = getModelById(config.selectedModel);
-      return model?.name.toLowerCase().replace(/\s+/g, '-') || 'gpt';
     }
   };
 

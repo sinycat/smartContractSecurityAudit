@@ -3,11 +3,31 @@ import { getModelById, GPT_MODELS } from "./openai-models";
 import { getClaudeModelById, CLAUDE_MODELS } from "./claude-models";
 import Anthropic from "@anthropic-ai/sdk";
 
-interface AIConfig {
+export interface AIConfig {
   provider: "gpt" | "claude";
   gptKey: string;
   claudeKey: string;
   selectedModel: string;
+}
+
+// Get AI config from localStorage
+export function getAIConfig(config: AIConfig): AIConfig {
+  const savedConfig = localStorage.getItem("ai_config");
+  if (savedConfig) {
+    return JSON.parse(savedConfig);
+  }
+  return config;
+}
+
+// Get AI model name
+export function getModelName(config: AIConfig): string {
+  if (config.provider === "claude") {
+    const model = getClaudeModelById(config.selectedModel);
+    return model?.name.toLowerCase().replace(/\s+/g, "-") || "claude";
+  } else {
+    const model = getModelById(config.selectedModel);
+    return model?.name.toLowerCase().replace(/\s+/g, "-") || "gpt";
+  }
 }
 
 // AI configuration Hook
@@ -20,12 +40,16 @@ export function useAIConfig() {
         const savedConfig = JSON.parse(saved);
         // Validate if saved model is valid
         if (savedConfig.provider === "gpt") {
-          const validModel = GPT_MODELS.find(m => m.id === savedConfig.selectedModel);
+          const validModel = GPT_MODELS.find(
+            (m) => m.id === savedConfig.selectedModel
+          );
           if (!validModel) {
             savedConfig.selectedModel = GPT_MODELS[0].id;
           }
         } else {
-          const validModel = CLAUDE_MODELS.find(m => m.id === savedConfig.selectedModel);
+          const validModel = CLAUDE_MODELS.find(
+            (m) => m.id === savedConfig.selectedModel
+          );
           if (!validModel) {
             savedConfig.selectedModel = CLAUDE_MODELS[0].id;
           }
@@ -68,7 +92,7 @@ export async function analyzeWithAI(prompt: string): Promise<string> {
 
       const anthropic = new Anthropic({
         apiKey: config.claudeKey,
-        dangerouslyAllowBrowser: true
+        dangerouslyAllowBrowser: true,
       });
 
       const msg = await anthropic.messages.create({
@@ -88,18 +112,17 @@ Format your response with clear sections for vulnerabilities, optimizations, and
             content: [
               {
                 type: "text",
-                text: prompt
-              }
-            ]
-          }
-        ]
+                text: prompt,
+              },
+            ],
+          },
+        ],
       });
 
-      if (!msg.content[0] || !('text' in msg.content[0])) {
+      if (!msg.content[0] || !("text" in msg.content[0])) {
         throw new Error("Unexpected response format from Claude");
       }
       return msg.content[0].text;
-
     } else if (config.provider === "gpt") {
       const gptModel = getModelById(config.selectedModel);
       if (!gptModel) {
@@ -120,7 +143,9 @@ Format your response with clear sections for vulnerabilities, optimizations, and
               content: prompt,
             },
           ],
-          ...(gptModel.supportsTemperature !== false ? { temperature: 0.7 } : {}),
+          ...(gptModel.supportsTemperature !== false
+            ? { temperature: 0.7 }
+            : {}),
         }),
       });
 
