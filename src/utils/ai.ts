@@ -1,8 +1,7 @@
 import { useState, useEffect } from "react";
-import { getModelById } from "./openai-models";
-import { getClaudeModelById } from "./claude-models";
+import { getModelById, GPT_MODELS } from "./openai-models";
+import { getClaudeModelById, CLAUDE_MODELS } from "./claude-models";
 import Anthropic from "@anthropic-ai/sdk";
-import type { Message } from "@anthropic-ai/sdk";
 
 interface AIConfig {
   provider: "gpt" | "claude";
@@ -18,14 +17,27 @@ export function useAIConfig() {
     if (typeof window !== "undefined") {
       const saved = localStorage.getItem("ai_config");
       if (saved) {
-        return JSON.parse(saved);
+        const savedConfig = JSON.parse(saved);
+        // Validate if saved model is valid
+        if (savedConfig.provider === "gpt") {
+          const validModel = GPT_MODELS.find(m => m.id === savedConfig.selectedModel);
+          if (!validModel) {
+            savedConfig.selectedModel = GPT_MODELS[0].id;
+          }
+        } else {
+          const validModel = CLAUDE_MODELS.find(m => m.id === savedConfig.selectedModel);
+          if (!validModel) {
+            savedConfig.selectedModel = CLAUDE_MODELS[0].id;
+          }
+        }
+        return savedConfig;
       }
     }
     return {
       provider: "gpt",
       gptKey: "",
       claudeKey: "",
-      selectedModel: "gpt-4o-mini",
+      selectedModel: GPT_MODELS[0].id,
     };
   });
 
@@ -47,8 +59,6 @@ export async function analyzeWithAI(prompt: string): Promise<string> {
   const config: AIConfig = JSON.parse(savedConfig);
   let response: Response;
 
-  console.log(config.selectedModel);
-  
   try {
     if (config.provider === "claude") {
       const claudeModel = getClaudeModelById(config.selectedModel);
@@ -79,16 +89,15 @@ export async function analyzeWithAI(prompt: string): Promise<string> {
         ]
       });
 
-      const content = msg.content[0] as { type: 'text', text: string };
-      if (content.type !== 'text') {
+      if (!msg.content[0] || !('text' in msg.content[0])) {
         throw new Error("Unexpected response format from Claude");
       }
-      return content.text;
+      return msg.content[0].text;
 
     } else if (config.provider === "gpt") {
       const gptModel = getModelById(config.selectedModel);
       if (!gptModel) {
-        throw new Error("Invalid GPT model selected");
+        throw new Error(`Invalid GPT model selected: ${config.selectedModel}`);
       }
 
       response = await fetch("https://api.openai.com/v1/chat/completions", {
@@ -98,7 +107,7 @@ export async function analyzeWithAI(prompt: string): Promise<string> {
           Authorization: `Bearer ${config.gptKey}`,
         },
         body: JSON.stringify({
-          model: config.selectedModel,
+          model: gptModel.id,
           messages: [
             {
               role: "user",
