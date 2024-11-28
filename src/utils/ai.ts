@@ -1,26 +1,33 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect } from "react";
 
 interface AIConfig {
-  provider: 'gpt35' | 'gpt4' | 'claude';
-  apiKey: string;
+  provider: "gpt" | "claude";
+  gptKey: string;
+  claudeKey: string;
+  selectedModel: string;
 }
 
-// AI configuration Hook  
+// AI configuration Hook
 export function useAIConfig() {
   const [config, setConfig] = useState<AIConfig>(() => {
     // Read configuration from localStorage
-    if (typeof window !== 'undefined') {
-      const saved = localStorage.getItem('ai_config');
+    if (typeof window !== "undefined") {
+      const saved = localStorage.getItem("ai_config");
       if (saved) {
         return JSON.parse(saved);
       }
     }
-    return { provider: 'claude', apiKey: '' };
+    return {
+      provider: "gpt",
+      gptKey: "",
+      claudeKey: "",
+      selectedModel: "gpt-4o-mini",
+    };
   });
 
   // Save configuration to localStorage
   useEffect(() => {
-    localStorage.setItem('ai_config', JSON.stringify(config));
+    localStorage.setItem("ai_config", JSON.stringify(config));
   }, [config]);
 
   return { config, setConfig };
@@ -28,67 +35,71 @@ export function useAIConfig() {
 
 // AI analysis function
 export async function analyzeWithAI(prompt: string): Promise<string> {
-  // Get configuration from localStorage
-  const savedConfig = localStorage.getItem('ai_config');
+  const savedConfig = localStorage.getItem("ai_config");
   if (!savedConfig) {
-    throw new Error('AI configuration not found');
+    throw new Error("AI configuration not found");
   }
 
   const config: AIConfig = JSON.parse(savedConfig);
-  
+  let response: Response;
+
   try {
-    let response;
-    
-    if (config.provider === 'claude') {
-      // Anthropic Claude API
-      response = await fetch('https://api.anthropic.com/v1/messages', {
-        method: 'POST',
+    if (config.provider === "claude") {
+      response = await fetch("https://api.anthropic.com/v1/messages", {
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
-          'x-api-key': config.apiKey,
-          'anthropic-version': '2023-06-01'
+          "Content-Type": "application/json",
+          "x-api-key": config.claudeKey,
+          "anthropic-version": "2023-06-01",
         },
         body: JSON.stringify({
-          model: 'claude-3-sonnet-20240229',
+          model: "claude-3-sonnet-20240229",
           max_tokens: 4000,
-          messages: [{
-            role: 'user',
-            content: prompt
-          }]
-        })
+          messages: [
+            {
+              role: "user",
+              content: prompt,
+            },
+          ],
+        }),
+      });
+    } else if (config.provider === "gpt") {
+      response = await fetch("https://api.openai.com/v1/chat/completions", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${config.gptKey}`,
+        },
+        body: JSON.stringify({
+          model: config.selectedModel,
+          messages: [
+            {
+              role: "user",
+              content: prompt,
+            },
+          ],
+          temperature: 0.7,
+        }),
       });
     } else {
-      // OpenAI API
-      response = await fetch('https://api.openai.com/v1/chat/completions', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${config.apiKey}`
-        },
-        body: JSON.stringify({
-          model: config.provider === 'gpt4' ? 'gpt-4-turbo-preview' : 'gpt-3.5-turbo',
-          messages: [{
-            role: 'user',
-            content: prompt
-          }],
-          temperature: 0.7
-        })
-      });
+      throw new Error("Invalid provider");
     }
 
-    if (!response.ok) {
-      throw new Error(`API request failed: ${response.statusText}`);
+    if (!response?.ok) {
+      const errorData = await response.text();
+      throw new Error(
+        `API request failed: ${response.statusText}. Details: ${errorData}`
+      );
     }
 
     const data = await response.json();
-
-    if (config.provider === 'claude') {
-      return data.content[0].text;
-    } else {
-      return data.choices[0].message.content;
-    }
+    return config.provider === "claude"
+      ? data.content[0].text
+      : data.choices[0].message.content;
   } catch (error) {
-    console.error('AI analysis error:', error);
-    throw error;
+    console.error("AI analysis error:", error);
+    throw error instanceof Error
+      ? error
+      : new Error("Unknown error during analysis");
   }
-} 
+}

@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useAIConfig } from '@/utils/ai';
+import { GPT_MODELS } from '@/utils/openai-models';
 import toast from 'react-hot-toast';
 
 interface AIConfigModalProps {
@@ -8,14 +9,19 @@ interface AIConfigModalProps {
   onStartAnalysis: () => void;
 }
 
+type Provider = 'gpt' | 'claude';
+
 export default function AIConfigModal({ isOpen, onClose, onStartAnalysis }: AIConfigModalProps) {
   const { config, setConfig } = useAIConfig();
-  const [apiKey, setApiKey] = useState(config.apiKey || '');
-  const [provider, setProvider] = useState<'gpt35' | 'gpt4' | 'claude'>(config.provider || 'gpt35');
+  const [provider, setProvider] = useState<Provider>('gpt');
+  const [gptKey, setGptKey] = useState(config.gptKey || '');
+  const [claudeKey, setClaudeKey] = useState(config.claudeKey || '');
+  const [selectedModel, setSelectedModel] = useState(GPT_MODELS[0].id);
 
   const handleSubmit = () => {
-    // Validate API Key
-    if (!apiKey.trim()) {
+    // Validate API Key based on provider
+    const currentKey = provider === 'gpt' ? gptKey : claudeKey;
+    if (!currentKey.trim()) {
       toast.error('Please enter your API key');
       return;
     }
@@ -24,13 +30,12 @@ export default function AIConfigModal({ isOpen, onClose, onStartAnalysis }: AICo
       // Save configuration
       setConfig({
         provider,
-        apiKey
+        gptKey,
+        claudeKey,
+        selectedModel: provider === 'gpt' ? selectedModel : 'claude-3-sonnet-20240229'
       });
 
-      // Call analysis function
       onStartAnalysis();
-      
-      // Close modal
       onClose();
     } catch (error) {
       console.error('Error starting analysis:', error);
@@ -52,31 +57,60 @@ export default function AIConfigModal({ isOpen, onClose, onStartAnalysis }: AICo
             <label className="block text-sm text-gray-400 mb-2">AI Provider</label>
             <select 
               value={provider}
-              onChange={(e) => setProvider(e.target.value as any)}
+              onChange={(e) => setProvider(e.target.value as Provider)}
               className="w-full bg-[#252525] border border-[#333333] rounded-lg px-3 py-2 text-white"
             >
-              <option value="gpt35">GPT-3.5-Turbo</option>
-              <option value="gpt4">GPT-4</option>
-              <option value="claude">Claude</option>
+              <option value="gpt">OpenAI GPT</option>
+              <option value="claude">Anthropic Claude</option>
             </select>
           </div>
 
-          <div>
-            <label className="block text-sm text-gray-400 mb-2">API Key</label>
-            <input 
-              type="password"
-              value={apiKey}
-              onChange={(e) => setApiKey(e.target.value)}
-              placeholder="Enter your API key"
-              className="w-full bg-[#252525] border border-[#333333] rounded-lg px-3 py-2 text-white"
-            />
-          </div>
+          {provider === 'gpt' && (
+            <div>
+              <label className="block text-sm text-gray-400 mb-2">GPT Model</label>
+              <select
+                value={selectedModel}
+                onChange={(e) => setSelectedModel(e.target.value)}
+                className="w-full bg-[#252525] border border-[#333333] rounded-lg px-3 py-2 text-white"
+              >
+                {GPT_MODELS.map(model => (
+                  <option key={model.id} value={model.id}>
+                    {model.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
+
+          {provider === 'gpt' ? (
+            <div>
+              <label className="block text-sm text-gray-400 mb-2">OpenAI API Key</label>
+              <input 
+                type="password"
+                value={gptKey}
+                onChange={(e) => setGptKey(e.target.value)}
+                placeholder="Enter your OpenAI API key"
+                className="w-full bg-[#252525] border border-[#333333] rounded-lg px-3 py-2 text-white"
+              />
+            </div>
+          ) : (
+            <div>
+              <label className="block text-sm text-gray-400 mb-2">Anthropic API Key</label>
+              <input 
+                type="password"
+                value={claudeKey}
+                onChange={(e) => setClaudeKey(e.target.value)}
+                placeholder="Enter your Anthropic API key"
+                className="w-full bg-[#252525] border border-[#333333] rounded-lg px-3 py-2 text-white"
+              />
+            </div>
+          )}
 
           <div className="text-sm text-gray-400">
             <p>API Key Instructions:</p>
             <ul className="list-disc pl-5 mt-1 space-y-1">
-              <li>GPT-3.5/GPT-4: Use OpenAI API Key</li>
-              <li>Claude: Use Anthropic API Key</li>
+              <li>OpenAI API Key: Get from <a href="https://platform.openai.com/api-keys" target="_blank" rel="noopener noreferrer" className="text-[#FF8B3E] hover:underline">OpenAI Dashboard</a></li>
+              <li>Anthropic API Key: Get from <a href="https://console.anthropic.com/account/keys" target="_blank" rel="noopener noreferrer" className="text-[#FF8B3E] hover:underline">Anthropic Console</a></li>
             </ul>
           </div>
         </div>
