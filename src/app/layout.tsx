@@ -54,7 +54,41 @@ export default function RootLayout({
             </ErrorBoundary>
           </main>
         </div>
-        <Toaster position="top-right" />
+        <Toaster 
+          position="top-right"
+          toastOptions={{
+            style: {
+              background: '#1E1E1E',
+              color: '#E5E5E5',
+              borderRadius: '8px',
+              border: '1px solid #666666',
+            },
+            error: {
+              style: {
+                background: '#1E1E1E',
+                color: '#E5E5E5',
+                border: '1px solid #666666',
+              },
+              iconTheme: {
+                primary: '#F48771',
+                secondary: '#1E1E1E',
+              },
+              duration: 4000,
+            },
+            success: {
+              style: {
+                background: '#1E1E1E',
+                color: '#E5E5E5',
+                border: '1px solid #666666',
+              },
+              iconTheme: {
+                primary: '#89D185',
+                secondary: '#1E1E1E',
+              },
+              duration: 4000,
+            },
+          }}
+        />
       </body>
     </html>
   );
