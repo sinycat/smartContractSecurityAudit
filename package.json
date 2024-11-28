@@ -9,6 +9,7 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@anthropic-ai/sdk": "^0.32.1",
     "@types/cheerio": "^0.22.35",
     "@types/highlight.js": "^10.1.0",
     "@types/prismjs": "^1.26.5",

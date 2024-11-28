@@ -1,6 +1,8 @@
 import { useState, useEffect } from "react";
 import { getModelById } from "./openai-models";
 import { getClaudeModelById } from "./claude-models";
+import Anthropic from "@anthropic-ai/sdk";
+import type { Message } from "@anthropic-ai/sdk";
 
 interface AIConfig {
   provider: "gpt" | "claude";
@@ -45,6 +47,8 @@ export async function analyzeWithAI(prompt: string): Promise<string> {
   const config: AIConfig = JSON.parse(savedConfig);
   let response: Response;
 
+  console.log(config.selectedModel);
+  
   try {
     if (config.provider === "claude") {
       const claudeModel = getClaudeModelById(config.selectedModel);
@@ -52,22 +56,35 @@ export async function analyzeWithAI(prompt: string): Promise<string> {
         throw new Error("Invalid Claude model selected");
       }
 
-      response = await fetch("https://api.anthropic.com/v1/messages", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "x-api-key": config.claudeKey
-        },
-        body: JSON.stringify({
-          model: config.selectedModel,
-          messages: [
-            {
-              role: "user",
-              content: prompt,
-            },
-          ],
-        }),
+      const anthropic = new Anthropic({
+        apiKey: config.claudeKey,
+        dangerouslyAllowBrowser: true
       });
+
+      const msg = await anthropic.messages.create({
+        model: config.selectedModel,
+        max_tokens: 8000,
+        temperature: 0.7,
+        system: "You are a smart contract security expert. Analyze the provided smart contract code and provide a detailed security analysis.",
+        messages: [
+          {
+            role: "user",
+            content: [
+              {
+                type: "text",
+                text: prompt
+              }
+            ]
+          }
+        ]
+      });
+
+      const content = msg.content[0] as { type: 'text', text: string };
+      if (content.type !== 'text') {
+        throw new Error("Unexpected response format from Claude");
+      }
+      return content.text;
+
     } else if (config.provider === "gpt") {
       const gptModel = getModelById(config.selectedModel);
       if (!gptModel) {
@@ -91,23 +108,19 @@ export async function analyzeWithAI(prompt: string): Promise<string> {
           temperature: 0.7,
         }),
       });
+
+      if (!response?.ok) {
+        const errorData = await response.text();
+        throw new Error(
+          `API request failed: ${response.statusText}. Details: ${errorData}`
+        );
+      }
+
+      const data = await response.json();
+      return data.choices[0].message.content;
     } else {
       throw new Error("Invalid provider");
     }
-
-    if (!response?.ok) {
-      const errorData = await response.text();
-      throw new Error(
-        `API request failed: ${response.statusText}. Details: ${errorData}`
-      );
-    }
-
-    const data = await response.json();
-    const result = config.provider === "claude"
-      ? data.content[0].text.replace(/^```markdown\n|\n```$/g, '') // Remove markdown code block markers if present
-      : data.choices[0].message.content;
-    
-    return result;
   } catch (error) {
     console.error("AI analysis error:", error);
     throw error instanceof Error
