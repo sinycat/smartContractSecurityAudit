@@ -9,6 +9,22 @@ export interface OpenAIModel {
 
 export const GPT_MODELS: OpenAIModel[] = [
   {
+    id: "o1-mini",
+    name: "o1-mini",
+    description: "Compact version of Opus One model",
+    contextWindow: 8000,
+    trainingData: "Up to Jan 2024",
+    supportsTemperature: false,
+  },
+  {
+    id: "o1-preview",
+    name: "o1-preview",
+    description: "Preview version of next-generation Opus One model",
+    contextWindow: 128000,
+    trainingData: "Up to Jan 2024",
+    supportsTemperature: false,
+  },
+  {
     id: "gpt-4o-mini",
     name: "gpt-4o-mini",
     description: "Lightweight version of GPT-4 Opus optimized for efficiency",
@@ -39,22 +55,6 @@ export const GPT_MODELS: OpenAIModel[] = [
     contextWindow: 8192,
     trainingData: "Up to Nov 2024",
     supportsTemperature: true,
-  },
-  {
-    id: "o1-preview",
-    name: "o1-preview",
-    description: "Preview version of next-generation Opus One model",
-    contextWindow: 128000,
-    trainingData: "Up to Jan 2024",
-    supportsTemperature: false,
-  },
-  {
-    id: "o1-mini",
-    name: "o1-mini",
-    description: "Compact version of Opus One model",
-    contextWindow: 8000,
-    trainingData: "Up to Jan 2024",
-    supportsTemperature: false,
   },
   {
     id: "gpt-4-turbo",
