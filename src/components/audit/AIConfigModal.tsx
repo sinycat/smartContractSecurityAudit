@@ -3,6 +3,7 @@ import { useAIConfig } from "@/utils/ai";
 import { GPT_MODELS, OpenAIModel } from "@/utils/openai-models";
 import { CLAUDE_MODELS, ClaudeModel } from "@/utils/claude-models";
 import { Dialog } from "@headlessui/react";
+import { toast } from "react-hot-toast";
 
 interface AIConfigModalProps {
   isOpen: boolean;
@@ -46,6 +47,17 @@ export default function AIConfigModal({
       
       return newConfig;
     });
+  };
+
+  const handleStartAnalysis = () => {
+    const currentKey = config.provider === "claude" ? config.claudeKey : config.gptKey;
+    
+    if (!currentKey.trim()) {
+      toast.error(`Please enter your ${config.provider === "claude" ? "Claude" : "OpenAI"} API key`);
+      return;
+    }
+    
+    onStartAnalysis();
   };
 
   return (
@@ -168,7 +180,7 @@ export default function AIConfigModal({
             Cancel
           </button>
           <button
-            onClick={onStartAnalysis}
+            onClick={handleStartAnalysis}
             className="group relative inline-flex items-center gap-2 px-4 py-2 
                      bg-[#252526] rounded-lg text-[#FF8B3E] font-medium
                      border border-[#FF8B3E]/20
