@@ -74,7 +74,7 @@ export async function analyzeWithAI(prompt: string): Promise<string> {
       const msg = await anthropic.messages.create({
         model: config.selectedModel,
         max_tokens: 8000,
-        temperature: 0.7,
+        temperature: 1,
         system: `You are a smart contract security auditor with the following responsibilities:
 - Identify potential security vulnerabilities and risks
 - Analyze code for best practices and standards compliance
