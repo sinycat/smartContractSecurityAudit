@@ -103,9 +103,11 @@ export async function analyzeWithAI(prompt: string): Promise<string> {
     }
 
     const data = await response.json();
-    return config.provider === "claude"
-      ? data.content[0].text
+    const result = config.provider === "claude"
+      ? data.content[0].text.replace(/^```markdown\n|\n```$/g, '') // Remove markdown code block markers if present
       : data.choices[0].message.content;
+    
+    return result;
   } catch (error) {
     console.error("AI analysis error:", error);
     throw error instanceof Error
