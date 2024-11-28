@@ -120,7 +120,7 @@ Format your response with clear sections for vulnerabilities, optimizations, and
               content: prompt,
             },
           ],
-          temperature: 0.7,
+          ...(gptModel.supportsTemperature !== false ? { temperature: 0.7 } : {}),
         }),
       });
 

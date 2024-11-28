@@ -4,6 +4,7 @@ export interface OpenAIModel {
   description: string;
   contextWindow: number;
   trainingData?: string;
+  supportsTemperature?: boolean;
 }
 
 export const GPT_MODELS: OpenAIModel[] = [
@@ -13,6 +14,7 @@ export const GPT_MODELS: OpenAIModel[] = [
     description: "Lightweight version of GPT-4 Opus optimized for efficiency",
     contextWindow: 8000,
     trainingData: "Up to Jan 2024",
+    supportsTemperature: true,
   },
   {
     id: "chatgpt-4o-latest",
@@ -20,6 +22,7 @@ export const GPT_MODELS: OpenAIModel[] = [
     description: "Latest version of ChatGPT-4 Opus with continuous updates",
     contextWindow: 128000,
     trainingData: "Continuous updates",
+    supportsTemperature: true,
   },
   {
     id: "gpt-4o",
@@ -27,6 +30,7 @@ export const GPT_MODELS: OpenAIModel[] = [
     description: "Standard GPT-4 Opus model for general use",
     contextWindow: 8192,
     trainingData: "Up to Jan 2024",
+    supportsTemperature: true,
   },
   {
     id: "gpt-4o-2024-11-20",
@@ -34,6 +38,7 @@ export const GPT_MODELS: OpenAIModel[] = [
     description: "Version-specific GPT-4 Opus with November 2024 training",
     contextWindow: 8192,
     trainingData: "Up to Nov 2024",
+    supportsTemperature: true,
   },
   {
     id: "o1-preview",
@@ -41,6 +46,7 @@ export const GPT_MODELS: OpenAIModel[] = [
     description: "Preview version of next-generation Opus One model",
     contextWindow: 128000,
     trainingData: "Up to Jan 2024",
+    supportsTemperature: false,
   },
   {
     id: "o1-mini",
@@ -48,6 +54,7 @@ export const GPT_MODELS: OpenAIModel[] = [
     description: "Compact version of Opus One model",
     contextWindow: 8000,
     trainingData: "Up to Jan 2024",
+    supportsTemperature: false,
   },
   {
     id: "gpt-4-turbo",
@@ -55,6 +62,7 @@ export const GPT_MODELS: OpenAIModel[] = [
     description: "High-performance GPT-4 model with enhanced capabilities",
     contextWindow: 128000,
     trainingData: "Up to Dec 2023",
+    supportsTemperature: true,
   },
 ];
 
