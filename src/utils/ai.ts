@@ -75,7 +75,13 @@ export async function analyzeWithAI(prompt: string): Promise<string> {
         model: config.selectedModel,
         max_tokens: 8000,
         temperature: 0.7,
-        system: "You are a smart contract security expert. Analyze the provided smart contract code and provide a detailed security analysis.",
+        system: `You are a smart contract security auditor with the following responsibilities:
+- Identify potential security vulnerabilities and risks
+- Analyze code for best practices and standards compliance
+- Suggest gas optimizations and efficiency improvements
+- Provide detailed explanations of findings
+- Recommend specific fixes and improvements
+Format your response with clear sections for vulnerabilities, optimizations, and recommendations.`,
         messages: [
           {
             role: "user",
