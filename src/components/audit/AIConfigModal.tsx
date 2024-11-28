@@ -114,6 +114,35 @@ export default function AIConfigModal({
               placeholder={`Enter your ${config.provider === "claude" ? "Claude" : "OpenAI"} API key`}
               className="w-full bg-[#2A2A2A] text-gray-300 border border-[#404040] rounded-md px-3 py-2"
             />
+            <div className="mt-2 text-sm text-gray-400">
+              {config.provider === "claude" ? (
+                <p>
+                  Need a Claude API key?{" "}
+                  <a
+                    href="https://console.anthropic.com/account/keys"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-[#FF8B3E] hover:text-[#FF8B3E]/80 transition-colors"
+                  >
+                    Get one from Anthropic Console
+                  </a>
+                  {" "}(requires registration)
+                </p>
+              ) : (
+                <p>
+                  Need an OpenAI API key?{" "}
+                  <a
+                    href="https://platform.openai.com/api-keys"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-[#FF8B3E] hover:text-[#FF8B3E]/80 transition-colors"
+                  >
+                    Get one from OpenAI Platform
+                  </a>
+                  {" "}(requires registration)
+                </p>
+              )}
+            </div>
           </div>
         </div>
 
