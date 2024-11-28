@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useAIConfig } from '@/utils/ai';
 import { GPT_MODELS } from '@/utils/openai-models';
+import { CLAUDE_MODELS } from '@/utils/claude-models';
 import toast from 'react-hot-toast';
 
 interface AIConfigModalProps {
@@ -13,10 +14,12 @@ type Provider = 'gpt' | 'claude';
 
 export default function AIConfigModal({ isOpen, onClose, onStartAnalysis }: AIConfigModalProps) {
   const { config, setConfig } = useAIConfig();
-  const [provider, setProvider] = useState<Provider>('gpt');
+  const [provider, setProvider] = useState<Provider>(config.provider || 'gpt');
   const [gptKey, setGptKey] = useState(config.gptKey || '');
   const [claudeKey, setClaudeKey] = useState(config.claudeKey || '');
-  const [selectedModel, setSelectedModel] = useState(GPT_MODELS[0].id);
+  const [selectedModel, setSelectedModel] = useState(
+    provider === 'gpt' ? GPT_MODELS[0].id : CLAUDE_MODELS[0].id
+  );
 
   const handleSubmit = () => {
     // Validate API Key based on provider
@@ -32,7 +35,7 @@ export default function AIConfigModal({ isOpen, onClose, onStartAnalysis }: AICo
         provider,
         gptKey,
         claudeKey,
-        selectedModel: provider === 'gpt' ? selectedModel : 'claude-3-sonnet-20240229'
+        selectedModel
       });
 
       onStartAnalysis();
@@ -57,7 +60,14 @@ export default function AIConfigModal({ isOpen, onClose, onStartAnalysis }: AICo
             <label className="block text-sm text-gray-400 mb-2">AI Provider</label>
             <select 
               value={provider}
-              onChange={(e) => setProvider(e.target.value as Provider)}
+              onChange={(e) => {
+                const newProvider = e.target.value as Provider;
+                setProvider(newProvider);
+                // Reset selected model when changing provider
+                setSelectedModel(
+                  newProvider === 'gpt' ? GPT_MODELS[0].id : CLAUDE_MODELS[0].id
+                );
+              }}
               className="w-full bg-[#252525] border border-[#333333] rounded-lg px-3 py-2 text-white"
             >
               <option value="gpt">OpenAI GPT</option>
@@ -65,22 +75,29 @@ export default function AIConfigModal({ isOpen, onClose, onStartAnalysis }: AICo
             </select>
           </div>
 
-          {provider === 'gpt' && (
-            <div>
-              <label className="block text-sm text-gray-400 mb-2">GPT Model</label>
-              <select
-                value={selectedModel}
-                onChange={(e) => setSelectedModel(e.target.value)}
-                className="w-full bg-[#252525] border border-[#333333] rounded-lg px-3 py-2 text-white"
-              >
-                {GPT_MODELS.map(model => (
-                  <option key={model.id} value={model.id}>
-                    {model.name}
-                  </option>
-                ))}
-              </select>
-            </div>
-          )}
+          <div>
+            <label className="block text-sm text-gray-400 mb-2">
+              {provider === 'gpt' ? 'GPT Model' : 'Claude Model'}
+            </label>
+            <select
+              value={selectedModel}
+              onChange={(e) => setSelectedModel(e.target.value)}
+              className="w-full bg-[#252525] border border-[#333333] rounded-lg px-3 py-2 text-white"
+            >
+              {provider === 'gpt' 
+                ? GPT_MODELS.map(model => (
+                    <option key={model.id} value={model.id}>
+                      {model.name}
+                    </option>
+                  ))
+                : CLAUDE_MODELS.map(model => (
+                    <option key={model.id} value={model.id}>
+                      {model.name}
+                    </option>
+                  ))
+              }
+            </select>
+          </div>
 
           {provider === 'gpt' ? (
             <div>

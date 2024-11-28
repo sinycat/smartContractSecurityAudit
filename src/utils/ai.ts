@@ -1,4 +1,6 @@
 import { useState, useEffect } from "react";
+import { getModelById } from "./openai-models";
+import { getClaudeModelById } from "./claude-models";
 
 interface AIConfig {
   provider: "gpt" | "claude";
@@ -45,16 +47,19 @@ export async function analyzeWithAI(prompt: string): Promise<string> {
 
   try {
     if (config.provider === "claude") {
+      const claudeModel = getClaudeModelById(config.selectedModel);
+      if (!claudeModel) {
+        throw new Error("Invalid Claude model selected");
+      }
+
       response = await fetch("https://api.anthropic.com/v1/messages", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "x-api-key": config.claudeKey,
-          "anthropic-version": "2023-06-01",
+          "x-api-key": config.claudeKey
         },
         body: JSON.stringify({
-          model: "claude-3-sonnet-20240229",
-          max_tokens: 4000,
+          model: config.selectedModel,
           messages: [
             {
               role: "user",
@@ -64,6 +69,11 @@ export async function analyzeWithAI(prompt: string): Promise<string> {
         }),
       });
     } else if (config.provider === "gpt") {
+      const gptModel = getModelById(config.selectedModel);
+      if (!gptModel) {
+        throw new Error("Invalid GPT model selected");
+      }
+
       response = await fetch("https://api.openai.com/v1/chat/completions", {
         method: "POST",
         headers: {
