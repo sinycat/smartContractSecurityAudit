@@ -19,11 +19,11 @@ export default function AIConfigModal({
   onStartAnalysis,
 }: AIConfigModalProps) {
   const { config, setConfig } = useAIConfig();
-  
+
   // Ensure default model is selected when component mounts
   useEffect(() => {
     if (!config.selectedModel) {
-      setConfig(prev => {
+      setConfig((prev) => {
         const newConfig = { ...prev };
         if (prev.provider === "claude") {
           newConfig.selectedModel = CLAUDE_MODELS[0].id;
@@ -37,42 +37,47 @@ export default function AIConfigModal({
 
   // Handle provider change and select default model
   const handleProviderChange = (provider: "gpt" | "claude") => {
-    setConfig(prev => {
+    setConfig((prev) => {
       const newConfig = { ...prev, provider };
-      
+
       // Select default model based on provider
       if (provider === "claude") {
         newConfig.selectedModel = CLAUDE_MODELS[0].id;
       } else {
         newConfig.selectedModel = GPT_MODELS[0].id;
       }
-      
+
       return newConfig;
     });
   };
 
   const handleStartAnalysis = () => {
-    const currentKey = config.provider === "claude" ? config.claudeKey : config.gptKey;
-    
+    const currentKey =
+      config.provider === "claude" ? config.claudeKey : config.gptKey;
+
     if (!currentKey.trim()) {
-      toast.error(`Please enter your ${config.provider === "claude" ? "Claude" : "OpenAI"} API key`);
+      toast.error(
+        `Please enter your ${
+          config.provider === "claude" ? "Claude" : "OpenAI"
+        } API key`
+      );
       return;
     }
-    
+
     onStartAnalysis();
   };
 
   return (
-    <Dialog
-      open={isOpen}
-      onClose={onClose}
-      className="relative z-50"
-    >
+    <Dialog open={isOpen} onClose={onClose} className="relative z-50">
       <div className="fixed inset-0 bg-black/50 z-40" onClick={onClose} />
-      <div className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 
-                    bg-[#1E1E1E] rounded-lg border border-[#333333] p-6 w-[480px] z-50">
-        <h3 className="text-xl font-semibold text-white mb-4">AI Configuration</h3>
-        
+      <div
+        className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 
+                    bg-[#1E1E1E] rounded-lg border border-[#333333] p-6 w-[480px] z-50"
+      >
+        <h3 className="text-xl font-semibold text-white mb-4">
+          AI Configuration
+        </h3>
+
         <div className="space-y-4">
           <div>
             <label className="block text-sm font-medium text-gray-300 mb-2">
@@ -80,7 +85,9 @@ export default function AIConfigModal({
             </label>
             <select
               value={config.provider}
-              onChange={(e) => handleProviderChange(e.target.value as "gpt" | "claude")}
+              onChange={(e) =>
+                handleProviderChange(e.target.value as "gpt" | "claude")
+              }
               className="w-full bg-[#2A2A2A] text-gray-300 border border-[#404040] rounded-md px-3 py-2"
             >
               <option value="gpt">OpenAI GPT</option>
@@ -94,7 +101,9 @@ export default function AIConfigModal({
             </label>
             <select
               value={config.selectedModel}
-              onChange={(e) => setConfig({ ...config, selectedModel: e.target.value })}
+              onChange={(e) =>
+                setConfig({ ...config, selectedModel: e.target.value })
+              }
               className="w-full bg-[#2A2A2A] text-gray-300 border border-[#404040] rounded-md px-3 py-2"
             >
               {config.provider === "claude"
@@ -116,8 +125,10 @@ export default function AIConfigModal({
               Response Language
             </label>
             <select
-              value={config.language || 'english'}
-              onChange={(e) => setConfig({ ...config, language: e.target.value })}
+              value={config.language || "english"}
+              onChange={(e) =>
+                setConfig({ ...config, language: e.target.value })
+              }
               className="w-full bg-[#2A2A2A] text-gray-300 border border-[#404040] rounded-md px-3 py-2"
             >
               {RESPONSE_LANGUAGES.map((lang) => (
@@ -130,19 +141,29 @@ export default function AIConfigModal({
 
           <div>
             <label className="block text-sm font-medium text-gray-300 mb-2">
-              {config.provider === "claude" ? "Claude API Key" : "OpenAI API Key"}
+              {config.provider === "claude"
+                ? "Claude API Key"
+                : "OpenAI API Key"}
             </label>
             <input
               type="password"
-              value={config.provider === "claude" ? config.claudeKey : config.gptKey}
-              onChange={(e) => 
+              value={
+                config.provider === "claude" ? config.claudeKey : config.gptKey
+              }
+              onChange={(e) =>
                 setConfig({
                   ...config,
-                  claudeKey: config.provider === "claude" ? e.target.value : config.claudeKey,
-                  gptKey: config.provider === "gpt" ? e.target.value : config.gptKey,
+                  claudeKey:
+                    config.provider === "claude"
+                      ? e.target.value
+                      : config.claudeKey,
+                  gptKey:
+                    config.provider === "gpt" ? e.target.value : config.gptKey,
                 })
               }
-              placeholder={`Enter your ${config.provider === "claude" ? "Claude" : "OpenAI"} API key`}
+              placeholder={`Enter your ${
+                config.provider === "claude" ? "Claude" : "OpenAI"
+              } API key`}
               className="w-full bg-[#2A2A2A] text-gray-300 border border-[#404040] rounded-md px-3 py-2"
             />
             <div className="mt-2 text-sm text-gray-400">
@@ -156,8 +177,8 @@ export default function AIConfigModal({
                     className="text-[#FF8B3E] hover:text-[#FF8B3E]/80 transition-colors"
                   >
                     Get one from Anthropic Console
-                  </a>
-                  {" "}(requires registration)
+                  </a>{" "}
+                  (requires registration)
                 </p>
               ) : (
                 <p>
@@ -169,8 +190,8 @@ export default function AIConfigModal({
                     className="text-[#FF8B3E] hover:text-[#FF8B3E]/80 transition-colors"
                   >
                     Get one from OpenAI Platform
-                  </a>
-                  {" "}(requires registration)
+                  </a>{" "}
+                  (requires registration)
                 </p>
               )}
             </div>
@@ -208,17 +229,17 @@ export default function AIConfigModal({
                      hover:bg-[#FF8B3E]/10"
           >
             <span className="relative z-10">Start Analysis</span>
-            <svg 
+            <svg
               className="w-4 h-4 transform transition-transform duration-300 
-                         group-hover:translate-x-1" 
-              fill="none" 
-              stroke="currentColor" 
+                         group-hover:translate-x-1"
+              fill="none"
+              stroke="currentColor"
               viewBox="0 0 24 24"
             >
-              <path 
-                strokeLinecap="round" 
-                strokeLinejoin="round" 
-                strokeWidth={2} 
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
                 d="M13 7l5 5m0 0l-5 5m5-5H6"
               />
             </svg>
@@ -227,4 +248,4 @@ export default function AIConfigModal({
       </div>
     </Dialog>
   );
-} 
+}

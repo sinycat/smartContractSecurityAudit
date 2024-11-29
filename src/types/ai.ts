@@ -4,4 +4,4 @@ export interface AIConfig {
   claudeKey: string;
   selectedModel: string;
   language: string;
-} 
+}
