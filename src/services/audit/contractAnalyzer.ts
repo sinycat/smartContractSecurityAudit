@@ -6,8 +6,8 @@ import { SECURITY_AUDIT_PROMPT } from "./prompts";
 
 // Format AI response content
 function formatAIResponse(content: string): string {
-  if (!content) return '';
-  
+  if (!content) return "";
+
   // Remove redundant Title lines and Title fields
   let formatted = content
     .replace(/### Title:.*\n/g, "")
@@ -51,7 +51,9 @@ export async function analyzeContract(params: {
         if (
           file.path.includes("/interfaces/") ||
           file.path.includes("Interface") ||
-          file.path.includes("IERC")
+          file.path.startsWith("IERC") ||
+          file.path.startsWith("ERC") ||
+          file.path.startsWith("EIP")
         ) {
           return false;
         }
@@ -72,9 +74,16 @@ export async function analyzeContract(params: {
       }
 
       // Separate proxy and implementation contract files
-      const proxyFiles = filteredFiles.filter(f => f.path.startsWith('proxy/'));
-      const implementationFiles = filteredFiles.filter(f => f.path.startsWith('implementation/'));
-      const regularFiles = filteredFiles.filter(f => !f.path.startsWith('proxy/') && !f.path.startsWith('implementation/'));
+      const proxyFiles = filteredFiles.filter((f) =>
+        f.path.startsWith("proxy/")
+      );
+      const implementationFiles = filteredFiles.filter((f) =>
+        f.path.startsWith("implementation/")
+      );
+      const regularFiles = filteredFiles.filter(
+        (f) =>
+          !f.path.startsWith("proxy/") && !f.path.startsWith("implementation/")
+      );
 
       // Determine which files to analyze
       let filesToAnalyze = regularFiles;
@@ -88,9 +97,13 @@ export async function analyzeContract(params: {
         throw new Error("No valid contract code to analyze");
       }
 
-      const prompt = SECURITY_AUDIT_PROMPT
-        .replace('${mergedCode}', mergedCode)
-        .replace('${params.contractName ? params.contractName : \'\'}', params.contractName || '');
+      const prompt = SECURITY_AUDIT_PROMPT.replace(
+        "${mergedCode}",
+        mergedCode
+      ).replace(
+        "${params.contractName ? params.contractName : ''}",
+        params.contractName || ""
+      );
 
       // Get AI response
       const aiResponse = await analyzeWithAI(prompt);
@@ -120,27 +133,32 @@ export async function analyzeContract(params: {
           analysis: formattedResponse,
         },
       };
-      
     } catch (error) {
       lastError = error;
       retryCount++;
-      
+
       // if we have retry chances, wait and retry
       if (retryCount < maxRetries) {
-        console.log(`Analysis attempt ${retryCount} failed, retrying in ${retryCount * 2} seconds...`);
-        await new Promise(resolve => setTimeout(resolve, retryCount * 2000));
+        console.log(
+          `Analysis attempt ${retryCount} failed, retrying in ${
+            retryCount * 2
+          } seconds...`
+        );
+        await new Promise((resolve) => setTimeout(resolve, retryCount * 2000));
         continue;
       }
-      
+
       // if we have reached the maximum retry count, throw the last error
       console.error(`Analysis failed after ${maxRetries} attempts:`, error);
       throw new Error(
         `Analysis failed after ${maxRetries} attempts: ${
-          error instanceof Error ? error.message : 'Unknown error'
+          error instanceof Error ? error.message : "Unknown error"
         }`
       );
     }
   }
 
-  throw new Error(`Unexpected error: Analysis failed after ${maxRetries} attempts`);
+  throw new Error(
+    `Unexpected error: Analysis failed after ${maxRetries} attempts`
+  );
 }
