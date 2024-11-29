@@ -2,13 +2,7 @@ import { useState, useEffect } from "react";
 import { getModelById, GPT_MODELS } from "./openai-models";
 import { getClaudeModelById, CLAUDE_MODELS } from "./claude-models";
 import Anthropic from "@anthropic-ai/sdk";
-
-export interface AIConfig {
-  provider: "gpt" | "claude";
-  gptKey: string;
-  claudeKey: string;
-  selectedModel: string;
-}
+import { AIConfig } from "@/types/ai";
 
 // Get AI config from localStorage
 export function getAIConfig(config: AIConfig): AIConfig {
@@ -62,6 +56,7 @@ export function useAIConfig() {
       gptKey: "",
       claudeKey: "",
       selectedModel: GPT_MODELS[0].id,
+      language: "english"
     };
   });
 

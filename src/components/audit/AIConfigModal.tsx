@@ -4,6 +4,8 @@ import { GPT_MODELS, OpenAIModel } from "@/utils/openai-models";
 import { CLAUDE_MODELS, ClaudeModel } from "@/utils/claude-models";
 import { Dialog } from "@headlessui/react";
 import { toast } from "react-hot-toast";
+import { AIConfig } from "@/types/ai";
+import { RESPONSE_LANGUAGES } from "@/utils/language";
 
 interface AIConfigModalProps {
   isOpen: boolean;
@@ -111,6 +113,23 @@ export default function AIConfigModal({
 
           <div>
             <label className="block text-sm font-medium text-gray-300 mb-2">
+              Response Language
+            </label>
+            <select
+              value={config.language || 'english'}
+              onChange={(e) => setConfig({ ...config, language: e.target.value })}
+              className="w-full bg-[#2A2A2A] text-gray-300 border border-[#404040] rounded-md px-3 py-2"
+            >
+              {RESPONSE_LANGUAGES.map((lang) => (
+                <option key={lang.id} value={lang.id}>
+                  {lang.name}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-300 mb-2">
               {config.provider === "claude" ? "Claude API Key" : "OpenAI API Key"}
             </label>
             <input
@@ -167,6 +186,7 @@ export default function AIConfigModal({
                 gptKey: "",
                 claudeKey: "",
                 selectedModel: GPT_MODELS[0].id,
+                language: "english",
               });
             }}
             className="px-4 py-2 text-gray-400 hover:text-white transition-colors"

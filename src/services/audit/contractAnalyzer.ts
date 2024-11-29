@@ -1,8 +1,10 @@
-import { analyzeWithAI } from "@/utils/ai";
+import { analyzeWithAI, getAIConfig } from "@/utils/ai";
 import { generateReport } from "./reportGenerator";
 import { mergeContractContents } from "@/utils/contractFilters";
 import type { ContractFile } from "@/types/blockchain";
 import { SECURITY_AUDIT_PROMPT } from "./prompts";
+import { createPromptWithLanguage } from "@/utils/language";
+import { AIConfig } from "@/types/ai";
 
 // Format AI response content
 function formatAIResponse(content: string): string {
@@ -43,6 +45,13 @@ export async function analyzeContract(params: {
   const maxRetries = 3; // max retry count
   let retryCount = 0;
   let lastError: any;
+
+  // Get AI config
+  const savedConfig = localStorage.getItem("ai_config");
+  if (!savedConfig) {
+    throw new Error("AI configuration not found");
+  }
+  const config: AIConfig = JSON.parse(savedConfig);
 
   while (retryCount < maxRetries) {
     try {
@@ -97,16 +106,16 @@ export async function analyzeContract(params: {
         throw new Error("No valid contract code to analyze");
       }
 
-      const prompt = SECURITY_AUDIT_PROMPT.replace(
-        "${mergedCode}",
-        mergedCode
-      ).replace(
-        "${params.contractName ? params.contractName : ''}",
-        params.contractName || ""
+      const finalPrompt = createPromptWithLanguage(
+        SECURITY_AUDIT_PROMPT.replace("${mergedCode}", mergedCode).replace(
+          "${params.contractName ? params.contractName : ''}",
+          params.contractName || ""
+        ),
+        config.language
       );
 
       // Get AI response
-      const aiResponse = await analyzeWithAI(prompt);
+      const aiResponse = await analyzeWithAI(finalPrompt);
       if (!aiResponse) {
         throw new Error("Failed to get AI analysis response");
       }
