@@ -54,13 +54,23 @@ export default function AIConfigModal({
   };
 
   const handleStartAnalysis = () => {
-    const currentKey =
-      config.provider === "claude" ? config.claudeKey : config.gptKey;
+    let currentKey = "";
+    if (config.provider === "gemini") {
+      currentKey = config.geminiKey;
+    } else if (config.provider === "claude") {
+      currentKey = config.claudeKey;
+    } else {
+      currentKey = config.gptKey;
+    }
 
-    if (!currentKey.trim()) {
+    if (!currentKey?.trim()) {
       toast.error(
         `Please enter your ${
-          config.provider === "claude" ? "Claude" : "OpenAI"
+          config.provider === "gemini"
+            ? "Google"
+            : config.provider === "claude"
+            ? "Claude"
+            : "OpenAI"
         } API key`
       );
       return;
@@ -184,7 +194,7 @@ export default function AIConfigModal({
           <div>
             <label className="block text-sm font-medium text-gray-300 mb-2">
               {config.provider === "gemini"
-                ? "Google API Key"
+                ? "Gemini API Key"
                 : config.provider === "claude"
                 ? "Claude API Key"
                 : "OpenAI API Key"}
@@ -193,19 +203,19 @@ export default function AIConfigModal({
               type="password"
               value={
                 config.provider === "gemini"
-                  ? config.geminiKey
+                  ? config.geminiKey || ""
                   : config.provider === "claude"
-                  ? config.claudeKey
-                  : config.gptKey
+                  ? config.claudeKey || ""
+                  : config.gptKey || ""
               }
               onChange={(e) =>
                 setConfig({
                   ...config,
                   geminiKey:
-                    config.provider === "gemini" ? e.target.value : config.geminiKey,
+                    config.provider === "gemini" ? e.target.value : config.geminiKey || "",
                   claudeKey:
-                    config.provider === "claude" ? e.target.value : config.claudeKey,
-                  gptKey: config.provider === "gpt" ? e.target.value : config.gptKey,
+                    config.provider === "claude" ? e.target.value : config.claudeKey || "",
+                  gptKey: config.provider === "gpt" ? e.target.value : config.gptKey || "",
                 })
               }
               placeholder={`Enter your ${
@@ -220,14 +230,14 @@ export default function AIConfigModal({
             <div className="mt-2 text-sm text-gray-400">
               {config.provider === "gemini" ? (
                 <p>
-                  Need a Google API key?{" "}
+                  Need a Gemini API key?{" "}
                   <a
-                    href="https://console.cloud.google.com/apis/credentials"
+                    href="https://ai.google.dev/gemini-api/docs/api-key"
                     target="_blank"
                     rel="noopener noreferrer"
                     className="text-[#FF8B3E] hover:text-[#FF8B3E]/80 transition-colors"
                   >
-                    Get one from Google Cloud Console
+                    Get one from Gemini Console
                   </a>{" "}
                   (requires registration)
                 </p>
