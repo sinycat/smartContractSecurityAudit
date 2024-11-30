@@ -305,7 +305,8 @@ export default function SourcePreview({
       // }
 
       // TODO: test
-      let analysisContent ="123";
+      let analysisContent;
+      analysisContent = getModelName(getAIConfig(config));
 
       // Remove duplicate titles
       analysisContent = removeDuplicateHeaders(analysisContent);
