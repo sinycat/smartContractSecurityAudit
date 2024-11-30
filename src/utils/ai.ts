@@ -93,6 +93,7 @@ export async function analyzeWithAI(prompt: string): Promise<string> {
 
   try {
     if (config.provider === "gemini") {
+      // console.log("gemini");
       const geminiModel = getGeminiModelById(config.selectedModel);
       if (!geminiModel) {
         throw new Error(
@@ -131,6 +132,7 @@ export async function analyzeWithAI(prompt: string): Promise<string> {
       const data = await response.json();
       return data.candidates[0].content.parts[0].text;
     } else if (config.provider === "claude") {
+      // console.log("claude");
       const claudeModel = getClaudeModelById(config.selectedModel);
       if (!claudeModel) {
         throw new Error("Invalid Claude model selected");
@@ -143,7 +145,7 @@ export async function analyzeWithAI(prompt: string): Promise<string> {
 
       const msg = await anthropic.messages.create({
         model: config.selectedModel,
-        max_tokens: 8000,
+        max_tokens: 8192,
         temperature: 1,
         system: `You are a smart contract security auditor with the following responsibilities:
 - Identify potential security vulnerabilities and risks
@@ -151,7 +153,8 @@ export async function analyzeWithAI(prompt: string): Promise<string> {
 - Suggest gas optimizations and efficiency improvements
 - Provide detailed explanations of findings
 - Recommend specific fixes and improvements
-Format your response with clear sections for vulnerabilities, optimizations, and recommendations.`,
+Format your response with clear sections for vulnerabilities, optimizations, and recommendations.
+Please include full code snippets and function names in your response.`,
         messages: [
           {
             role: "user",
@@ -170,6 +173,7 @@ Format your response with clear sections for vulnerabilities, optimizations, and
       }
       return msg.content[0].text;
     } else if (config.provider === "gpt") {
+      // console.log("gpt");
       const gptModel = getModelById(config.selectedModel);
       if (!gptModel) {
         throw new Error(`Invalid GPT model selected: ${config.selectedModel}`);
@@ -191,7 +195,7 @@ Format your response with clear sections for vulnerabilities, optimizations, and
           ],
           ...(gptModel.supportsTemperature !== false
             ? { temperature: 0.7 }
-            : {}),
+            : { temperature: 1}),
         }),
       });
 
