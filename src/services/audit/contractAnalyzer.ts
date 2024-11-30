@@ -22,16 +22,10 @@ function formatAIResponse(content: string): string {
   );
 
   // bold text
-  formatted = formatted.replace(
-    /(\*\*[^*]+\*\*):/g, 
-    (match) => `\n${match}\n`
-  );
+  formatted = formatted.replace(/(\*\*[^*]+\*\*):/g, (match) => `\n${match}\n`);
 
   // make sure each ### title has a newline after it
-  formatted = formatted.replace(
-    /(### [^\n]+)(\n\*\*)/g,
-    "$1\n$2"
-  );
+  formatted = formatted.replace(/(### [^\n]+)(\n\*\*)/g, "$1\n$2");
 
   // Remove "```markdown"
   formatted = formatted.replace(/```markdown/g, "");
