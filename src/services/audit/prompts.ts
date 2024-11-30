@@ -28,9 +28,9 @@ Severity: [Critical/High/Medium/Low/Gas]
 Description: [Detailed explanation]
 Impact: [What could happen if exploited]
 Location: [File name and line numbers]
-Recommendation: [How to fix]
+Recommendation: [How to fix it and make sure the logic is correct]
 
-Focus on these specific vulnerabilities:
+Focus on these specific vulnerabilities and make sure the logic is correct:
 
 a) Access Control & Authorization
 - Missing or insufficient access controls
