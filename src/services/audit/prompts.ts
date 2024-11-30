@@ -128,6 +128,6 @@ List of key recommendations for improving the contract security and efficiency.
 
 ## Improved Code with Security Comments
 Please provide the improved version of the contract code with detailed security-related comments.
-Please include full code snippets and function names in your response.
+Please include full code snippets and function names in your response and make sure the logic is correct.
 
 Format your response to clearly separate these sections, and ensure each vulnerability finding includes concrete examples from the code.`; 
