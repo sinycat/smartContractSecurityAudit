@@ -22,10 +22,11 @@ export function getModelName(config: AIConfig): string {
   } else if (config.provider === "gemini") {
     const model = getGeminiModelById(config.selectedModel);
     return model?.name.toLowerCase().replace(/\s+/g, "-") || "gemini";
-  } else {
+  } else if (config.provider === "gpt") {
     const model = getModelById(config.selectedModel);
     return model?.name.toLowerCase().replace(/\s+/g, "-") || "gpt";
   }
+  return "";
 }
 
 // AI configuration Hook

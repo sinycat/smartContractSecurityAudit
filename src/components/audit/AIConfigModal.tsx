@@ -1,12 +1,13 @@
 import { useState, useEffect } from "react";
 import { useAIConfig } from "@/utils/ai";
-import { GPT_MODELS, OpenAIModel } from "@/utils/openai-models";
-import { CLAUDE_MODELS, ClaudeModel } from "@/utils/claude-models";
+import { GPT_MODELS } from "@/utils/openai-models";
+import { CLAUDE_MODELS } from "@/utils/claude-models";
+import { GEMINI_MODELS } from "@/utils/gemini-models";
 import { Dialog, Listbox } from "@headlessui/react";
 import { toast } from "react-hot-toast";
 import { AIConfig } from "@/types/ai";
 import { RESPONSE_LANGUAGES } from "@/utils/language";
-import { GEMINI_MODELS } from "@/utils/gemini-models";
+import { PROVIDERS, getProviderInfo, getApiKey } from "@/utils/provider-config";
 
 interface AIConfigModalProps {
   isOpen: boolean;
@@ -20,62 +21,38 @@ export default function AIConfigModal({
   onStartAnalysis,
 }: AIConfigModalProps) {
   const { config, setConfig } = useAIConfig();
+  const providerInfo = getProviderInfo(config.provider);
 
-  // Ensure default model is selected when component mounts
-  useEffect(() => {
-    if (!config.selectedModel) {
-      setConfig((prev) => {
-        const newConfig = { ...prev };
-        if (prev.provider === "claude") {
-          newConfig.selectedModel = CLAUDE_MODELS[0].id;
-        } else {
-          newConfig.selectedModel = GPT_MODELS[0].id;
-        }
-        return newConfig;
-      });
-    }
-  }, [config.provider]);
+  // Handle provider change
+  const handleProviderChange = (provider: AIConfig['provider']) => {
+    const info = getProviderInfo(provider);
+    setConfig(prev => ({
+      ...prev,
+      provider,
+      selectedModel: info.defaultModel,
+    }));
+  };
 
-  // Handle provider change and select default model
-  const handleProviderChange = (provider: "gpt" | "claude" | "gemini") => {
-    setConfig((prev) => {
-      const newConfig = { ...prev, provider };
+  // Handle API key change
+  const handleKeyChange = (value: string) => {
+    const updates = {
+      gpt: { gptKey: value },
+      claude: { claudeKey: value },
+      gemini: { geminiKey: value }
+    };
 
-      if (provider === "claude") {
-        newConfig.selectedModel = CLAUDE_MODELS[0].id;
-      } else if (provider === "gemini") {
-        newConfig.selectedModel = GEMINI_MODELS[0].id;
-      } else {
-        newConfig.selectedModel = GPT_MODELS[0].id;
-      }
-
-      return newConfig;
-    });
+    setConfig(prev => ({
+      ...prev,
+      ...updates[prev.provider]
+    }));
   };
 
   const handleStartAnalysis = () => {
-    let currentKey = "";
-    if (config.provider === "gemini") {
-      currentKey = config.geminiKey;
-    } else if (config.provider === "claude") {
-      currentKey = config.claudeKey;
-    } else {
-      currentKey = config.gptKey;
-    }
-
+    const currentKey = getApiKey(config);
     if (!currentKey?.trim()) {
-      toast.error(
-        `Please enter your ${
-          config.provider === "gemini"
-            ? "Google"
-            : config.provider === "claude"
-            ? "Claude"
-            : "OpenAI"
-        } API key`
-      );
+      toast.error(`Please enter your ${providerInfo.keyName}`);
       return;
     }
-
     onStartAnalysis();
   };
 
@@ -97,14 +74,14 @@ export default function AIConfigModal({
             </label>
             <select
               value={config.provider}
-              onChange={(e) =>
-                handleProviderChange(e.target.value as "gpt" | "claude" | "gemini")
-              }
+              onChange={(e) => handleProviderChange(e.target.value as AIConfig['provider'])}
               className="w-full bg-[#2A2A2A] text-gray-300 border border-[#404040] rounded-md px-3 py-2"
             >
-              <option value="gpt">OpenAI GPT</option>
-              <option value="claude">Anthropic Claude</option>
-              <option value="gemini">Google Gemini</option>
+              {Object.entries(PROVIDERS).map(([key, info]) => (
+                <option key={key} value={key}>
+                  {info.name}
+                </option>
+              ))}
             </select>
           </div>
 
@@ -114,28 +91,14 @@ export default function AIConfigModal({
             </label>
             <select
               value={config.selectedModel}
-              onChange={(e) =>
-                setConfig((prev) => ({ ...prev, selectedModel: e.target.value }))
-              }
+              onChange={(e) => setConfig(prev => ({ ...prev, selectedModel: e.target.value }))}
               className="w-full bg-[#2A2A2A] text-gray-300 border border-[#404040] rounded-md px-3 py-2"
             >
-              {config.provider === "gemini"
-                ? GEMINI_MODELS.map((model) => (
-                    <option key={model.id} value={model.id}>
-                      {model.name}
-                    </option>
-                  ))
-                : config.provider === "claude"
-                ? CLAUDE_MODELS.map((model) => (
-                    <option key={model.id} value={model.id}>
-                      {model.name}
-                    </option>
-                  ))
-                : GPT_MODELS.map((model) => (
-                    <option key={model.id} value={model.id}>
-                      {model.name}
-                    </option>
-                  ))}
+              {providerInfo.models.map((model) => (
+                <option key={model.id} value={model.id}>
+                  {model.name}
+                </option>
+              ))}
             </select>
           </div>
 
@@ -193,81 +156,28 @@ export default function AIConfigModal({
 
           <div>
             <label className="block text-sm font-medium text-gray-300 mb-2">
-              {config.provider === "gemini"
-                ? "Gemini API Key"
-                : config.provider === "claude"
-                ? "Claude API Key"
-                : "OpenAI API Key"}
+              {providerInfo.keyName}
             </label>
             <input
               type="password"
-              value={
-                config.provider === "gemini"
-                  ? config.geminiKey || ""
-                  : config.provider === "claude"
-                  ? config.claudeKey || ""
-                  : config.gptKey || ""
-              }
-              onChange={(e) =>
-                setConfig({
-                  ...config,
-                  geminiKey:
-                    config.provider === "gemini" ? e.target.value : config.geminiKey || "",
-                  claudeKey:
-                    config.provider === "claude" ? e.target.value : config.claudeKey || "",
-                  gptKey: config.provider === "gpt" ? e.target.value : config.gptKey || "",
-                })
-              }
-              placeholder={`Enter your ${
-                config.provider === "gemini"
-                  ? "Google"
-                  : config.provider === "claude"
-                  ? "Claude"
-                  : "OpenAI"
-              } API key`}
+              value={getApiKey(config)}
+              onChange={(e) => handleKeyChange(e.target.value)}
+              placeholder={providerInfo.keyPlaceholder}
               className="w-full bg-[#2A2A2A] text-gray-300 border border-[#404040] rounded-md px-3 py-2"
             />
             <div className="mt-2 text-sm text-gray-400">
-              {config.provider === "gemini" ? (
-                <p>
-                  Need a Gemini API key?{" "}
-                  <a
-                    href="https://ai.google.dev/gemini-api/docs/api-key"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-[#FF8B3E] hover:text-[#FF8B3E]/80 transition-colors"
-                  >
-                    Get one from Gemini Console
-                  </a>{" "}
-                  (requires registration)
-                </p>
-              ) : config.provider === "claude" ? (
-                <p>
-                  Need a Claude API key?{" "}
-                  <a
-                    href="https://console.anthropic.com/account/keys"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-[#FF8B3E] hover:text-[#FF8B3E]/80 transition-colors"
-                  >
-                    Get one from Anthropic Console
-                  </a>{" "}
-                  (requires registration)
-                </p>
-              ) : (
-                <p>
-                  Need an OpenAI API key?{" "}
-                  <a
-                    href="https://platform.openai.com/api-keys"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-[#FF8B3E] hover:text-[#FF8B3E]/80 transition-colors"
-                  >
-                    Get one from OpenAI Platform
-                  </a>{" "}
-                  (requires registration)
-                </p>
-              )}
+              <p>
+                Need a {providerInfo.keyName}?{" "}
+                <a
+                  href={providerInfo.getKeyLink}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-[#FF8B3E] hover:text-[#FF8B3E]/80 transition-colors"
+                >
+                  {providerInfo.getKeyText}
+                </a>{" "}
+                (requires registration)
+              </p>
             </div>
           </div>
         </div>
