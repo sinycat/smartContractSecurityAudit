@@ -322,9 +322,15 @@ export default function SourcePreview({
         : contractName;
 
       // Create report.md file with contract name
+      let languageCfg = getAIConfig(config).language;
+      if (languageCfg === "english") {
+        languageCfg = "";
+      } else {
+        languageCfg = `-${languageCfg}`;
+      }
       const reportFileName = `report-${reportContractName.toLowerCase()}-${getModelName(
         getAIConfig(config)
-      )}-${getAIConfig(config).language}.md`;
+      )}${languageCfg}.md`;
       const reportFile: ContractFile = {
         name: reportFileName,
         path: reportFileName,
