@@ -330,13 +330,13 @@ export default function SourcePreview({
         path: reportFileName,
         content: analysisContent,
       };
-      
-      setFiles(prevFiles => {
+
+      setFiles((prevFiles) => {
         // Delete old reports for the same model
         const filesWithoutCurrentModelReport = prevFiles.filter(
-          f => f.path !== reportFileName
+          (f) => f.path !== reportFileName
         );
-        
+
         // Append new report file
         return [...filesWithoutCurrentModelReport, reportFile];
       });

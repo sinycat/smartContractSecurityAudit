@@ -69,7 +69,7 @@ export function useAIConfig() {
       claudeKey: "",
       geminiKey: "",
       selectedModel: GPT_MODELS[0].id,
-      language: "english"
+      language: "english",
     };
   });
 
@@ -95,7 +95,9 @@ export async function analyzeWithAI(prompt: string): Promise<string> {
     if (config.provider === "gemini") {
       const geminiModel = getGeminiModelById(config.selectedModel);
       if (!geminiModel) {
-        throw new Error(`Invalid Gemini model selected: ${config.selectedModel}`);
+        throw new Error(
+          `Invalid Gemini model selected: ${config.selectedModel}`
+        );
       }
 
       response = await fetch(

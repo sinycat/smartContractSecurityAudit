@@ -24,9 +24,9 @@ export default function AIConfigModal({
   const providerInfo = getProviderInfo(config.provider);
 
   // Handle provider change
-  const handleProviderChange = (provider: AIConfig['provider']) => {
+  const handleProviderChange = (provider: AIConfig["provider"]) => {
     const info = getProviderInfo(provider);
-    setConfig(prev => ({
+    setConfig((prev) => ({
       ...prev,
       provider,
       selectedModel: info.defaultModel,
@@ -38,12 +38,12 @@ export default function AIConfigModal({
     const updates = {
       gpt: { gptKey: value },
       claude: { claudeKey: value },
-      gemini: { geminiKey: value }
+      gemini: { geminiKey: value },
     };
 
-    setConfig(prev => ({
+    setConfig((prev) => ({
       ...prev,
-      ...updates[prev.provider]
+      ...updates[prev.provider],
     }));
   };
 
@@ -74,7 +74,9 @@ export default function AIConfigModal({
             </label>
             <select
               value={config.provider}
-              onChange={(e) => handleProviderChange(e.target.value as AIConfig['provider'])}
+              onChange={(e) =>
+                handleProviderChange(e.target.value as AIConfig["provider"])
+              }
               className="w-full bg-[#2A2A2A] text-gray-300 border border-[#404040] rounded-md px-3 py-2"
             >
               {Object.entries(PROVIDERS).map(([key, info]) => (
@@ -91,7 +93,12 @@ export default function AIConfigModal({
             </label>
             <select
               value={config.selectedModel}
-              onChange={(e) => setConfig(prev => ({ ...prev, selectedModel: e.target.value }))}
+              onChange={(e) =>
+                setConfig((prev) => ({
+                  ...prev,
+                  selectedModel: e.target.value,
+                }))
+              }
               className="w-full bg-[#2A2A2A] text-gray-300 border border-[#404040] rounded-md px-3 py-2"
             >
               {providerInfo.models.map((model) => (
@@ -113,7 +120,11 @@ export default function AIConfigModal({
               <div className="relative mt-1">
                 <Listbox.Button className="relative w-full bg-[#2A2A2A] text-gray-300 border border-[#404040] rounded-md px-3 py-2 text-left">
                   <span className="block truncate">
-                    {RESPONSE_LANGUAGES.find((l) => l.id === (config.language || "english"))?.name}
+                    {
+                      RESPONSE_LANGUAGES.find(
+                        (l) => l.id === (config.language || "english")
+                      )?.name
+                    }
                   </span>
                   <span className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-2">
                     <svg
@@ -143,7 +154,11 @@ export default function AIConfigModal({
                       }
                     >
                       {({ selected }: { selected: boolean }) => (
-                        <span className={`block truncate ${selected ? "font-medium" : "font-normal"}`}>
+                        <span
+                          className={`block truncate ${
+                            selected ? "font-medium" : "font-normal"
+                          }`}
+                        >
                           {language.name}
                         </span>
                       )}
