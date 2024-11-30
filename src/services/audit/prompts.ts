@@ -28,7 +28,7 @@ Severity: [Critical/High/Medium/Low/Gas]
 Description: [Detailed explanation]
 Impact: [What could happen if exploited]
 Location: [File name and line numbers]
-Recommendation: [How to fix it and make sure the logic is correct]
+Recommendation: [How to fix it and make sure the result of the fix is correct]
 
 Focus on these specific vulnerabilities and make sure the logic is correct:
 
