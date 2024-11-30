@@ -291,22 +291,22 @@ export default function SourcePreview({
       setIsAnalyzing(true);
       setShowAIConfig(false);
 
-      // // Perform analysis
-      // const result = await analyzeContract({
-      //   files,
-      //   contractName,
-      //   chain: chainId,
-      // });
+      // Perform analysis
+      const result = await analyzeContract({
+        files,
+        contractName,
+        chain: chainId,
+      });
 
-      // // Check if there's a main title, if not add it
-      // let analysisContent = result.report.analysis;
-      // if (!analysisContent.match(/^#\s+/m)) {
-      //   analysisContent = `# Smart Contract Security Analysis Report\n\n${analysisContent}`;
-      // }
+      // Check if there's a main title, if not add it
+      let analysisContent = result.report.analysis;
+      if (!analysisContent.match(/^#\s+/m)) {
+        analysisContent = `# Smart Contract Security Analysis Report\n\n${analysisContent}`;
+      }
 
-      // TODO: test
-      let analysisContent;
-      analysisContent = getModelName(getAIConfig(config));
+      // // TODO: test
+      // let analysisContent;
+      // analysisContent = getModelName(getAIConfig(config));
 
       // Remove duplicate titles
       analysisContent = removeDuplicateHeaders(analysisContent);
