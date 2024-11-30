@@ -8,31 +8,31 @@ export interface GeminiModel {
 export const GEMINI_MODELS: GeminiModel[] = [
   {
     id: "gemini-1.5-flash",
-    name: "Gemini 1.5 Flash",
+    name: "gemini-1.5-flash",
     description: "Fast and efficient model for quick responses",
     contextWindow: 12000,
   },
   {
     id: "gemini-1.5-flash-8b",
-    name: "Gemini 1.5 Flash 8B",
+    name: "gemini-1.5-flash-8b",
     description: "Lightweight version optimized for efficiency",
     contextWindow: 12000,
   },
   {
     id: "gemini-1.5-pro",
-    name: "Gemini 1.5 Pro",
+    name: "gemini-1.5-pro",
     description: "Advanced model with enhanced capabilities",
     contextWindow: 128000,
   },
   {
     id: "gemini-exp-1121",
-    name: "Gemini Experimental 1121",
+    name: "gemini-exp-1121",
     description: "Experimental version with latest features",
     contextWindow: 128000,
   },
   {
     id: "gemini-exp-1114",
-    name: "Gemini Experimental 1114",
+    name: "gemini-exp-1114",
     description: "Experimental version for testing",
     contextWindow: 128000,
   },
