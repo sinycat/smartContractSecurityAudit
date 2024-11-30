@@ -21,8 +21,23 @@ function formatAIResponse(content: string): string {
     "- $1:"
   );
 
+  // bold text
+  formatted = formatted.replace(
+    /(\*\*[^*]+\*\*):/g, 
+    (match) => `\n${match}\n`
+  );
+
+  // make sure each ### title has a newline after it
+  formatted = formatted.replace(
+    /(### [^\n]+)(\n\*\*)/g,
+    "$1\n$2"
+  );
+
   // Remove "```markdown"
   formatted = formatted.replace(/```markdown/g, "");
+
+  // Remove extra newlines (more than 2 consecutive empty lines)
+  formatted = formatted.replace(/\n{3,}/g, "\n\n");
 
   return formatted;
 }
