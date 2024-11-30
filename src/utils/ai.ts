@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { getModelById, GPT_MODELS } from "./openai-models";
 import { getClaudeModelById, CLAUDE_MODELS } from "./claude-models";
+import { getGeminiModelById, GEMINI_MODELS } from "./gemini-models";
 import Anthropic from "@anthropic-ai/sdk";
 import { AIConfig } from "@/types/ai";
 
@@ -18,6 +19,9 @@ export function getModelName(config: AIConfig): string {
   if (config.provider === "claude") {
     const model = getClaudeModelById(config.selectedModel);
     return model?.name.toLowerCase().replace(/\s+/g, "-") || "claude";
+  } else if (config.provider === "gemini") {
+    const model = getGeminiModelById(config.selectedModel);
+    return model?.name.toLowerCase().replace(/\s+/g, "-") || "gemini";
   } else {
     const model = getModelById(config.selectedModel);
     return model?.name.toLowerCase().replace(/\s+/g, "-") || "gpt";
@@ -40,12 +44,19 @@ export function useAIConfig() {
           if (!validModel) {
             savedConfig.selectedModel = GPT_MODELS[0].id;
           }
-        } else {
+        } else if (savedConfig.provider === "claude") {
           const validModel = CLAUDE_MODELS.find(
             (m) => m.id === savedConfig.selectedModel
           );
           if (!validModel) {
             savedConfig.selectedModel = CLAUDE_MODELS[0].id;
+          }
+        } else if (savedConfig.provider === "gemini") {
+          const validModel = GEMINI_MODELS.find(
+            (m) => m.id === savedConfig.selectedModel
+          );
+          if (!validModel) {
+            savedConfig.selectedModel = GEMINI_MODELS[0].id;
           }
         }
         return savedConfig;
@@ -55,6 +66,7 @@ export function useAIConfig() {
       provider: "gpt",
       gptKey: "",
       claudeKey: "",
+      geminiKey: "",
       selectedModel: GPT_MODELS[0].id,
       language: "english"
     };
@@ -79,7 +91,43 @@ export async function analyzeWithAI(prompt: string): Promise<string> {
   let response: Response;
 
   try {
-    if (config.provider === "claude") {
+    if (config.provider === "gemini") {
+      const geminiModel = getGeminiModelById(config.selectedModel);
+      if (!geminiModel) {
+        throw new Error(`Invalid Gemini model selected: ${config.selectedModel}`);
+      }
+
+      response = await fetch(
+        `https://generativelanguage.googleapis.com/v1beta/models/${geminiModel.id}:generateContent?key=${config.geminiKey}`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            contents: [
+              {
+                parts: [
+                  {
+                    text: prompt,
+                  },
+                ],
+              },
+            ],
+          }),
+        }
+      );
+
+      if (!response?.ok) {
+        const errorData = await response.text();
+        throw new Error(
+          `Gemini API request failed: ${response.statusText}. Details: ${errorData}`
+        );
+      }
+
+      const data = await response.json();
+      return data.candidates[0].content.parts[0].text;
+    } else if (config.provider === "claude") {
       const claudeModel = getClaudeModelById(config.selectedModel);
       if (!claudeModel) {
         throw new Error("Invalid Claude model selected");

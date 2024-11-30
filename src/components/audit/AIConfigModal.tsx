@@ -6,6 +6,7 @@ import { Dialog, Listbox } from "@headlessui/react";
 import { toast } from "react-hot-toast";
 import { AIConfig } from "@/types/ai";
 import { RESPONSE_LANGUAGES } from "@/utils/language";
+import { GEMINI_MODELS } from "@/utils/gemini-models";
 
 interface AIConfigModalProps {
   isOpen: boolean;
@@ -36,13 +37,14 @@ export default function AIConfigModal({
   }, [config.provider]);
 
   // Handle provider change and select default model
-  const handleProviderChange = (provider: "gpt" | "claude") => {
+  const handleProviderChange = (provider: "gpt" | "claude" | "gemini") => {
     setConfig((prev) => {
       const newConfig = { ...prev, provider };
 
-      // Select default model based on provider
       if (provider === "claude") {
         newConfig.selectedModel = CLAUDE_MODELS[0].id;
+      } else if (provider === "gemini") {
+        newConfig.selectedModel = GEMINI_MODELS[0].id;
       } else {
         newConfig.selectedModel = GPT_MODELS[0].id;
       }
@@ -86,12 +88,13 @@ export default function AIConfigModal({
             <select
               value={config.provider}
               onChange={(e) =>
-                handleProviderChange(e.target.value as "gpt" | "claude")
+                handleProviderChange(e.target.value as "gpt" | "claude" | "gemini")
               }
               className="w-full bg-[#2A2A2A] text-gray-300 border border-[#404040] rounded-md px-3 py-2"
             >
               <option value="gpt">OpenAI GPT</option>
               <option value="claude">Anthropic Claude</option>
+              <option value="gemini">Google Gemini</option>
             </select>
           </div>
 
@@ -102,11 +105,17 @@ export default function AIConfigModal({
             <select
               value={config.selectedModel}
               onChange={(e) =>
-                setConfig({ ...config, selectedModel: e.target.value })
+                setConfig((prev) => ({ ...prev, selectedModel: e.target.value }))
               }
               className="w-full bg-[#2A2A2A] text-gray-300 border border-[#404040] rounded-md px-3 py-2"
             >
-              {config.provider === "claude"
+              {config.provider === "gemini"
+                ? GEMINI_MODELS.map((model) => (
+                    <option key={model.id} value={model.id}>
+                      {model.name}
+                    </option>
+                  ))
+                : config.provider === "claude"
                 ? CLAUDE_MODELS.map((model) => (
                     <option key={model.id} value={model.id}>
                       {model.name}
@@ -174,33 +183,55 @@ export default function AIConfigModal({
 
           <div>
             <label className="block text-sm font-medium text-gray-300 mb-2">
-              {config.provider === "claude"
+              {config.provider === "gemini"
+                ? "Google API Key"
+                : config.provider === "claude"
                 ? "Claude API Key"
                 : "OpenAI API Key"}
             </label>
             <input
               type="password"
               value={
-                config.provider === "claude" ? config.claudeKey : config.gptKey
+                config.provider === "gemini"
+                  ? config.geminiKey
+                  : config.provider === "claude"
+                  ? config.claudeKey
+                  : config.gptKey
               }
               onChange={(e) =>
                 setConfig({
                   ...config,
+                  geminiKey:
+                    config.provider === "gemini" ? e.target.value : config.geminiKey,
                   claudeKey:
-                    config.provider === "claude"
-                      ? e.target.value
-                      : config.claudeKey,
-                  gptKey:
-                    config.provider === "gpt" ? e.target.value : config.gptKey,
+                    config.provider === "claude" ? e.target.value : config.claudeKey,
+                  gptKey: config.provider === "gpt" ? e.target.value : config.gptKey,
                 })
               }
               placeholder={`Enter your ${
-                config.provider === "claude" ? "Claude" : "OpenAI"
+                config.provider === "gemini"
+                  ? "Google"
+                  : config.provider === "claude"
+                  ? "Claude"
+                  : "OpenAI"
               } API key`}
               className="w-full bg-[#2A2A2A] text-gray-300 border border-[#404040] rounded-md px-3 py-2"
             />
             <div className="mt-2 text-sm text-gray-400">
-              {config.provider === "claude" ? (
+              {config.provider === "gemini" ? (
+                <p>
+                  Need a Google API key?{" "}
+                  <a
+                    href="https://console.cloud.google.com/apis/credentials"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-[#FF8B3E] hover:text-[#FF8B3E]/80 transition-colors"
+                  >
+                    Get one from Google Cloud Console
+                  </a>{" "}
+                  (requires registration)
+                </p>
+              ) : config.provider === "claude" ? (
                 <p>
                   Need a Claude API key?{" "}
                   <a
@@ -239,6 +270,7 @@ export default function AIConfigModal({
                 provider: "gpt",
                 gptKey: "",
                 claudeKey: "",
+                geminiKey: "",
                 selectedModel: GPT_MODELS[0].id,
                 language: "english",
               });
