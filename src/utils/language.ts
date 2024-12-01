@@ -1,3 +1,5 @@
+import { SUPPER_PROMPT } from "@/services/audit/prompts";
+
 // Language configuration with supported languages and their instructions
 export const RESPONSE_LANGUAGES = [
   {
@@ -189,4 +191,9 @@ export const getLanguageInstruction = (language?: string) => {
 export const createPromptWithLanguage = (prompt: string, language?: string) => {
   const languageInstruction = getLanguageInstruction(language);
   return prompt + "\n\n" + languageInstruction;
+};
+
+// Create a prompt with super prompt
+export const createPromptWithSupperPrompt = (prompt: string) => {
+  return SUPPER_PROMPT + "\n\n" + prompt;
 };
