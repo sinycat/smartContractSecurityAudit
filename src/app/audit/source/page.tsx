@@ -1,12 +1,12 @@
 "use client";
 
-import { useEffect, useState } from 'react';
-import { useSearchParams, useRouter } from 'next/navigation';
-import { toast } from 'react-hot-toast';
-import SourcePreview from '@/components/audit/SourcePreview';
-import type { ContractFile } from '@/types/blockchain';
-import Image from 'next/image';
-import { getChainId } from '@/utils/chainServices';
+import { useEffect, useState } from "react";
+import { useSearchParams, useRouter } from "next/navigation";
+import { toast } from "react-hot-toast";
+import SourcePreview from "@/components/audit/SourcePreview";
+import type { ContractFile } from "@/types/blockchain";
+import Image from "next/image";
+import { getChainId } from "@/utils/chainServices";
 
 interface ContractSource {
   files: ContractFile[];
@@ -35,10 +35,10 @@ export default function SourcePage() {
   const [sourceData, setSourceData] = useState<ContractSource | null>(null);
   const [loading, setLoading] = useState(true);
 
-  const address = searchParams.get('address');
-  const chain = searchParams.get('chain');
-  const implementation = searchParams.get('implementation');
-  const tokenName = searchParams.get('tokenName');
+  const address = searchParams.get("address");
+  const chain = searchParams.get("chain");
+  const implementation = searchParams.get("implementation");
+  const tokenName = searchParams.get("tokenName");
 
   const chainId = chain ? getChainId(chain) : undefined;
 
@@ -46,42 +46,51 @@ export default function SourcePage() {
     if (address && chain) {
       router.push(`/audit/analyze?address=${address}&chain=${chain}`);
     } else {
-      toast.error('Missing address or chain information');
+      toast.error("Missing address or chain information");
     }
   };
 
   useEffect(() => {
     const fetchSource = async () => {
       if (!address || !chain) {
-        toast.error('Missing address or chain');
+        toast.error("Missing address or chain");
         setLoading(false);
         return;
       }
 
       try {
-        const response = await fetch(`/api/source?address=${address}&chain=${chain}`);
+        const response = await fetch(
+          `/api/source?address=${address}&chain=${chain}`
+        );
         const data = await response.json();
-        
+
         if (data.error) {
           toast.error(data.error);
           return;
         }
 
-        const contractResponse = await fetch(`/api/contract-info?address=${address}&chain=${chain}`);
+        const contractResponse = await fetch(
+          `/api/contract-info?address=${address}&chain=${chain}`
+        );
         const contractData = await contractResponse.json();
 
         let implementationInfo;
         if (implementation) {
           try {
-            const implResponse = await fetch(`/api/contract-info?address=${implementation}&chain=${chain}`);
+            const implResponse = await fetch(
+              `/api/contract-info?address=${implementation}&chain=${chain}`
+            );
             if (implResponse.ok) {
               implementationInfo = await implResponse.json();
             } else {
               const errorData = await implResponse.json();
-              console.error('Failed to fetch implementation contract info:', errorData);
+              console.error(
+                "Failed to fetch implementation contract info:",
+                errorData
+              );
             }
           } catch (error) {
-            console.error('Error fetching implementation info:', error);
+            console.error("Error fetching implementation info:", error);
           }
         }
 
@@ -99,12 +108,12 @@ export default function SourcePage() {
           implementationAddress: implementation || undefined,
           implementationInfo: implementationInfo || undefined,
           creationCode: contractData.creationCode,
-          deployedBytecode: contractData.deployedBytecode
+          deployedBytecode: contractData.deployedBytecode,
         });
       } catch (error) {
-        console.error('Error:', error);
+        console.error("Error:", error);
         if (!(error instanceof Response && error.status === 404)) {
-          toast.error('Failed to fetch source code');
+          toast.error("Failed to fetch source code");
         }
         setSourceData(null);
       } finally {
@@ -121,29 +130,39 @@ export default function SourcePage() {
         <div className="text-center">
           <div className="relative w-24 h-24 mx-auto mb-6">
             {/* Outer rotating halo */}
-            <div className="absolute inset-0 border-4 border-t-mush-orange border-r-mush-orange/50 border-b-mush-orange/30 border-l-mush-orange/10 
-                          rounded-full animate-spin" />
-            
+            <div
+              className="absolute inset-0 border-4 border-t-mush-orange border-r-mush-orange/50 border-b-mush-orange/30 border-l-mush-orange/10 
+                          rounded-full animate-spin"
+            />
+
             {/* Inner pulse effect */}
-            <div className="absolute inset-2 border-2 border-mush-orange/50 rounded-full 
-                          animate-[ping_2s_cubic-bezier(0,0,0.2,1)_infinite]" />
-            
+            <div
+              className="absolute inset-2 border-2 border-mush-orange/50 rounded-full 
+                          animate-[ping_2s_cubic-bezier(0,0,0.2,1)_infinite]"
+            />
+
             {/* Logo */}
-            <div className="absolute inset-3 bg-[#1E1E1E] rounded-full flex items-center justify-center
-                          border border-mush-orange/20">
-              <Image 
-                src="/mush.png" 
-                alt="Loading" 
+            <div
+              className="absolute inset-3 bg-[#1E1E1E] rounded-full flex items-center justify-center
+                          border border-mush-orange/20"
+            >
+              <Image
+                src="/mush.png"
+                alt="Loading"
                 width={40}
                 height={40}
                 className="animate-bounce-slow"
               />
             </div>
           </div>
-          
+
           <div className="space-y-2">
-            <h3 className="text-xl font-medium text-white">Loading Source Code</h3>
-            <p className="text-sm text-gray-400">Fetching contract files from blockchain...</p>
+            <h3 className="text-xl font-medium text-white">
+              Loading Source Code
+            </h3>
+            <p className="text-sm text-gray-400">
+              Fetching contract files from blockchain...
+            </p>
           </div>
         </div>
       </div>
@@ -156,7 +175,8 @@ export default function SourcePage() {
         <div className="text-white text-center">
           <p className="text-lg mb-2">No source code found</p>
           <p className="text-sm text-gray-400">
-            This contract may not exist on {chain} or its source code is not verified.
+            This contract may not exist on {chain} or its source code is not
+            verified.
           </p>
         </div>
       </div>
@@ -164,8 +184,8 @@ export default function SourcePage() {
   }
 
   return (
-    <SourcePreview 
-      files={sourceData.files} 
+    <SourcePreview
+      files={sourceData.files}
       onAnalyze={handleStartAnalysis}
       contractName={sourceData.contractName}
       compiler={sourceData.compiler}
@@ -183,4 +203,4 @@ export default function SourcePage() {
       implementationAbi={sourceData.implementationAbi}
     />
   );
-} 
+}
