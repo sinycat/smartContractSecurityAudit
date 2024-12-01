@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getApiScanConfig, getExplorerUrl } from "@/utils/chainServices";
-import * as cheerio from "cheerio";
 
 export const runtime = 'nodejs'
 
@@ -42,18 +41,20 @@ export async function GET(request: NextRequest) {
         const explorerUrl = getExplorerUrl(chain, address);
         const response = await fetch(explorerUrl, {
           headers: {
-            "User-Agent":
-              "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36",
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36",
           },
         });
 
         if (response.ok) {
           const html = await response.text();
-          const $ = cheerio.load(html);
-          creationCode = $("#verifiedbytecode2").text().trim();
-          // Add 0x prefix if missing
-          if (!creationCode.startsWith("0x")) {
-            creationCode = "0x" + creationCode;
+          const bytecodeMatch = html.match(/id='verifiedbytecode2'>([0-9a-fA-F]+)</);
+          
+          if (bytecodeMatch && bytecodeMatch[1]) {
+            creationCode = bytecodeMatch[1];
+            // Add 0x prefix if missing
+            if (!creationCode.startsWith("0x")) {
+              creationCode = "0x" + creationCode;
+            }
           }
         }
       } catch (_error) {
@@ -62,9 +63,8 @@ export async function GET(request: NextRequest) {
     }
 
     // Get contract source code information
-    const sourceResponse = await fetch(
-      `${apiUrl}?module=contract&action=getsourcecode&address=${address}&apikey=${apiKey}`
-    );
+    const sourceUrl = `${apiUrl}?module=contract&action=getsourcecode&address=${address}&apikey=${apiKey}`;
+    const sourceResponse = await fetch(sourceUrl);
     const sourceData = await sourceResponse.json();
 
     return NextResponse.json({
@@ -73,12 +73,12 @@ export async function GET(request: NextRequest) {
       optimization: sourceData.result[0]?.OptimizationUsed === "1",
       runs: parseInt(sourceData.result[0]?.Runs) || 200,
       evmVersion: sourceData.result[0]?.EVMVersion || "default",
-      creationCode, // Contract creation code
-      deployedBytecode: bytecodeData.result || "", // Deployed bytecode
+      creationCode,
+      deployedBytecode: bytecodeData.result || "",
       implementation: sourceData.result[0]?.Implementation,
     });
-  } catch (_error) {
-    console.error("Error:", _error);
+  } catch (error) {
+    console.error("Error details:", error);
     return NextResponse.json(
       { error: "Failed to fetch contract info" },
       { status: 500 }
