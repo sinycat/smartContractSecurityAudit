@@ -607,17 +607,17 @@ export default function SourcePreview({
       {isAnalyzing && (
         <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center">
           <div className="bg-[#1E1E1E] rounded-lg p-8 flex flex-col items-center">
-            <div className="relative w-16 h-16 mb-4">
+            <div className="relative w-24 h-24 mb-4">
               <div
                 className="absolute inset-0 border-4 border-t-[#FF8B3E] border-r-[#FF8B3E]/50 border-b-[#FF8B3E]/30 border-l-[#FF8B3E]/10 
                             rounded-full animate-spin"
               />
-              <div className="absolute inset-3 bg-[#1E1E1E] rounded-full flex items-center justify-center">
+              <div className="absolute inset-2 bg-[#1E1E1E] rounded-full flex items-center justify-center">
                 <Image
                   src="/mush.png"
                   alt="Loading"
-                  width={20}
-                  height={20}
+                  width={40}
+                  height={40}
                   className="animate-bounce-slow"
                 />
               </div>
