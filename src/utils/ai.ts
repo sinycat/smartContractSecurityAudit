@@ -105,7 +105,10 @@ export function useAIConfig() {
 }
 
 // AI analysis function
-export async function analyzeWithAI(prompt: string, signal?: AbortSignal): Promise<string> {
+export async function analyzeWithAI(
+  prompt: string,
+  signal?: AbortSignal
+): Promise<string> {
   const savedConfig = localStorage.getItem("ai_config");
   if (!savedConfig) {
     throw new Error("AI configuration not found");
@@ -187,15 +190,15 @@ export async function analyzeWithAI(prompt: string, signal?: AbortSignal): Promi
 
       const abortPromise = signal
         ? new Promise<never>((_, reject) => {
-            signal.addEventListener('abort', () => {
-              reject(new Error('Analysis cancelled'));
+            signal.addEventListener("abort", () => {
+              reject(new Error("Analysis cancelled"));
             });
           })
         : null;
 
-      const msg = await (abortPromise 
+      const msg = (await (abortPromise
         ? Promise.race([messagePromise, abortPromise])
-        : messagePromise) as Awaited<typeof messagePromise>;
+        : messagePromise)) as Awaited<typeof messagePromise>;
 
       if (!msg.content[0] || !("text" in msg.content[0])) {
         throw new Error("Unexpected response format from Claude");
