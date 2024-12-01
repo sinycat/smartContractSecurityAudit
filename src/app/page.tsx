@@ -43,7 +43,9 @@ export default function HomePage() {
           </a>
 
           <a
-            href="/docs"
+            href="https://github.com/mush-support/mush-audit/blob/main/README.md"
+            target="_blank"
+            rel="noopener noreferrer"
             className="px-8 py-4 bg-[#252526] rounded-lg
                      text-[#CCCCCC] text-lg font-medium
                      border border-[#404040]
