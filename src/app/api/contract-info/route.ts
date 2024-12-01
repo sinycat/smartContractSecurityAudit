@@ -35,31 +35,9 @@ export async function GET(request: NextRequest) {
       creationCode = creationData.result[0].creationBytecode;
     }
 
-    // If creation code is not found, try to fetch from explorer
+    // not found 
     if (creationCode === "" || creationCode === undefined) {
-      try {
-        const explorerUrl = getExplorerUrl(chain, address);
-        const response = await fetch(explorerUrl, {
-          headers: {
-            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36",
-          },
-        });
-
-        if (response.ok) {
-          const html = await response.text();
-          const bytecodeMatch = html.match(/id='verifiedbytecode2'>([0-9a-fA-F]+)</);
-          
-          if (bytecodeMatch && bytecodeMatch[1]) {
-            creationCode = bytecodeMatch[1];
-            // Add 0x prefix if missing
-            if (!creationCode.startsWith("0x")) {
-              creationCode = "0x" + creationCode;
-            }
-          }
-        }
-      } catch (_error) {
         creationCode = "";
-      }
     }
 
     // Get contract source code information
