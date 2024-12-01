@@ -7,40 +7,7 @@ import toast from 'react-hot-toast';
 import Image from 'next/image';
 import Link from 'next/link';
 import ReactMarkdown from 'react-markdown';
-
-interface Analysis {
-  filteredFiles: Array<{
-    name: string;
-    path: string;
-    content: string;
-  }>;
-  vulnerabilities: Array<{
-    id: string;
-    title: string;
-    severity: 'Critical' | 'High' | 'Medium' | 'Low';
-    description: string;
-    location: string;
-    recommendation: string;
-  }>;
-  optimizations: Array<{
-    id: string;
-    title: string;
-    description: string;
-    impact: string;
-  }>;
-  report: {
-    summary: {
-      totalIssues: number;
-      criticalIssues: number;
-      highIssues: number;
-      mediumIssues: number;
-      lowIssues: number;
-    };
-    contractInfo: any;
-    analysis: string;
-    recommendations: string[];
-  };
-}
+import { Analysis, AnalysisResult } from "@/types/blockchain";
 
 export default function AnalyzePage() {
   const searchParams = useSearchParams();
@@ -69,13 +36,24 @@ export default function AnalyzePage() {
         }
 
         // Start analysis
-        const result = await analyzeContract({
+        const result: AnalysisResult = await analyzeContract({
           files: data.files,
           contractName: data.contractName,
-          chain
+          chain: chain
         });
 
-        setAnalysis(result);
+        setAnalysis({
+          summary: {
+            totalIssues: 0,
+            criticalIssues: 0,
+            highIssues: 0,
+            mediumIssues: 0,
+            lowIssues: 0,
+          },
+          contractInfo: {},
+          analysis: result.report.analysis,
+          recommendations: [],
+        });
       } catch (error) {
         console.error('Analysis error:', error);
         toast.error('Failed to analyze contract');
@@ -124,7 +102,7 @@ export default function AnalyzePage() {
                           prose-li:text-gray-300
                           [&_ul]:mt-2 [&_ul]:mb-4 [&_ul]:pl-6
                           [&_li]:my-1">
-              <ReactMarkdown>{analysis.report.analysis}</ReactMarkdown>
+              <ReactMarkdown>{analysis.analysis}</ReactMarkdown>
             </div>
           </div>
         </div>

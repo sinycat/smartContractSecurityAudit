@@ -27,4 +27,27 @@ export interface ContractFile {
   name: string;
   content: string;
   path: string;
+}
+
+export interface Analysis {
+  summary: {
+    totalIssues: number;
+    criticalIssues: number;
+    highIssues: number;
+    mediumIssues: number;
+    lowIssues: number;
+  };
+  contractInfo: any;
+  analysis: string;
+  recommendations: string[];
+}
+
+export interface AnalysisResult {
+  filteredFiles: ContractFile[];
+  vulnerabilities: any[];
+  optimizations: any[];
+  report: {
+    analysis: string;
+    [key: string]: any;
+  };
 } 
