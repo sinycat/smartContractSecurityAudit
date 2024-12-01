@@ -101,6 +101,32 @@ export const CHAINS: Record<string, ChainConfig> = {
       },
     },
   },
+  base: {
+    id: '8453',
+    name: 'base',
+    displayName: 'Base',
+    nativeCurrency: {
+      name: 'Ethereum',
+      symbol: 'ETH',
+      decimals: 18,
+    },
+    rpcUrls: {
+      default: 'https://mainnet.base.org',
+      fallbacks: [
+        'https://base.blockpi.network/v1/rpc/public',
+        'https://base.meowrpc.com',
+        'https://base.publicnode.com',
+      ],
+    },
+    blockExplorers: {
+      default: {
+        name: 'Basescan',
+        url: 'https://basescan.org',
+        apiUrl: 'https://api.basescan.org/api',
+        apiKey: process.env.NEXT_PUBLIC_BASESCAN_API_KEY,
+      },
+    },
+  },
 } as const;
 
 export const KNOWN_CONTRACTS: Record<string, {labels: string[], projectName: string}> = {

@@ -34,6 +34,10 @@ const nextConfig = {
         destination: 'https://api.arbiscan.io/api/:path*',
       },
       {
+        source: '/api/basescan/:path*',
+        destination: 'https://api.basescan.org/api/:path*',
+      },
+      {
         source: '/etherscan/:path*',
         destination: 'https://etherscan.io/:path*',
       },
@@ -44,6 +48,10 @@ const nextConfig = {
       {
         source: '/arbiscan/:path*',
         destination: 'https://arbiscan.io/:path*',
+      },
+      {
+        source: '/basescan/:path*',
+        destination: 'https://basescan.org/:path*',
       }
     ]
   },
