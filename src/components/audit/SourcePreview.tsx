@@ -22,7 +22,7 @@ import { analyzeContract } from "@/services/audit/contractAnalyzer";
 import { getExplorerUrl } from "@/utils/chainServices";
 import { CHAINS } from "@/utils/constants";
 import { useAIConfig, getModelName, getAIConfig } from "@/utils/ai";
-import type { AIConfig } from "@/utils/ai";
+import type { AIConfig } from "@/types/ai";
 
 interface ContractFile {
   name: string;
@@ -108,6 +108,7 @@ export default function SourcePreview({
   const [showRawReadme, setShowRawReadme] = useState(false);
   const [showAIConfig, setShowAIConfig] = useState(false);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [abortController, setAbortController] = useState<AbortController | null>(null);
 
   const codeRef = useRef<HTMLElement>(null);
   const preRef = useRef<HTMLPreElement>(null);
@@ -290,12 +291,14 @@ export default function SourcePreview({
     try {
       setIsAnalyzing(true);
       setShowAIConfig(false);
+      const controller = new AbortController();
+      setAbortController(controller);
 
-      // Perform analysis
       const result = await analyzeContract({
         files,
         contractName,
         chain: chainId,
+        signal: controller.signal,
       });
 
       // Check if there's a main title, if not add it
@@ -351,11 +354,23 @@ export default function SourcePreview({
       setSelectedFile(reportFile);
 
       toast.success("Analysis completed");
-    } catch (error) {
-      console.error("Error in analysis:", error);
-      toast.error("Error during analysis");
+    } catch (error: unknown) {
+      if (error instanceof Error && error.name === 'AbortError') {
+        toast.success('Analysis cancelled');
+      } else {
+        console.error("Error in analysis:", error);
+        toast.error("Error during analysis");
+      }
     } finally {
       setIsAnalyzing(false);
+      setAbortController(null);
+    }
+  };
+
+  // Add cancel analysis function
+  const handleCancelAnalysis = () => {
+    if (abortController) {
+      abortController.abort();
     }
   };
 
@@ -608,9 +623,18 @@ export default function SourcePreview({
               </div>
             </div>
             <p className="text-[#E5E5E5] text-lg mb-2">Analyzing Contract</p>
-            <p className="text-gray-400 text-sm">
+            <p className="text-gray-400 text-sm mb-4">
               This may take a few moments...
             </p>
+            <button
+              onClick={handleCancelAnalysis}
+              className="px-4 py-2 bg-[#252526] text-[#FF8B3E] rounded-md 
+                       border border-[#FF8B3E]/20
+                       hover:bg-[#FF8B3E]/10 transition-colors
+                       font-medium"
+            >
+              Cancel Analysis
+            </button>
           </div>
         </div>
       )}

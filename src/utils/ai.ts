@@ -6,6 +6,8 @@ import { getXAIModelById, XAI_MODELS } from "./xai-models";
 import Anthropic from "@anthropic-ai/sdk";
 import { AIConfig } from "@/types/ai";
 
+export type { AIConfig } from "@/types/ai";
+
 const SYSTEM_PROMPT = `You are a smart contract security auditor with the following responsibilities:
 - Identify potential security vulnerabilities and risks
 - Analyze code for best practices and standards compliance
@@ -103,7 +105,7 @@ export function useAIConfig() {
 }
 
 // AI analysis function
-export async function analyzeWithAI(prompt: string): Promise<string> {
+export async function analyzeWithAI(prompt: string, signal?: AbortSignal): Promise<string> {
   const savedConfig = localStorage.getItem("ai_config");
   if (!savedConfig) {
     throw new Error("AI configuration not found");
@@ -140,6 +142,7 @@ export async function analyzeWithAI(prompt: string): Promise<string> {
               },
             ],
           }),
+          signal,
         }
       );
 
@@ -211,6 +214,7 @@ export async function analyzeWithAI(prompt: string): Promise<string> {
             ? { temperature: 0.7 }
             : { temperature: 1 }),
         }),
+        signal,
       });
 
       if (!response?.ok) {
@@ -249,6 +253,7 @@ export async function analyzeWithAI(prompt: string): Promise<string> {
           stream: false,
           temperature: 1,
         }),
+        signal,
       });
 
       if (!response?.ok) {

@@ -50,6 +50,7 @@ export async function analyzeContract(params: {
   files: ContractFile[];
   contractName?: string;
   chain?: string;
+  signal?: AbortSignal;
 }): Promise<AnalysisResult> {
   const maxRetries = 3; // max retry count
   let retryCount = 0;
@@ -64,6 +65,10 @@ export async function analyzeContract(params: {
 
   while (retryCount < maxRetries) {
     try {
+      if (params.signal?.aborted) {
+        throw new Error('Analysis cancelled');
+      }
+
       // Filter out interface files and third-party library files
       const filteredFiles = params.files.filter((file) => {
         if (
@@ -124,7 +129,7 @@ export async function analyzeContract(params: {
       );
 
       // Get AI response
-      const aiResponse = await analyzeWithAI(finalPrompt);
+      const aiResponse = await analyzeWithAI(finalPrompt, params.signal);
       if (!aiResponse) {
         throw new Error("Failed to get AI analysis response");
       }
@@ -151,7 +156,10 @@ export async function analyzeContract(params: {
           analysis: formattedResponse,
         },
       };
-    } catch (error) {
+    } catch (error: unknown) {
+      if ((error instanceof Error && error.name === 'AbortError') || params.signal?.aborted) {
+        throw new Error('Analysis cancelled');
+      }
       lastError = error;
       retryCount++;
 
