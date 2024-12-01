@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { analyzeContract } from '@/services/audit/contractAnalyzer';
 import toast from 'react-hot-toast';
@@ -9,7 +9,7 @@ import Link from 'next/link';
 import ReactMarkdown from 'react-markdown';
 import { Analysis, AnalysisResult } from "@/types/blockchain";
 
-export default function AnalyzePage() {
+function AnalyzeContent() {
   const searchParams = useSearchParams();
   const [loading, setLoading] = useState(true);
   const [analysis, setAnalysis] = useState<Analysis | null>(null);
@@ -114,5 +114,20 @@ export default function AnalyzePage() {
         </div>
       )}
     </div>
+  );
+}
+
+export default function AnalyzePage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-[#1E1E1E] flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#FF8B3E] mb-4"></div>
+          <p className="text-[#E5E5E5]">Loading...</p>
+        </div>
+      </div>
+    }>
+      <AnalyzeContent />
+    </Suspense>
   );
 } 
