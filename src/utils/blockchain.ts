@@ -313,62 +313,75 @@ export async function fetchCreationCodeFromExplorer(
   chain: string,
   address: string
 ): Promise<string> {
-  try {
-    const explorerUrl = getExplorerTokenUrl(chain, address);
+  // Try with token URL first, then fallback to address URL
+  const urls = [
+    getExplorerTokenUrl(chain, address),
+    getExplorerUrl(chain, address),
+  ];
 
-    // Try different CORS proxies
-    const corsProxies = [
-      "https://api.allorigins.win/raw?url=",
-      "https://corsproxy.io/?",
-      "https://cors-proxy.fringe.zone/",
-      "https://cors.streamlit.app/",
-      "https://crossorigin.me/",
-      "https://thingproxy.freeboard.io/fetch/",
-    ];
+  // Try different CORS proxies
+  const corsProxies = [
+    "https://api.allorigins.win/raw?url=",
+    "https://corsproxy.io/?",
+    "https://cors-proxy.fringe.zone/",
+    "https://cors.streamlit.app/",
+    "https://crossorigin.me/",
+    "https://thingproxy.freeboard.io/fetch/",
+  ];
 
-    let html = "";
-    let proxySuccess = false;
+  for (const explorerUrl of urls) {
+    try {
+      let html = "";
+      let proxySuccess = false;
 
-    // Try each proxy until one works
-    for (const proxy of corsProxies) {
-      try {
-        const response = await fetch(proxy + encodeURIComponent(explorerUrl), {
-          headers: {
-            "User-Agent":
-              "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36",
-          },
-        });
+      // Try each proxy until one works
+      for (const proxy of corsProxies) {
+        try {
+          const response = await fetch(
+            proxy + encodeURIComponent(explorerUrl),
+            {
+              headers: {
+                "User-Agent":
+                  "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36",
+              },
+            }
+          );
 
-        if (response.ok) {
-          html = await response.text();
-          proxySuccess = true;
-          break;
+          if (response.ok) {
+            html = await response.text();
+            proxySuccess = true;
+            break;
+          }
+        } catch (proxyError) {
+          continue;
         }
-      } catch (proxyError) {
-        continue;
       }
+
+      if (!proxySuccess) {
+        continue; // Try next URL if all proxies failed
+      }
+
+      const $ = cheerio.load(html);
+      let creationCode = "";
+
+      // Only use the verified bytecode selector
+      const text = $("#verifiedbytecode2").text().trim();
+      if (text && text.match(/^[0-9a-fA-F]+$/)) {
+        creationCode = text;
+      }
+
+      if (creationCode) {
+        return creationCode.startsWith("0x")
+          ? creationCode
+          : "0x" + creationCode;
+      }
+      // If no creation code found, continue to next URL
+    } catch (error) {
+      console.error("Error fetching creation code:", error);
+      continue; // Try next URL if error occurred
     }
-
-    if (!proxySuccess) {
-      return "";
-    }
-
-    const $ = cheerio.load(html);
-    let creationCode = "";
-
-    // Only use the verified bytecode selector
-    const text = $("#verifiedbytecode2").text().trim();
-    if (text && text.match(/^[0-9a-fA-F]+$/)) {
-      creationCode = text;
-    }
-
-    if (creationCode && !creationCode.startsWith("0x")) {
-      creationCode = "0x" + creationCode;
-    }
-
-    return creationCode;
-  } catch (error) {
-    console.error("Error fetching creation code:", error);
-    return "";
   }
+
+  // Return empty string if all attempts failed
+  return "";
 }
