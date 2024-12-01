@@ -131,6 +131,7 @@ export async function analyzeContract(params: {
 
       // if we have super prompt, add it to the final prompt
       if (config.superPrompt) {
+        // console.log("Using super prompt");
         finalPrompt = await createPromptWithSupperPrompt(finalPrompt);
       }
 
