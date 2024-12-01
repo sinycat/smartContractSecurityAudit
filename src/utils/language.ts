@@ -193,7 +193,4 @@ export const createPromptWithLanguage = (prompt: string, language?: string) => {
   return prompt + "\n\n" + languageInstruction;
 };
 
-// Create a prompt with super prompt
-export const createPromptWithSupperPrompt = (prompt: string) => {
-  return SUPPER_PROMPT + "\n\n" + prompt;
-};
+

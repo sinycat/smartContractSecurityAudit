@@ -196,6 +196,31 @@ export default function AIConfigModal({
               </p>
             </div>
           </div>
+
+          <div className="flex items-center">
+            <input
+              type="checkbox"
+              id="superPrompt"
+              checked={config.superPrompt}
+              onChange={(e) =>
+                setConfig((prev) => ({
+                  ...prev,
+                  superPrompt: e.target.checked,
+                }))
+              }
+              className="w-4 h-4 text-[#FF8B3E] bg-[#2A2A2A] border-[#404040] 
+                       rounded focus:ring-[#FF8B3E] focus:ring-offset-[#1E1E1E]"
+            />
+            <label
+              htmlFor="superPrompt"
+              className="ml-2 text-sm font-medium text-gray-300"
+            >
+              Enable Super Prompt
+              <span className="ml-2 text-xs text-gray-400">
+                (Enhanced analysis with additional context)
+              </span>
+            </label>
+          </div>
         </div>
 
         <div className="flex justify-end gap-3 mt-6">
@@ -210,6 +235,7 @@ export default function AIConfigModal({
                 xaiKey: "",
                 selectedModel: GPT_MODELS[0].id,
                 language: "english",
+                superPrompt: false,
               });
             }}
             className="px-4 py-2 text-gray-400 hover:text-white transition-colors"

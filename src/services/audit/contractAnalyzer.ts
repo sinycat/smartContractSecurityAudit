@@ -2,7 +2,8 @@ import { analyzeWithAI, getAIConfig } from "@/utils/ai";
 import { generateReport } from "./reportGenerator";
 import { mergeContractContents } from "@/utils/contractFilters";
 import type { ContractFile } from "@/types/blockchain";
-import { SECURITY_AUDIT_PROMPT } from "./prompts";
+import { SECURITY_AUDIT_PROMPT } from "@/services/audit/prompts";
+import { createPromptWithSupperPrompt } from "@/utils/prompts";
 import { createPromptWithLanguage } from "@/utils/language";
 import { AIConfig } from "@/types/ai";
 
@@ -120,13 +121,18 @@ export async function analyzeContract(params: {
         throw new Error("No valid contract code to analyze");
       }
 
-      const finalPrompt = createPromptWithLanguage(
+      let finalPrompt = createPromptWithLanguage(
         SECURITY_AUDIT_PROMPT.replace("${mergedCode}", mergedCode).replace(
           "${params.contractName ? params.contractName : ''}",
           params.contractName || ""
         ),
         config.language
       );
+
+      // if we have super prompt, add it to the final prompt
+      if (config.superPrompt) {
+        finalPrompt = await createPromptWithSupperPrompt(finalPrompt);
+      }
 
       // Get AI response
       const aiResponse = await analyzeWithAI(finalPrompt, params.signal);
