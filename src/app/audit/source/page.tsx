@@ -134,8 +134,8 @@ export default function SourcePage() {
               <Image 
                 src="/mush.png" 
                 alt="Loading" 
-                width={32}
-                height={32}
+                width={40}
+                height={40}
                 className="animate-bounce-slow"
               />
             </div>
