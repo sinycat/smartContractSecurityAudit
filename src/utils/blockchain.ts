@@ -1,7 +1,11 @@
 import { ethers } from "ethers";
 import { CHAINS, KNOWN_CONTRACTS } from "./constants";
 import { withRetry } from "./rpc";
-import { getRpcUrl, getExplorerUrl } from "@/utils/chainServices";
+import {
+  getRpcUrl,
+  getExplorerUrl,
+  getExplorerTokenUrl,
+} from "@/utils/chainServices";
 import type { ContractBasicInfo, ContractFile } from "@/types/blockchain";
 import * as cheerio from "cheerio";
 
@@ -310,7 +314,7 @@ export async function fetchCreationCodeFromExplorer(
   address: string
 ): Promise<string> {
   try {
-    const explorerUrl = getExplorerUrl(chain, address);
+    const explorerUrl = getExplorerTokenUrl(chain, address);
 
     // Try different CORS proxies
     const corsProxies = [
