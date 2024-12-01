@@ -108,7 +108,8 @@ export default function SourcePreview({
   const [showRawReadme, setShowRawReadme] = useState(false);
   const [showAIConfig, setShowAIConfig] = useState(false);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
-  const [abortController, setAbortController] = useState<AbortController | null>(null);
+  const [abortController, setAbortController] =
+    useState<AbortController | null>(null);
 
   const codeRef = useRef<HTMLElement>(null);
   const preRef = useRef<HTMLPreElement>(null);
@@ -355,8 +356,8 @@ export default function SourcePreview({
 
       toast.success("Analysis completed");
     } catch (error: unknown) {
-      if (error instanceof Error && error.name === 'AbortError') {
-        toast.success('Analysis cancelled');
+      if (error instanceof Error && error.name === "AbortError") {
+        toast.success("Analysis cancelled");
       } else {
         console.error("Error in analysis:", error);
         toast.error("Error during analysis");
