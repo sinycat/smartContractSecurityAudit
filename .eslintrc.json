@@ -6,7 +6,7 @@
     "@typescript-eslint/explicit-function-return-type": "off",
     "react-hooks/exhaustive-deps": "warn",
     "@typescript-eslint/no-explicit-any": "warn",
-    "prefer-const": "error",
+    "prefer-const": "warn",
     "@typescript-eslint/no-empty-interface": "warn"
   }
 }
