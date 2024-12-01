@@ -2,11 +2,11 @@ import { ethers } from 'ethers';
 import { CHAINS, KNOWN_CONTRACTS } from './constants';
 import { withRetry } from './rpc';
 import { getRpcUrl } from '@/utils/chainServices';
-import type { ChainContractInfo, ContractBasicInfo, ContractFile } from '@/types/blockchain';
+import type { ContractBasicInfo, ContractFile } from '@/types/blockchain';
 
-export async function checkContractOnChains(address: string): Promise<ChainContractInfo> {
-  const result: ChainContractInfo = {};
+const result: { [key: string]: ContractBasicInfo | undefined } = {};
 
+export async function checkContractOnChains(address: string): Promise<{ [key: string]: ContractBasicInfo | undefined }> {
   // Get contract label information
   const contractInfo = KNOWN_CONTRACTS[address.toLowerCase()] || {};
 
@@ -26,7 +26,7 @@ export async function checkContractOnChains(address: string): Promise<ChainContr
           fetchContractLabels(address, chainName)
         ]);
 
-        result[chainName] = {
+        (result as any)[chainName] = {
           exists: true,
           chainId: network.chainId,
           balance: balance.toString(),
@@ -77,17 +77,17 @@ export async function checkContractOnChains(address: string): Promise<ChainContr
 
           // Set contract type, but only display if there is no project name or label
           if (isERC721 || isERC1155) {
-            result[chainName]!.contractType = isERC721 ? 'ERC721' : 'ERC1155';
+            (result as any)[chainName]!.contractType = isERC721 ? 'ERC721' : 'ERC1155';
           } else if (name || symbol || decimals !== null || totalSupply) {
-            result[chainName]!.contractType = 'ERC20';
+            (result as any)[chainName]!.contractType = 'ERC20';
           }
 
           // Save the retrieved information
-          if (name) result[chainName]!.name = name;
-          if (symbol) result[chainName]!.symbol = symbol;
-          if (decimals !== null) result[chainName]!.decimals = decimals;
-          if (totalSupply) result[chainName]!.totalSupply = totalSupply.toString();
-          if (owner) result[chainName]!.owner = owner;
+          if (name) (result as any)[chainName]!.name = name;
+          if (symbol) (result as any)[chainName]!.symbol = symbol;
+          if (decimals !== null) (result as any)[chainName]!.decimals = decimals;
+          if (totalSupply) (result as any)[chainName]!.totalSupply = totalSupply.toString();
+          if (owner) (result as any)[chainName]!.owner = owner;
 
         } catch (e) {
           console.log('Failed to get contract info:', e);
@@ -97,8 +97,8 @@ export async function checkContractOnChains(address: string): Promise<ChainContr
         try {
           const implementationResult = await getImplementationAddress(address, chainName);
           if (implementationResult.address) {
-            result[chainName] = {
-              ...result[chainName],
+            (result as any)[chainName] = {
+              ...(result as any)[chainName],
               implementation: implementationResult.address,
               isProxy: true,
               proxyType: implementationResult.type || 'Proxy Contract'
@@ -120,10 +120,10 @@ export async function checkContractOnChains(address: string): Promise<ChainContr
                 implContract.totalSupply().catch(() => null)
               ]);
 
-              if (name) result[chainName]!.name = name;
-              if (symbol) result[chainName]!.symbol = symbol;
-              if (decimals !== null) result[chainName]!.decimals = decimals;
-              if (totalSupply) result[chainName]!.totalSupply = totalSupply.toString();
+              if (name) (result as any)[chainName]!.name = name;
+              if (symbol) (result as any)[chainName]!.symbol = symbol;
+              if (decimals !== null) (result as any)[chainName]!.decimals = decimals;
+              if (totalSupply) (result as any)[chainName]!.totalSupply = totalSupply.toString();
             } catch (e) {
               console.log('Failed to get implementation contract info');
             }
@@ -134,7 +134,7 @@ export async function checkContractOnChains(address: string): Promise<ChainContr
 
       } catch (error) {
         console.error(`Failed to check ${chainName}:`, error);
-        result[chainName] = { exists: false };
+        (result as any)[chainName] = { exists: false };
       }
     })
   );

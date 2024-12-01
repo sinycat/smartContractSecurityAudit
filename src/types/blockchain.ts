@@ -18,9 +18,7 @@ export interface ContractBasicInfo {
 }
 
 export interface ChainContractInfo {
-  ethereum?: ContractBasicInfo;
-  arbitrum?: ContractBasicInfo;
-  bsc?: ContractBasicInfo;
+  [key: string]: ContractBasicInfo | undefined;
 }
 
 export interface ContractFile {
