@@ -38,6 +38,7 @@ export default function AuditPage() {
 
     try {
       setLoading(true);
+      setChainInfo(null);
       const info = await checkContractOnChains(formattedAddress);
       setChainInfo(info);
     } catch (error) {

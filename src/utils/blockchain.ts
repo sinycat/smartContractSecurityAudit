@@ -4,11 +4,15 @@ import { withRetry } from './rpc';
 import { getRpcUrl } from '@/utils/chainServices';
 import type { ContractBasicInfo, ContractFile } from '@/types/blockchain';
 
-const result: { [key: string]: ContractBasicInfo | undefined } = {};
-
 export async function checkContractOnChains(address: string): Promise<{ [key: string]: ContractBasicInfo | undefined }> {
+  const result: { [key: string]: ContractBasicInfo | undefined } = {};
+
   // Get contract label information
   const contractInfo = KNOWN_CONTRACTS[address.toLowerCase()] || {};
+
+  Object.keys(CHAINS).forEach(chainName => {
+    result[chainName] = { exists: false };
+  });
 
   await Promise.all(
     Object.entries(CHAINS).map(async ([chainName, chainInfo]) => {
@@ -17,7 +21,10 @@ export async function checkContractOnChains(address: string): Promise<{ [key: st
         
         // 1. First check if the contract exists using RPC
         const code = await provider.getCode(address);
-        if (code === '0x') return;
+        if (code === '0x') {
+          result[chainName] = { exists: false };
+          return;
+        }
 
         // 2. Get basic network information, balance, and labels
         const [network, balance, labels] = await Promise.all([
@@ -26,7 +33,7 @@ export async function checkContractOnChains(address: string): Promise<{ [key: st
           fetchContractLabels(address, chainName)
         ]);
 
-        (result as any)[chainName] = {
+        result[chainName] = {
           exists: true,
           chainId: network.chainId,
           balance: balance.toString(),
@@ -77,17 +84,17 @@ export async function checkContractOnChains(address: string): Promise<{ [key: st
 
           // Set contract type, but only display if there is no project name or label
           if (isERC721 || isERC1155) {
-            (result as any)[chainName]!.contractType = isERC721 ? 'ERC721' : 'ERC1155';
+            result[chainName]!.contractType = isERC721 ? 'ERC721' : 'ERC1155';
           } else if (name || symbol || decimals !== null || totalSupply) {
-            (result as any)[chainName]!.contractType = 'ERC20';
+            result[chainName]!.contractType = 'ERC20';
           }
 
           // Save the retrieved information
-          if (name) (result as any)[chainName]!.name = name;
-          if (symbol) (result as any)[chainName]!.symbol = symbol;
-          if (decimals !== null) (result as any)[chainName]!.decimals = decimals;
-          if (totalSupply) (result as any)[chainName]!.totalSupply = totalSupply.toString();
-          if (owner) (result as any)[chainName]!.owner = owner;
+          if (name) result[chainName]!.name = name;
+          if (symbol) result[chainName]!.symbol = symbol;
+          if (decimals !== null) result[chainName]!.decimals = decimals;
+          if (totalSupply) result[chainName]!.totalSupply = totalSupply.toString();
+          if (owner) result[chainName]!.owner = owner;
 
         } catch (e) {
           console.log('Failed to get contract info:', e);
@@ -97,8 +104,8 @@ export async function checkContractOnChains(address: string): Promise<{ [key: st
         try {
           const implementationResult = await getImplementationAddress(address, chainName);
           if (implementationResult.address) {
-            (result as any)[chainName] = {
-              ...(result as any)[chainName],
+            result[chainName] = {
+              ...result[chainName],
               implementation: implementationResult.address,
               isProxy: true,
               proxyType: implementationResult.type || 'Proxy Contract'
@@ -120,10 +127,10 @@ export async function checkContractOnChains(address: string): Promise<{ [key: st
                 implContract.totalSupply().catch(() => null)
               ]);
 
-              if (name) (result as any)[chainName]!.name = name;
-              if (symbol) (result as any)[chainName]!.symbol = symbol;
-              if (decimals !== null) (result as any)[chainName]!.decimals = decimals;
-              if (totalSupply) (result as any)[chainName]!.totalSupply = totalSupply.toString();
+              if (name) result[chainName]!.name = name;
+              if (symbol) result[chainName]!.symbol = symbol;
+              if (decimals !== null) result[chainName]!.decimals = decimals;
+              if (totalSupply) result[chainName]!.totalSupply = totalSupply.toString();
             } catch (e) {
               console.log('Failed to get implementation contract info');
             }
@@ -134,7 +141,7 @@ export async function checkContractOnChains(address: string): Promise<{ [key: st
 
       } catch (error) {
         console.error(`Failed to check ${chainName}:`, error);
-        (result as any)[chainName] = { exists: false };
+        result[chainName] = { exists: false };
       }
     })
   );
