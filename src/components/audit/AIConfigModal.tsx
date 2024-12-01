@@ -35,16 +35,16 @@ export default function AIConfigModal({
 
   // Handle API key change
   const handleKeyChange = (value: string) => {
-    const updates: Record<AIConfig['provider'], Partial<AIConfig>> = {
+    const updates: Record<AIConfig["provider"], Partial<AIConfig>> = {
       gpt: { gptKey: value },
       claude: { claudeKey: value },
       gemini: { geminiKey: value },
-      xai: { xaiKey: value }
+      xai: { xaiKey: value },
     };
 
-    setConfig(prev => ({
+    setConfig((prev) => ({
       ...prev,
-      ...updates[prev.provider]
+      ...updates[prev.provider],
     }));
   };
 
