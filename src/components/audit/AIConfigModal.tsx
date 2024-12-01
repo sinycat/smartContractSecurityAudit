@@ -88,26 +88,50 @@ export default function AIConfigModal({
             </select>
           </div>
 
-          <div>
-            <label className="block text-sm font-medium text-gray-300 mb-2">
-              Model
-            </label>
-            <select
-              value={config.selectedModel}
-              onChange={(e) =>
-                setConfig((prev) => ({
-                  ...prev,
-                  selectedModel: e.target.value,
-                }))
-              }
-              className="w-full bg-[#2A2A2A] text-gray-300 border border-[#404040] rounded-md px-3 py-2"
-            >
-              {providerInfo.models.map((model) => (
-                <option key={model.id} value={model.id}>
-                  {model.name}
-                </option>
-              ))}
-            </select>
+          <div className="flex gap-4 items-end">
+            <div className="flex-1">
+              <label className="block text-sm font-medium text-gray-300 mb-2">
+                Model
+              </label>
+              <select
+                value={config.selectedModel}
+                onChange={(e) =>
+                  setConfig((prev) => ({
+                    ...prev,
+                    selectedModel: e.target.value,
+                  }))
+                }
+                className="w-full bg-[#2A2A2A] text-gray-300 border border-[#404040] rounded-md px-3 py-2"
+              >
+                {providerInfo.models.map((model) => (
+                  <option key={model.id} value={model.id}>
+                    {model.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div className="flex items-center pb-2">
+              <input
+                type="checkbox"
+                id="superPrompt"
+                checked={config.superPrompt}
+                onChange={(e) =>
+                  setConfig((prev) => ({
+                    ...prev,
+                    superPrompt: e.target.checked,
+                  }))
+                }
+                className="h-4 w-4 text-[#FF8B3E] bg-[#2A2A2A] border-[#404040] 
+                         rounded focus:ring-[#FF8B3E] focus:ring-offset-[#1E1E1E]"
+              />
+              <label
+                htmlFor="superPrompt"
+                className="ml-2 cursor-pointer text-sm font-medium text-gray-300"
+              >
+                Super Prompt
+              </label>
+            </div>
           </div>
 
           <div>
@@ -195,31 +219,6 @@ export default function AIConfigModal({
                 (requires registration)
               </p>
             </div>
-          </div>
-
-          <div className="flex items-center">
-            <input
-              type="checkbox"
-              id="superPrompt"
-              checked={config.superPrompt}
-              onChange={(e) =>
-                setConfig((prev) => ({
-                  ...prev,
-                  superPrompt: e.target.checked,
-                }))
-              }
-              className="w-4 h-4 text-[#FF8B3E] bg-[#2A2A2A] border-[#404040] 
-                       rounded focus:ring-[#FF8B3E] focus:ring-offset-[#1E1E1E]"
-            />
-            <label
-              htmlFor="superPrompt"
-              className="ml-2 text-sm font-medium text-gray-300"
-            >
-              Enable Super Prompt
-              <span className="ml-2 text-xs text-gray-400">
-                (Enhanced analysis with additional context)
-              </span>
-            </label>
           </div>
         </div>
 
