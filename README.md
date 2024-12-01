@@ -74,6 +74,3 @@ We welcome contributions! Please feel free to submit a Pull Request.
 
 This project is licensed under the [GNU Affero General Public License v3.0](LICENSE).
 
-## Contact
-
-- GitHub: [@mush-support](https://github.com/mush-support)
