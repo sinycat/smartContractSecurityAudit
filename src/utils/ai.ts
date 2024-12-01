@@ -173,7 +173,7 @@ export async function analyzeWithAI(
       const messagePromise = anthropic.messages.create({
         model: config.selectedModel,
         max_tokens: 8192,
-        temperature: 0.7,
+        temperature: 0.5,
         system: SYSTEM_PROMPT,
         messages: [
           {
@@ -266,7 +266,7 @@ export async function analyzeWithAI(
           ],
           model: xaiModel.id,
           stream: false,
-          temperature: 0.7,
+          temperature: 0.5,
         }),
         signal,
       });
