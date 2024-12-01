@@ -222,6 +222,7 @@ export default function SourcePage() {
                 alt="Loading" 
                 width={32}
                 height={32}
+                priority
                 className="animate-bounce-slow"
               />
             </div>
