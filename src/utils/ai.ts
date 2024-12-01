@@ -167,7 +167,7 @@ export async function analyzeWithAI(prompt: string, signal?: AbortSignal): Promi
         dangerouslyAllowBrowser: true,
       });
 
-      const msg = await anthropic.messages.create({
+      const messagePromise = anthropic.messages.create({
         model: config.selectedModel,
         max_tokens: 8192,
         temperature: 1,
@@ -184,6 +184,18 @@ export async function analyzeWithAI(prompt: string, signal?: AbortSignal): Promi
           },
         ],
       });
+
+      const abortPromise = signal
+        ? new Promise<never>((_, reject) => {
+            signal.addEventListener('abort', () => {
+              reject(new Error('Analysis cancelled'));
+            });
+          })
+        : null;
+
+      const msg = await (abortPromise 
+        ? Promise.race([messagePromise, abortPromise])
+        : messagePromise) as Awaited<typeof messagePromise>;
 
       if (!msg.content[0] || !("text" in msg.content[0])) {
         throw new Error("Unexpected response format from Claude");
