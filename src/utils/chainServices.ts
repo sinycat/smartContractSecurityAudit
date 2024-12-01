@@ -30,3 +30,10 @@ export function getExplorerUrl(chain: string, address: string): string {
   if (!chainConfig) return '#';
   return `${chainConfig.blockExplorers.default.url}/address/${address}`;
 } 
+
+// Get block explorer URL for tokens
+export function getExplorerTokenUrl(chain: string, address: string): string {
+  const chainConfig = CHAINS[chain.toLowerCase()];
+  if (!chainConfig) return '#';
+  return `${chainConfig.blockExplorers.default.url}/token/${address}`;
+} 
