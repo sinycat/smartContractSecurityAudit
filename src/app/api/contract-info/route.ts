@@ -54,7 +54,7 @@ export async function GET(request: NextRequest) {
             creationCode = "0x" + creationCode;
           }
         }
-      } catch (error) {
+      } catch (_error) {
         creationCode = "";
       }
     }
@@ -75,8 +75,8 @@ export async function GET(request: NextRequest) {
       deployedBytecode: bytecodeData.result || "", // Deployed bytecode
       implementation: sourceData.result[0]?.Implementation,
     });
-  } catch (error) {
-    console.error("Error:", error);
+  } catch (_error) {
+    console.error("Error:", _error);
     return NextResponse.json(
       { error: "Failed to fetch contract info" },
       { status: 500 }

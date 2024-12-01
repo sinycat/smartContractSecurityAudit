@@ -53,8 +53,8 @@ export async function GET(request: NextRequest) {
         );
       }
 
-      let files: ContractFile[] = [];
-      let filteredFiles: ContractFile[] = [];
+      const files: ContractFile[] = [];
+      const filteredFiles: ContractFile[] = [];
       let settings = null;
       
       // Handle multi-file contract case
