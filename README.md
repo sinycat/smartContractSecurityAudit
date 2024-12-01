@@ -49,3 +49,31 @@ Mush Audit is an AI-powered smart contract security analysis platform that lever
 - ``cd mush-audit``
 - Install dependencies: ``npm install``
 - Start the development server: ``npm run dev``
+
+
+## Usage
+
+1. Visit the platform
+2. Input your smart contract address
+3. Select the blockchain network
+4. Choose AI models for analysis
+5. Get comprehensive security analysis and recommendations
+
+## Tech Stack
+
+- Next.js 15
+- TypeScript
+- Tailwind CSS
+- Multiple AI Models Integration
+
+## Contributing
+
+We welcome contributions! Please feel free to submit a Pull Request.
+
+## License
+
+This project is licensed under the [GNU Affero General Public License v3.0](LICENSE).
+
+## Contact
+
+- GitHub: [@mush-support](https://github.com/mush-support)
