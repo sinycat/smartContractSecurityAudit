@@ -1,12 +1,13 @@
 "use client";
 
-import { useEffect, useState, Suspense } from 'react';
-import { useSearchParams, useRouter } from 'next/navigation';
-import { toast } from 'react-hot-toast';
-import SourcePreview from '@/components/audit/SourcePreview';
-import type { ContractFile } from '@/types/blockchain';
-import Image from 'next/image';
-import { getChainId } from '@/utils/chainServices';
+import { useEffect, useState, Suspense } from "react";
+import { useSearchParams, useRouter } from "next/navigation";
+import { toast } from "react-hot-toast";
+import SourcePreview from "@/components/audit/SourcePreview";
+import type { ContractFile } from "@/types/blockchain";
+import Image from "next/image";
+import { getChainId } from "@/utils/chainServices";
+import { fetchCreationCodeFromExplorer } from "@/utils/blockchain";
 
 interface ContractSource {
   files: ContractFile[];
@@ -35,10 +36,10 @@ function SourceContent() {
   const [sourceData, setSourceData] = useState<ContractSource | null>(null);
   const [loading, setLoading] = useState(true);
 
-  const address = searchParams.get('address');
-  const chain = searchParams.get('chain');
-  const implementation = searchParams.get('implementation');
-  const tokenName = searchParams.get('tokenName');
+  const address = searchParams.get("address");
+  const chain = searchParams.get("chain");
+  const implementation = searchParams.get("implementation");
+  const tokenName = searchParams.get("tokenName");
 
   const chainId = chain ? getChainId(chain) : undefined;
 
@@ -73,6 +74,17 @@ function SourceContent() {
           `/api/contract-info?address=${address}&chain=${chain}`
         );
         const contractData = await contractResponse.json();
+        // // console.log("creation code:", contractData.creationCode);
+        if (contractData && contractData.creationCode == "") {
+          // console.log("11\n");
+          // console.log("chain:", chain);
+          // console.log("address:", address);
+          contractData.creationCode = await fetchCreationCodeFromExplorer(
+            chain,
+            address
+          );
+          //console.log("creation code2:", contractData.creationCode);
+        }
 
         let implementationInfo;
         if (implementation) {
@@ -82,6 +94,11 @@ function SourceContent() {
             );
             if (implResponse.ok) {
               implementationInfo = await implResponse.json();
+              if (implementationInfo && implementationInfo.creationCode == "") {
+                implementationInfo.creationCode =
+                  await fetchCreationCodeFromExplorer(chain, implementation);
+                //console.log("imp creation code2:", implementationInfo.creationCode);
+              }
             } else {
               const errorData = await implResponse.json();
               console.error(
@@ -207,33 +224,39 @@ function SourceContent() {
 
 export default function SourcePage() {
   return (
-    <Suspense fallback={
-      <div className="fixed inset-0 bg-[#1E1E1E] flex items-center justify-center">
-        <div className="text-center">
-          <div className="relative w-24 h-24 mx-auto mb-6">
-            {/* Outer rotating halo */}
-            <div className="absolute inset-0 border-4 border-t-mush-orange border-r-mush-orange/50 border-b-mush-orange/30 border-l-mush-orange/10 rounded-full animate-spin" />
-            {/* Inner pulse effect */}
-            <div className="absolute inset-2 border-2 border-mush-orange/50 rounded-full animate-[ping_2s_cubic-bezier(0,0,0.2,1)_infinite]" />
-            {/* Logo */}
-            <div className="absolute inset-3 bg-[#1E1E1E] rounded-full flex items-center justify-center border border-mush-orange/20">
-              <Image 
-                src="/mush.png" 
-                alt="Loading" 
-                width={32}
-                height={32}
-                priority
-                className="animate-bounce-slow"
-              />
+    <Suspense
+      fallback={
+        <div className="fixed inset-0 bg-[#1E1E1E] flex items-center justify-center">
+          <div className="text-center">
+            <div className="relative w-24 h-24 mx-auto mb-6">
+              {/* Outer rotating halo */}
+              <div className="absolute inset-0 border-4 border-t-mush-orange border-r-mush-orange/50 border-b-mush-orange/30 border-l-mush-orange/10 rounded-full animate-spin" />
+              {/* Inner pulse effect */}
+              <div className="absolute inset-2 border-2 border-mush-orange/50 rounded-full animate-[ping_2s_cubic-bezier(0,0,0.2,1)_infinite]" />
+              {/* Logo */}
+              <div className="absolute inset-3 bg-[#1E1E1E] rounded-full flex items-center justify-center border border-mush-orange/20">
+                <Image
+                  src="/mush.png"
+                  alt="Loading"
+                  width={32}
+                  height={32}
+                  priority
+                  className="animate-bounce-slow"
+                />
+              </div>
+            </div>
+            <div className="space-y-2">
+              <h3 className="text-xl font-medium text-white">
+                Loading Source Code
+              </h3>
+              <p className="text-sm text-gray-400">
+                Fetching contract files from blockchain...
+              </p>
             </div>
           </div>
-          <div className="space-y-2">
-            <h3 className="text-xl font-medium text-white">Loading Source Code</h3>
-            <p className="text-sm text-gray-400">Fetching contract files from blockchain...</p>
-          </div>
         </div>
-      </div>
-    }>
+      }
+    >
       <SourceContent />
     </Suspense>
   );
