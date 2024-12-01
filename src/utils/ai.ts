@@ -6,6 +6,15 @@ import { getXAIModelById, XAI_MODELS } from "./xai-models";
 import Anthropic from "@anthropic-ai/sdk";
 import { AIConfig } from "@/types/ai";
 
+const SYSTEM_PROMPT = `You are a smart contract security auditor with the following responsibilities:
+- Identify potential security vulnerabilities and risks
+- Analyze code for best practices and standards compliance
+- Suggest gas optimizations and efficiency improvements
+- Provide detailed explanations of findings
+- Recommend specific fixes and improvements
+Format your response with clear sections for vulnerabilities, optimizations, and recommendations.
+Please include full code snippets and function names in your response.`;
+
 // Get AI config from localStorage
 export function getAIConfig(config: AIConfig): AIConfig {
   const savedConfig = localStorage.getItem("ai_config");
@@ -159,14 +168,7 @@ export async function analyzeWithAI(prompt: string): Promise<string> {
         model: config.selectedModel,
         max_tokens: 8192,
         temperature: 1,
-        system: `You are a smart contract security auditor with the following responsibilities:
-- Identify potential security vulnerabilities and risks
-- Analyze code for best practices and standards compliance
-- Suggest gas optimizations and efficiency improvements
-- Provide detailed explanations of findings
-- Recommend specific fixes and improvements
-Format your response with clear sections for vulnerabilities, optimizations, and recommendations.
-Please include full code snippets and function names in your response.`,
+        system: SYSTEM_PROMPT,
         messages: [
           {
             role: "user",
@@ -207,7 +209,7 @@ Please include full code snippets and function names in your response.`,
           ],
           ...(gptModel.supportsTemperature !== false
             ? { temperature: 0.7 }
-            : { temperature: 1}),
+            : { temperature: 1 }),
         }),
       });
 
@@ -230,13 +232,13 @@ Please include full code snippets and function names in your response.`,
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "Authorization": `Bearer ${config.xaiKey}`,
+          Authorization: `Bearer ${config.xaiKey}`,
         },
         body: JSON.stringify({
           messages: [
             {
               role: "system",
-              content: "You are a smart contract security auditor analyzing code for vulnerabilities.",
+              content: SYSTEM_PROMPT,
             },
             {
               role: "user",
@@ -251,7 +253,9 @@ Please include full code snippets and function names in your response.`,
 
       if (!response?.ok) {
         const errorData = await response.text();
-        throw new Error(`xAI API request failed: ${response.statusText}. Details: ${errorData}`);
+        throw new Error(
+          `xAI API request failed: ${response.statusText}. Details: ${errorData}`
+        );
       }
 
       const data = await response.json();
