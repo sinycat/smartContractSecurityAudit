@@ -227,7 +227,7 @@ export async function analyzeWithAI(
           ],
           ...(gptModel.supportsTemperature !== false
             ? { temperature: 0.7 }
-            : { temperature: 0 }),
+            : { temperature: 1 }),
         }),
         signal,
       });
