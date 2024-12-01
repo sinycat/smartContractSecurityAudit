@@ -3,6 +3,7 @@ import { CHAINS, KNOWN_CONTRACTS } from "./constants";
 import { withRetry } from "./rpc";
 import { getRpcUrl, getExplorerUrl } from "@/utils/chainServices";
 import type { ContractBasicInfo, ContractFile } from "@/types/blockchain";
+import * as cheerio from "cheerio";
 
 export async function checkContractOnChains(
   address: string
@@ -310,30 +311,58 @@ export async function fetchCreationCodeFromExplorer(
 ): Promise<string> {
   try {
     const explorerUrl = getExplorerUrl(chain, address);
-    const response = await fetch(explorerUrl, {
+    // use corsproxy.io as proxy
+    const corsProxy = "https://corsproxy.io/?";
+    const response = await fetch(corsProxy + encodeURIComponent(explorerUrl), {
       headers: {
         "User-Agent":
           "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36",
       },
     });
 
+    let creationCode = "";
+
     if (response.ok) {
       const html = await response.text();
-      const bytecodeMatch = html.match(
-        /id='verifiedbytecode2'>([0-9a-fA-F]+)</
-      );
+      const $ = cheerio.load(html);
 
-      if (bytecodeMatch && bytecodeMatch[1]) {
-        let creationCode = bytecodeMatch[1];
-        // Add 0x prefix if missing
-        if (!creationCode.startsWith("0x")) {
-          creationCode = "0x" + creationCode;
+      // Try all possible selectors
+      const selectors = [
+        "#verifiedbytecode2",
+        "#ContentPlaceHolder1_verifiedbytecode2",
+        '[data-original-title="Creation Code"]',
+        "#dividcode",
+        "#code",
+        ".wordwrap",
+      ];
+
+      for (const selector of selectors) {
+        const text = $(selector).text().trim();
+        if (text && text.match(/^[0-9a-fA-F]+$/)) {
+          creationCode = text;
+          break;
         }
-        return creationCode;
+      }
+
+      if (!creationCode) {
+        // Search for any elements containing 'bytecode' in their id
+        $('[id*="bytecode"]').each((i, el) => {
+          const text = $(el).text().trim();
+          if (text && text.match(/^[0-9a-fA-F]+$/)) {
+            creationCode = text;
+            return false; // break each loop
+          }
+        });
+      }
+
+      if (creationCode && !creationCode.startsWith("0x")) {
+        creationCode = "0x" + creationCode;
       }
     }
-    return "";
-  } catch (_error) {
+
+    return creationCode;
+  } catch (error) {
+    console.error("Error fetching creation code:", error);
     return "";
   }
 }
