@@ -51,6 +51,10 @@ export default function AuditPage() {
 
   return (
     <div className="min-h-screen bg-[#1A1A1A]">
+      <div className="absolute top-4 right-4 text-gray-400">
+        The ticker is ETH
+      </div>
+
       <main className="container mx-auto px-4 py-8 max-w-4xl">
         <div className="mb-12 text-center">
           <h1 className="text-5xl font-bold text-[#E5E5E5] mb-4">

@@ -6,6 +6,10 @@ import { SecurityIcon, GasIcon, CodeIcon, AIIcon, ComplianceIcon, ReportIcon } f
 export default function HomePage() {
   return (
     <div className="min-h-screen bg-[#1A1A1A] flex flex-col">
+      <div className="absolute top-4 right-4 text-gray-400">
+        The ticker is ETH
+      </div>
+
       <main className="max-w-7xl mx-auto px-4 py-20 flex-1">
         <div className="text-center mb-12">
           <h1 className="text-6xl font-bold text-[#E5E5E5] mb-4">
