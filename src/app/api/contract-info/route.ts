@@ -1,8 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getApiScanConfig, getExplorerUrl } from "@/utils/chainServices";
 
-export const runtime = 'nodejs'
-
 export async function GET(request: NextRequest) {
   const searchParams = request.nextUrl.searchParams;
   const address = searchParams.get("address");
@@ -35,9 +33,9 @@ export async function GET(request: NextRequest) {
       creationCode = creationData.result[0].creationBytecode;
     }
 
-    // not found 
+    // not found
     if (creationCode === "" || creationCode === undefined) {
-        creationCode = "";
+      creationCode = "";
     }
 
     // Get contract source code information
