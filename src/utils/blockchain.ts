@@ -311,53 +311,55 @@ export async function fetchCreationCodeFromExplorer(
 ): Promise<string> {
   try {
     const explorerUrl = getExplorerUrl(chain, address);
-    // use corsproxy.io as proxy
-    const corsProxy = "https://corsproxy.io/?";
-    const response = await fetch(corsProxy + encodeURIComponent(explorerUrl), {
-      headers: {
-        "User-Agent":
-          "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36",
-      },
-    });
 
-    let creationCode = "";
+    // Try different CORS proxies
+    const corsProxies = [
+      "https://api.allorigins.win/raw?url=",
+      "https://corsproxy.io/?",
+      "https://cors-proxy.fringe.zone/",
+      "https://cors.streamlit.app/",
+      "https://crossorigin.me/",
+      "https://thingproxy.freeboard.io/fetch/",
+    ];
 
-    if (response.ok) {
-      const html = await response.text();
-      const $ = cheerio.load(html);
+    let html = "";
+    let proxySuccess = false;
 
-      // Try all possible selectors
-      const selectors = [
-        "#verifiedbytecode2",
-        "#ContentPlaceHolder1_verifiedbytecode2",
-        '[data-original-title="Creation Code"]',
-        "#dividcode",
-        "#code",
-        ".wordwrap",
-      ];
+    // Try each proxy until one works
+    for (const proxy of corsProxies) {
+      try {
+        const response = await fetch(proxy + encodeURIComponent(explorerUrl), {
+          headers: {
+            "User-Agent":
+              "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36",
+          },
+        });
 
-      for (const selector of selectors) {
-        const text = $(selector).text().trim();
-        if (text && text.match(/^[0-9a-fA-F]+$/)) {
-          creationCode = text;
+        if (response.ok) {
+          html = await response.text();
+          proxySuccess = true;
           break;
         }
+      } catch (proxyError) {
+        continue;
       }
+    }
 
-      if (!creationCode) {
-        // Search for any elements containing 'bytecode' in their id
-        $('[id*="bytecode"]').each((i, el) => {
-          const text = $(el).text().trim();
-          if (text && text.match(/^[0-9a-fA-F]+$/)) {
-            creationCode = text;
-            return false; // break each loop
-          }
-        });
-      }
+    if (!proxySuccess) {
+      return "";
+    }
 
-      if (creationCode && !creationCode.startsWith("0x")) {
-        creationCode = "0x" + creationCode;
-      }
+    const $ = cheerio.load(html);
+    let creationCode = "";
+
+    // Only use the verified bytecode selector
+    const text = $("#verifiedbytecode2").text().trim();
+    if (text && text.match(/^[0-9a-fA-F]+$/)) {
+      creationCode = text;
+    }
+
+    if (creationCode && !creationCode.startsWith("0x")) {
+      creationCode = "0x" + creationCode;
     }
 
     return creationCode;
