@@ -332,9 +332,12 @@ export default function SourcePreview({
       } else {
         languageCfg = `-${languageCfg}`;
       }
+
+      let withSuperPrompt = config.superPrompt ? "-SuperPrompt" : "";
+
       const reportFileName = `report-${reportContractName.toLowerCase()}-${getModelName(
         getAIConfig(config)
-      )}${languageCfg}.md`;
+      )}${languageCfg}${withSuperPrompt}.md`;
       const reportFile: ContractFile = {
         name: reportFileName,
         path: reportFileName,
