@@ -1,7 +1,7 @@
 // Client RPC tool
-import { ethers } from 'ethers';
-import { createCache } from './performance';
-import { getRpcUrl } from '@/utils/chainServices'; // Import new getRpcUrl
+import { ethers } from "ethers";
+import { createCache } from "./performance";
+import { getRpcUrl } from "@/utils/chainServices"; // Import new getRpcUrl
 
 // Create RPC response cache
 const rpcCache = createCache<any>();
@@ -11,30 +11,29 @@ export function getRpcUrlOptimized(chain: string): string {
   return getRpcUrl(chain); // Use new getRpcUrl
 }
 
+type RetryFunction<T> = () => Promise<T>;
+
 export async function withRetry<T>(
-  fn: () => Promise<T>, 
-  retries = 3,
-  delay = 1000,
-  cacheKey?: string // Add cache key parameter
+  fn: RetryFunction<T>,
+  maxRetries: number = 3
 ): Promise<T> {
-  // Check cache
-  if (cacheKey) {
-    const cached = rpcCache.get(cacheKey);
-    if (cached) return cached;
+  let lastError: Error | null = null;
+
+  for (let i = 0; i < maxRetries; i++) {
+    try {
+      return await fn();
+    } catch (error) {
+      lastError = error as Error;
+      if (i < maxRetries - 1) {
+        await new Promise((resolve) =>
+          setTimeout(resolve, Math.pow(2, i) * 1000)
+        );
+        continue;
+      }
+    }
   }
 
-  try {
-    const result = await fn();
-    // Save to cache
-    if (cacheKey) {
-      rpcCache.set(cacheKey, result);
-    }
-    return result;
-  } catch (error) {
-    if (retries === 0) throw error;
-    await new Promise(resolve => setTimeout(resolve, delay));
-    return withRetry(fn, retries - 1, delay * 1.5, cacheKey);
-  }
+  throw lastError || new Error("Max retries reached");
 }
 
 // Batch request processor
@@ -62,7 +61,7 @@ export class BatchRequestHandler {
 
   private scheduleBatch() {
     if (this.timeout) return;
-    
+
     this.timeout = setTimeout(() => {
       this.processBatch();
     }, this.delay);
@@ -76,11 +75,12 @@ export class BatchRequestHandler {
 
     try {
       const results = await this.provider.send(
+        "eth_batch",
         batch.map(({ method, params }) => ({
-          jsonrpc: '2.0',
+          jsonrpc: "2.0",
           id: Math.random(),
           method,
-          params
+          params,
         }))
       );
 
@@ -95,4 +95,4 @@ export class BatchRequestHandler {
       batch.forEach(({ reject }) => reject(error));
     }
   }
-} 
+}
