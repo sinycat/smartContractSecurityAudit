@@ -129,13 +129,13 @@ export default function SourcePage() {
                           animate-[ping_2s_cubic-bezier(0,0,0.2,1)_infinite]" />
             
             {/* Logo */}
-            <div className="absolute inset-4 bg-[#1E1E1E] rounded-full flex items-center justify-center
+            <div className="absolute inset-3 bg-[#1E1E1E] rounded-full flex items-center justify-center
                           border border-mush-orange/20">
               <Image 
                 src="/mush.png" 
                 alt="Loading" 
-                width={24} 
-                height={24}
+                width={32}
+                height={32}
                 className="animate-bounce-slow"
               />
             </div>
