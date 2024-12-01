@@ -333,7 +333,9 @@ export default function SourcePreview({
         languageCfg = `-${languageCfg}`;
       }
 
-      let withSuperPrompt = config.superPrompt ? "-SuperPrompt" : "";
+      let withSuperPrompt = getAIConfig(config).superPrompt
+        ? "-SuperPrompt"
+        : "";
 
       const reportFileName = `report-${reportContractName.toLowerCase()}-${getModelName(
         getAIConfig(config)
