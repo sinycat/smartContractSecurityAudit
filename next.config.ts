@@ -33,6 +33,18 @@ const nextConfig = {
         source: '/api/arbiscan/:path*',
         destination: 'https://api.arbiscan.io/api/:path*',
       },
+      {
+        source: '/etherscan/:path*',
+        destination: 'https://etherscan.io/:path*',
+      },
+      {
+        source: '/bscscan/:path*',
+        destination: 'https://bscscan.com/:path*',
+      },
+      {
+        source: '/arbiscan/:path*',
+        destination: 'https://arbiscan.io/:path*',
+      }
     ]
   },
 }
