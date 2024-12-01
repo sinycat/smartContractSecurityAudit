@@ -2,6 +2,7 @@ import { AIConfig } from "@/types/ai";
 import { GPT_MODELS } from "./openai-models";
 import { CLAUDE_MODELS } from "./claude-models";
 import { GEMINI_MODELS } from "./gemini-models";
+import { XAI_MODELS } from "./xai-models";
 
 export const PROVIDERS = {
   gpt: {
@@ -31,6 +32,15 @@ export const PROVIDERS = {
     getKeyText: "Get one from Gemini Console",
     defaultModel: GEMINI_MODELS[0].id,
   },
+  xai: {
+    name: "xAI Grok",
+    models: XAI_MODELS,
+    keyName: "xAI API Key",
+    keyPlaceholder: "Enter your xAI API key",
+    getKeyLink: "https://x.ai",
+    getKeyText: "Get one from xAI Platform",
+    defaultModel: XAI_MODELS[0].id,
+  },
 } as const;
 
 export const getProviderInfo = (provider: AIConfig['provider']) => PROVIDERS[provider];
@@ -40,6 +50,7 @@ export const getApiKey = (config: AIConfig) => {
     gpt: config.gptKey,
     claude: config.claudeKey,
     gemini: config.geminiKey,
+    xai: config.xaiKey,
   };
   return keys[config.provider] || "";
 }; 

@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { getModelById, GPT_MODELS } from "./openai-models";
 import { getClaudeModelById, CLAUDE_MODELS } from "./claude-models";
 import { getGeminiModelById, GEMINI_MODELS } from "./gemini-models";
+import { getXAIModelById, XAI_MODELS } from "./xai-models";
 import Anthropic from "@anthropic-ai/sdk";
 import { AIConfig } from "@/types/ai";
 
@@ -25,6 +26,9 @@ export function getModelName(config: AIConfig): string {
   } else if (config.provider === "gpt") {
     const model = getModelById(config.selectedModel);
     return model?.name.toLowerCase().replace(/\s+/g, "-") || "gpt";
+  } else if (config.provider === "xai") {
+    const model = getXAIModelById(config.selectedModel);
+    return model?.name.toLowerCase().replace(/\s+/g, "-") || "xai";
   }
   return "";
 }
@@ -59,6 +63,13 @@ export function useAIConfig() {
           if (!validModel) {
             savedConfig.selectedModel = GEMINI_MODELS[0].id;
           }
+        } else if (savedConfig.provider === "xai") {
+          const validModel = XAI_MODELS.find(
+            (m) => m.id === savedConfig.selectedModel
+          );
+          if (!validModel) {
+            savedConfig.selectedModel = XAI_MODELS[0].id;
+          }
         }
         return savedConfig;
       }
@@ -68,6 +79,7 @@ export function useAIConfig() {
       gptKey: "",
       claudeKey: "",
       geminiKey: "",
+      xaiKey: "",
       selectedModel: GPT_MODELS[0].id,
       language: "english",
     };
@@ -204,6 +216,42 @@ Please include full code snippets and function names in your response.`,
         throw new Error(
           `API request failed: ${response.statusText}. Details: ${errorData}`
         );
+      }
+
+      const data = await response.json();
+      return data.choices[0].message.content;
+    } else if (config.provider === "xai") {
+      const xaiModel = getXAIModelById(config.selectedModel);
+      if (!xaiModel) {
+        throw new Error(`Invalid xAI model selected: ${config.selectedModel}`);
+      }
+
+      response = await fetch("https://api.x.ai/v1/chat/completions", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${config.xaiKey}`,
+        },
+        body: JSON.stringify({
+          messages: [
+            {
+              role: "system",
+              content: "You are a smart contract security auditor analyzing code for vulnerabilities.",
+            },
+            {
+              role: "user",
+              content: prompt,
+            },
+          ],
+          model: xaiModel.id,
+          stream: false,
+          temperature: 1,
+        }),
+      });
+
+      if (!response?.ok) {
+        const errorData = await response.text();
+        throw new Error(`xAI API request failed: ${response.statusText}. Details: ${errorData}`);
       }
 
       const data = await response.json();

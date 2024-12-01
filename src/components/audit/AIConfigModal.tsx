@@ -35,15 +35,16 @@ export default function AIConfigModal({
 
   // Handle API key change
   const handleKeyChange = (value: string) => {
-    const updates = {
+    const updates: Record<AIConfig['provider'], Partial<AIConfig>> = {
       gpt: { gptKey: value },
       claude: { claudeKey: value },
       gemini: { geminiKey: value },
+      xai: { xaiKey: value }
     };
 
-    setConfig((prev) => ({
+    setConfig(prev => ({
       ...prev,
-      ...updates[prev.provider],
+      ...updates[prev.provider]
     }));
   };
 
@@ -206,6 +207,7 @@ export default function AIConfigModal({
                 gptKey: "",
                 claudeKey: "",
                 geminiKey: "",
+                xaiKey: "",
                 selectedModel: GPT_MODELS[0].id,
                 language: "english",
               });
