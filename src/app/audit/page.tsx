@@ -358,7 +358,7 @@ export default function AuditPage() {
           )}
         </div>
 
-        {chainInfo && Object.entries(chainInfo).map(([chain, info]) => (
+        {activeTab === 'address' && chainInfo && Object.entries(chainInfo).map(([chain, info]) => (
           info?.exists && (
             <ContractInfoCard 
               key={chain} 
