@@ -9,7 +9,7 @@ import {
 import type { ContractBasicInfo, ContractFile } from "@/types/blockchain";
 import * as cheerio from "cheerio";
 
-function findContractInfo(address: string) {
+function findContractInfo(address: string): { labels?: string[]; projectName?: string } {
   const lowerAddress = address.toLowerCase();
   for (const [addr, info] of Object.entries(KNOWN_CONTRACTS)) {
     if (addr.toLowerCase() === lowerAddress) {
@@ -71,22 +71,37 @@ export async function checkContractOnChains(
               "function totalSupply() view returns (uint256)",
               "function owner() view returns (address)",
               "function getOwner() view returns (address)",
-               // NFT specific interface
-               "function balanceOf(address) view returns (uint256)",
-               "function ownerOf(uint256) view returns (address)",
-               "function uri(uint256) view returns (string)",
+              // NFT specific interface
+              "function balanceOf(address) view returns (uint256)",
+              "function ownerOf(uint256) view returns (address)",
+              "function uri(uint256) view returns (string)",
             ],
             provider
           );
 
           let decimals: number | undefined = undefined;
           
+          // Check contract interfaces
+          let isERC721 = false;
+          let isERC1155 = false;
+
           try {
-            const rawDecimals = await contract.decimals();
-            decimals = Number(rawDecimals);
-            result[chainName]!.decimals = decimals;
-          } catch (error) {
-            console.error(`Failed to get decimals on ${chainName}:`, error);
+            [isERC721, isERC1155] = await Promise.all([
+              contract.supportsInterface("0x80ac58cd").catch(() => false),
+              contract.supportsInterface("0xd9b67a26").catch(() => false),
+            ]);
+          } catch (e) {}
+
+          // Only try to get decimals if not an NFT contract
+          if (!isERC721 && !isERC1155) {
+            try {
+              const rawDecimals = await contract.decimals();
+              decimals = Number(rawDecimals);
+              result[chainName]!.decimals = decimals;
+            } catch (error) {
+              // Skip error logging for known Permit2 contract
+              if (!contractInfo.labels?.includes("Permit2")) {}
+            }
           }
 
           const [name, symbol, totalSupply, owner] = await Promise.all([
@@ -98,19 +113,6 @@ export async function checkContractOnChains(
             ),
           ]);
 
-          // Check NFT interfaces
-          let isERC721 = false;
-          let isERC1155 = false;
-
-          try {
-            [isERC721, isERC1155] = await Promise.all([
-              contract.supportsInterface("0x80ac58cd").catch(() => false),
-              contract.supportsInterface("0xd9b67a26").catch(() => false),
-            ]);
-          } catch (e) {
-            console.error("Failed to check NFT interfaces:", e);
-          }
-
           // Set contract type
           if (isERC721 || isERC1155) {
             result[chainName]!.contractType = isERC721 ? "ERC721" : "ERC1155";
@@ -118,7 +120,7 @@ export async function checkContractOnChains(
             result[chainName]!.contractType = "ERC20";
           }
 
-          // Save information
+          // Save contract information
           if (name) result[chainName]!.name = name;
           if (symbol) result[chainName]!.symbol = symbol;
           if (decimals !== undefined) result[chainName]!.decimals = decimals;
