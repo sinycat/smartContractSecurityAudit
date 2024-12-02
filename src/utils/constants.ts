@@ -250,7 +250,7 @@ export const KNOWN_CONTRACTS: Record<
   },
 
   // orbitchain
-  "0x1Bf68A9d1EaEe7826b3593C20a0ca93293cb489a": {
+  "0x1bf68a9d1eaee7826b3593c20a0ca93293cb489a": {
     labels: ["ETH Vault"],
     projectName: "OrbitChain",
   },
