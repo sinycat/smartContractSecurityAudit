@@ -11,6 +11,7 @@
   "dependencies": {
     "@anthropic-ai/sdk": "^0.32.1",
     "@headlessui/react": "^2.2.0",
+    "@monaco-editor/react": "^4.6.0",
     "@types/cheerio": "^0.22.35",
     "@types/highlight.js": "^10.1.0",
     "@types/prismjs": "^1.26.5",

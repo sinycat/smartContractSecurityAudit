@@ -19,6 +19,7 @@ import {
   CodeIcon,
   AIIcon,
 } from "@/components/Icons";
+import Editor from "@monaco-editor/react";
 
 type TabType = "address" | "single-file" | "multi-files";
 
@@ -240,17 +241,28 @@ export default function AuditPage() {
 
           {activeTab === "single-file" && (
             <div className="flex flex-col gap-3">
-              <textarea
-                placeholder="// Paste your Solidity contract code here..."
-                className="w-full h-64 bg-[#1A1A1A] border border-[#333333] rounded-lg px-4 py-3
-                         text-[#E5E5E5] placeholder-gray-500 
-                         focus:outline-none focus:border-[#505050]
-                         hover:border-[#404040]
-                         focus:ring-1 focus:ring-[#505050]
-                         transition-[border,box-shadow]
-                         duration-200 ease-in-out
-                         font-mono text-sm
-                         resize-y"
+              <Editor
+                height="400px"
+                defaultLanguage="sol"
+                theme="vs-dark"
+                options={{
+                  minimap: { enabled: false },
+                  fontSize: 14,
+                  fontFamily: "ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace",
+                  padding: { top: 16, bottom: 16 },
+                  scrollBeyondLastLine: false,
+                  lineNumbers: "on",
+                  roundedSelection: false,
+                  automaticLayout: true,
+                  tabSize: 2,
+                  wordWrap: "on",
+                }}
+                defaultValue={`// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.0;
+
+contract MyContract {
+    // Your code here
+}`}
               />
               <button
                 className="self-end h-11 inline-flex items-center gap-2 px-5
