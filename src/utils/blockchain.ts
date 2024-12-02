@@ -9,13 +9,23 @@ import {
 import type { ContractBasicInfo, ContractFile } from "@/types/blockchain";
 import * as cheerio from "cheerio";
 
+function findContractInfo(address: string) {
+  const lowerAddress = address.toLowerCase();
+  for (const [addr, info] of Object.entries(KNOWN_CONTRACTS)) {
+    if (addr.toLowerCase() === lowerAddress) {
+      return info;
+    }
+  }
+  return {};
+}
+
 export async function checkContractOnChains(
   address: string
 ): Promise<{ [key: string]: ContractBasicInfo | undefined }> {
   const result: { [key: string]: ContractBasicInfo | undefined } = {};
 
   // Get contract label information
-  const contractInfo = KNOWN_CONTRACTS[address.toLowerCase()] || {};
+  const contractInfo = findContractInfo(address);
 
   Object.keys(CHAINS).forEach((chainName) => {
     result[chainName] = { exists: false };
