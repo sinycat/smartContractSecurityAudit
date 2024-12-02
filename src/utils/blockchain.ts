@@ -70,103 +70,115 @@ export async function checkContractOnChains(
               "function decimals() view returns (uint8)",
               "function totalSupply() view returns (uint256)",
               "function owner() view returns (address)",
-              "function getOwner() view returns (address)", // Some contracts use getOwner
-              // NFT specific interface
-              "function balanceOf(address) view returns (uint256)",
-              "function ownerOf(uint256) view returns (address)",
-              "function uri(uint256) view returns (string)",
+              "function getOwner() view returns (address)",
+               // NFT specific interface
+               "function balanceOf(address) view returns (uint256)",
+               "function ownerOf(uint256) view returns (address)",
+               "function uri(uint256) view returns (string)",
             ],
             provider
           );
 
-          // Try to get basic information first
-          const [name, symbol, decimals, totalSupply, owner] =
-            await Promise.all([
-              contract.name().catch(() => null),
-              contract.symbol().catch(() => null),
-              contract.decimals().catch(() => null),
-              contract.totalSupply().catch(() => null),
-              contract
-                .owner()
-                .catch(() => contract.getOwner().catch(() => null)),
-            ]);
+          let decimals: number | undefined = undefined;
+          
+          try {
+            const rawDecimals = await contract.decimals();
+            decimals = Number(rawDecimals);
+            result[chainName]!.decimals = decimals;
+          } catch (error) {
+            console.error(`Failed to get decimals on ${chainName}:`, error);
+          }
 
-          // Check if the contract supports NFT interfaces
+          const [name, symbol, totalSupply, owner] = await Promise.all([
+            contract.name().catch(() => null),
+            contract.symbol().catch(() => null),
+            contract.totalSupply().catch(() => null),
+            contract.owner().catch(() => 
+              contract.getOwner().catch(() => null)
+            ),
+          ]);
+
+          // Check NFT interfaces
           let isERC721 = false;
           let isERC1155 = false;
 
           try {
             [isERC721, isERC1155] = await Promise.all([
-              contract.supportsInterface("0x80ac58cd").catch(() => false), // ERC721
-              contract.supportsInterface("0xd9b67a26").catch(() => false), // ERC1155
+              contract.supportsInterface("0x80ac58cd").catch(() => false),
+              contract.supportsInterface("0xd9b67a26").catch(() => false),
             ]);
           } catch (e) {
-            console.log("Failed to check NFT interfaces");
+            console.error("Failed to check NFT interfaces:", e);
           }
 
-          // Set contract type, but only display if there is no project name or label
+          // Set contract type
           if (isERC721 || isERC1155) {
             result[chainName]!.contractType = isERC721 ? "ERC721" : "ERC1155";
-          } else if (name || symbol || decimals !== null || totalSupply) {
+          } else if (name || symbol || decimals !== undefined || totalSupply) {
             result[chainName]!.contractType = "ERC20";
           }
 
-          // Save the retrieved information
+          // Save information
           if (name) result[chainName]!.name = name;
           if (symbol) result[chainName]!.symbol = symbol;
-          if (decimals !== null) result[chainName]!.decimals = decimals;
-          if (totalSupply)
-            result[chainName]!.totalSupply = totalSupply.toString();
+          if (decimals !== undefined) result[chainName]!.decimals = decimals;
+          if (totalSupply) result[chainName]!.totalSupply = totalSupply.toString();
           if (owner) result[chainName]!.owner = owner;
-        } catch (e) {
-          console.log("Failed to get contract info:", e);
-        }
 
-        // Check if this is a proxy contract
-        try {
-          const implementationResult = await getImplementationAddress(
-            address,
-            chainName
-          );
-          if (implementationResult.address) {
-            result[chainName] = {
-              ...result[chainName],
-              implementation: implementationResult.address,
-              isProxy: true,
-              proxyType: implementationResult.type || "Proxy Contract",
-            } as ContractBasicInfo;
+          // Check proxy contract
+          try {
+            const implementationResult = await getImplementationAddress(address, chainName);
+            if (implementationResult.address) {
+              result[chainName] = {
+                ...result[chainName],
+                implementation: implementationResult.address,
+                isProxy: true,
+                proxyType: implementationResult.type || "Proxy Contract",
+              } as ContractBasicInfo;
 
-            // If the implementation contract address is retrieved, try to get more information from the implementation contract
-            const implContract = new ethers.Contract(
-              implementationResult.address,
-              [
-                "function name() view returns (string)",
-                "function symbol() view returns (string)",
-                "function decimals() view returns (uint8)",
-                "function totalSupply() view returns (uint256)",
-              ],
-              provider
-            );
+              const implContract = new ethers.Contract(
+                implementationResult.address,
+                [
+                  "function name() view returns (string)",
+                  "function symbol() view returns (string)",
+                  "function decimals() view returns (uint8)",
+                  "function totalSupply() view returns (uint256)",
+                ],
+                provider
+              );
 
-            try {
-              const [name, symbol, decimals, totalSupply] = await Promise.all([
-                implContract.name().catch(() => null),
-                implContract.symbol().catch(() => null),
-                implContract.decimals().catch(() => null),
-                implContract.totalSupply().catch(() => null),
-              ]);
+              try {
+                if (result[chainName]!.decimals === undefined) {
+                  try {
+                    const rawImplDecimals = await implContract.decimals();
+                    const implDecimals = Number(rawImplDecimals);
+                    if (implDecimals !== undefined) {
+                      result[chainName]!.decimals = implDecimals;
+                    }
+                  } catch (e) {
+                    console.error("Failed to get implementation decimals:", e);
+                  }
+                }
 
-              if (name) result[chainName]!.name = name;
-              if (symbol) result[chainName]!.symbol = symbol;
-              if (decimals !== null) result[chainName]!.decimals = decimals;
-              if (totalSupply)
-                result[chainName]!.totalSupply = totalSupply.toString();
-            } catch (e) {
-              console.log("Failed to get implementation contract info");
+                const [name, symbol, totalSupply] = await Promise.all([
+                  implContract.name().catch(() => null),
+                  implContract.symbol().catch(() => null),
+                  implContract.totalSupply().catch(() => null),
+                ]);
+
+                if (name) result[chainName]!.name = name;
+                if (symbol) result[chainName]!.symbol = symbol;
+                if (totalSupply) result[chainName]!.totalSupply = totalSupply.toString();
+              } catch (e) {
+                console.error("Failed to get implementation contract info:", e);
+              }
             }
+          } catch (e) {
+            console.error("Failed to check proxy status:", e);
           }
-        } catch (e) {
-          console.log("Failed to check proxy status");
+        } catch (error) {
+          console.error(`Failed to check ${chainName}:`, error);
+          result[chainName] = { exists: false };
         }
       } catch (error) {
         console.error(`Failed to check ${chainName}:`, error);
