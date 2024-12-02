@@ -226,16 +226,32 @@ export default function AuditPage() {
           )}
 
           {activeTab === 'single-file' && (
-            <div className="flex items-center gap-3">
-              <input
-                type="file"
-                accept=".sol"
-                className="flex-1 text-gray-400 file:mr-4 file:py-2 file:px-4
-                         file:rounded-lg file:border-0
-                         file:text-sm file:font-semibold
-                         file:bg-mush-orange file:text-white
-                         hover:file:bg-mush-orange/90"
+            <div className="flex flex-col gap-3">
+              <textarea
+                placeholder="// Paste your Solidity contract code here..."
+                className="w-full h-64 bg-[#1A1A1A] border border-[#333333] rounded-lg px-4 py-3
+                         text-[#E5E5E5] placeholder-gray-500 
+                         focus:outline-none focus:border-[#505050]
+                         hover:border-[#404040]
+                         focus:ring-1 focus:ring-[#505050]
+                         transition-[border,box-shadow]
+                         duration-200 ease-in-out
+                         font-mono text-sm
+                         resize-y"
               />
+              <button
+                className="self-end h-11 inline-flex items-center gap-2 px-5
+                         bg-[#1E1E1E] text-mush-orange text-base font-normal
+                         border border-[#333333] rounded-lg
+                         transition-all duration-300
+                         hover:bg-mush-orange/10 hover:border-mush-orange/50
+                         whitespace-nowrap"
+              >
+                <span>Analyze Contract</span>
+                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                </svg>
+              </button>
             </div>
           )}
 
