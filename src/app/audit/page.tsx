@@ -149,7 +149,9 @@ export default function AuditPage() {
           </div>
         </div>
 
-        <div className="bg-gradient-to-br from-[#1E1E1E] to-[#252526] rounded-xl p-8 mb-8 border border-[#333333]/50 relative overflow-hidden">
+        <div className="bg-gradient-to-br from-[#252526] to-[#1E1E1E] rounded-xl p-8 mb-8 border border-[#333333]/50 relative overflow-hidden
+            before:absolute before:inset-0 before:p-[1px] before:-m-[1px] before:bg-gradient-to-r before:from-mush-orange/0 before:via-mush-orange/20 before:to-mush-orange/0 before:rounded-xl before:-z-10
+            after:absolute after:inset-0 after:p-[1px] after:-m-[1px] after:bg-gradient-to-b after:from-white/10 after:via-white/0 after:to-white/5 after:rounded-xl after:-z-10">
           <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-mush-orange/0 via-mush-orange/30 to-mush-orange/0" />
 
           <div className="mb-6">
