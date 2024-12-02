@@ -1,10 +1,13 @@
 # `Mush Audit`
 ----------------------------------------
+
 Mush Audit is an AI-powered smart contract security analysis platform that leverages multiple AI models to provide comprehensive security audits for blockchain contracts.
+
+----------------------------------------
 
 ![image](https://github.com/user-attachments/assets/336fae3c-06af-4e09-a59a-3d815e1f0f53)
 
-
+----------------------------------------
 
 
 ## Features
