@@ -127,6 +127,32 @@ export const CHAINS: Record<string, ChainConfig> = {
       },
     },
   },
+  optimism: {
+    id: "10",
+    name: "optimism",
+    displayName: "Optimism",
+    nativeCurrency: {
+      name: "Ether",
+      symbol: "ETH",
+      decimals: 18,
+    },
+    rpcUrls: {
+      default: "https://mainnet.optimism.io",
+      fallbacks: [
+        "https://optimism.publicnode.com",
+        "https://optimism.meowrpc.com",
+        "https://opt-mainnet.g.alchemy.com/v2/demo",
+      ],
+    },
+    blockExplorers: {
+      default: {
+        name: "Optimistic Etherscan",
+        url: "https://optimistic.etherscan.io",
+        apiUrl: "https://api-optimistic.etherscan.io/api",
+        apiKey: process.env.NEXT_PUBLIC_OPTIMISM_API_KEY,
+      },
+    },
+  },
 } as const;
 
 export const KNOWN_CONTRACTS: Record<
