@@ -67,7 +67,7 @@ export async function analyzeContract(params: {
   while (retryCount < maxRetries) {
     try {
       if (params.signal?.aborted) {
-        throw new Error('Analysis cancelled');
+        throw new Error("Analysis cancelled");
       }
 
       // Filter out interface files and third-party library files
@@ -130,7 +130,12 @@ export async function analyzeContract(params: {
       );
 
       // if we have super prompt, add it to the final prompt
-      if (config.superPrompt) {
+      // exclude o1-mini and o1-preview because they don't support super prompt
+      if (
+        config.superPrompt &&
+        config.selectedModel !== "o1-mini" &&
+        config.selectedModel !== "o1-preview"
+      ) {
         // console.log("Using super prompt");
         finalPrompt = await createPromptWithSupperPrompt(finalPrompt);
       }
@@ -164,8 +169,11 @@ export async function analyzeContract(params: {
         },
       };
     } catch (error: unknown) {
-      if ((error instanceof Error && error.name === 'AbortError') || params.signal?.aborted) {
-        throw new Error('Analysis cancelled');
+      if (
+        (error instanceof Error && error.name === "AbortError") ||
+        params.signal?.aborted
+      ) {
+        throw new Error("Analysis cancelled");
       }
       lastError = error;
       retryCount++;
