@@ -15,7 +15,9 @@ import {
   WalletIcon, 
   SecurityIcon,
   SecurityAnalysisIcon,
-  MultiChainIcon 
+  MultiChainIcon,
+  CodeIcon,
+  AIIcon
 } from '@/components/Icons';
 
 type TabType = 'address' | 'single-file' | 'multi-files';
@@ -161,6 +163,44 @@ export default function AuditPage() {
               </div>
             </>
           )}
+
+          {(activeTab === 'single-file' || activeTab === 'multi-files') && (
+            <>
+              <div className="bg-gradient-to-br from-[#252526] to-[#1E1E1E] p-6 rounded-xl border border-[#333333]/50 hover:border-[#FF8B3E]/20 transition-colors duration-300">
+                <div className="flex items-center gap-3 mb-3">
+                  <div className="w-8 h-8 rounded-lg bg-[#FF8B3E]/10 flex items-center justify-center">
+                    <CodeIcon className="w-5 h-5" />
+                  </div>
+                  <h3 className="text-[#FF8B3E] font-medium">Syntax Check</h3>
+                </div>
+                <p className="text-gray-400 text-sm leading-relaxed">
+                  Verify contract syntax and compilation
+                </p>
+              </div>
+              <div className="bg-gradient-to-br from-[#252526] to-[#1E1E1E] p-6 rounded-xl border border-[#333333]/50 hover:border-[#FF8B3E]/20 transition-colors duration-300">
+                <div className="flex items-center gap-3 mb-3">
+                  <div className="w-8 h-8 rounded-lg bg-[#FF8B3E]/10 flex items-center justify-center">
+                    <SecurityAnalysisIcon className="w-5 h-5" />
+                  </div>
+                  <h3 className="text-[#FF8B3E] font-medium">Security Analysis</h3>
+                </div>
+                <p className="text-gray-400 text-sm leading-relaxed">
+                  AI-powered security vulnerability detection
+                </p>
+              </div>
+              <div className="bg-gradient-to-br from-[#252526] to-[#1E1E1E] p-6 rounded-xl border border-[#333333]/50 hover:border-[#FF8B3E]/20 transition-colors duration-300">
+                <div className="flex items-center gap-3 mb-3">
+                  <div className="w-8 h-8 rounded-lg bg-[#FF8B3E]/10 flex items-center justify-center">
+                    <AIIcon className="w-5 h-5" />
+                  </div>
+                  <h3 className="text-[#FF8B3E] font-medium">Gas Optimization</h3>
+                </div>
+                <p className="text-gray-400 text-sm leading-relaxed">
+                  Analyze and optimize gas consumption
+                </p>
+              </div>
+            </>
+          )}
         </div>
 
         <div className="bg-gradient-to-br from-[#1E1E1E] to-[#252526] rounded-xl p-8 mb-8 border border-[#333333]/50 relative overflow-hidden">
@@ -256,17 +296,64 @@ export default function AuditPage() {
           )}
 
           {activeTab === 'multi-files' && (
-            <div className="flex items-center gap-3">
-              <input
-                type="file"
-                multiple
-                accept=".sol"
-                className="flex-1 text-gray-400 file:mr-4 file:py-2 file:px-4
-                         file:rounded-lg file:border-0
-                         file:text-sm file:font-semibold
-                         file:bg-mush-orange file:text-white
-                         hover:file:bg-mush-orange/90"
-              />
+            <div className="flex flex-col gap-4">
+              <div className="border border-dashed border-[#333333] rounded-lg p-8 bg-[#1A1A1A] hover:border-[#505050] transition-colors duration-200">
+                <div className="flex flex-col items-center gap-3">
+                  <FilesIcon className="w-12 h-12 text-gray-500" />
+                  <div className="text-center">
+                    <p className="text-gray-300 mb-1">Drag and drop your contract files here</p>
+                    <p className="text-gray-500 text-sm">or</p>
+                  </div>
+                  <label className="cursor-pointer">
+                    <input
+                      type="file"
+                      multiple
+                      accept=".sol"
+                      className="hidden"
+                    />
+                    <span className="h-9 inline-flex items-center gap-2 px-4
+                                  bg-[#1E1E1E] text-mush-orange text-sm font-normal
+                                  border border-[#333333] rounded-lg
+                                  transition-all duration-300
+                                  hover:bg-mush-orange/10 hover:border-mush-orange/50
+                                  cursor-pointer">
+                      Browse Files
+                    </span>
+                  </label>
+                </div>
+              </div>
+              
+              <div className="flex flex-col gap-2">
+                <div className="text-sm text-gray-400">Selected files:</div>
+                <div className="space-y-2">
+                  {/* 这里可以添加已选文件列表的状态和渲染 */}
+                  <div className="flex items-center justify-between p-3 bg-[#1A1A1A] border border-[#333333] rounded-lg">
+                    <div className="flex items-center gap-2">
+                      <FileIcon className="w-4 h-4 text-gray-400" />
+                      <span className="text-gray-300 text-sm">Token.sol</span>
+                    </div>
+                    <button className="text-gray-500 hover:text-gray-300">
+                      <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                      </svg>
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              <button
+                className="self-end h-11 inline-flex items-center gap-2 px-5
+                         bg-[#1E1E1E] text-mush-orange text-base font-normal
+                         border border-[#333333] rounded-lg
+                         transition-all duration-300
+                         hover:bg-mush-orange/10 hover:border-mush-orange/50
+                         whitespace-nowrap"
+              >
+                <span>Analyze Contracts</span>
+                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                </svg>
+              </button>
             </div>
           )}
         </div>
