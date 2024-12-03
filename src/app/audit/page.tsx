@@ -36,6 +36,12 @@ export default function AuditPage() {
   const [analysisFiles, setAnalysisFiles] = useState<ContractFile[]>([]);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const { config } = useAIConfig();
+  const [editorContent, setEditorContent] = useState(`// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.0;
+
+contract MyContract {
+    // Your code here
+}`);
 
   const handleAddressChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     let value = e.target.value.trim();
@@ -399,7 +405,11 @@ export default function AuditPage() {
                 height="400px"
                 defaultLanguage="sol"
                 theme="vs-dark"
-                onChange={(value) => setContractCode(value || "")}
+                value={editorContent}
+                onChange={(value) => {
+                  setEditorContent(value || "");
+                  setContractCode(value || "");
+                }}
                 options={{
                   minimap: { enabled: false },
                   fontSize: 14,
@@ -412,12 +422,6 @@ export default function AuditPage() {
                   tabSize: 2,
                   wordWrap: "on",
                 }}
-                defaultValue={`// SPDX-License-Identifier: MIT
-pragma solidity ^0.8.0;
-
-contract MyContract {
-    // Your code here
-}`}
               />
               
               {analysisFiles.length > 0 && (
