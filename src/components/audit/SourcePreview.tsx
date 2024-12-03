@@ -23,6 +23,8 @@ import { getExplorerUrl } from "@/utils/chainServices";
 import { CHAINS } from "@/utils/constants";
 import { useAIConfig, getModelName, getAIConfig } from "@/utils/ai";
 import type { AIConfig } from "@/types/ai";
+import html2canvas from "html2canvas";
+import { marked } from "marked";
 
 interface ContractFile {
   name: string;
@@ -79,6 +81,45 @@ function removeDuplicateHeaders(content: string): string {
 
   return result.join("\n");
 }
+
+// Add save as image function
+const handleSaveAsImage = async (content: string, fileName: string) => {
+  // Create a temporary div to render Markdown
+  const tempDiv = document.createElement('div');
+  tempDiv.style.cssText = `
+    position: fixed;
+    top: -9999px;
+    left: -9999px;
+    width: 800px;
+    padding: 20px;
+    background: #1A1A1A;
+    color: #E5E5E5;
+    font-family: system-ui, -apple-system, sans-serif;
+  `;
+  document.body.appendChild(tempDiv);
+
+  // Render Markdown content
+  tempDiv.innerHTML = marked(content);
+
+  try {
+    const canvas = await html2canvas(tempDiv, {
+      backgroundColor: '#1A1A1A',
+      scale: 2,
+      useCORS: true,
+      logging: false
+    });
+
+    const link = document.createElement('a');
+    link.download = `${fileName.replace('.md', '')}.png`;
+    link.href = canvas.toDataURL('image/png');
+    link.click();
+  } catch (error) {
+    console.error('Error generating image:', error);
+    toast.error('Failed to generate image');
+  } finally {
+    document.body.removeChild(tempDiv);
+  }
+};
 
 export default function SourcePreview({
   files: initialFiles,
@@ -509,17 +550,38 @@ export default function SourcePreview({
             <PathBreadcrumb path={selectedFile.path} />
             <div className="flex items-center gap-2">
               {selectedFile.path.endsWith(".md") && (
-                <button
-                  onClick={() => setShowRawReadme(!showRawReadme)}
-                  className="px-3 py-1 hover:bg-[#333333] text-gray-400 text-xs rounded-md transition-colors flex items-center gap-2"
-                >
-                  {showRawReadme ? "View Rendered" : "View Raw"}
-                </button>
+                <>
+                  <button
+                    onClick={() => setShowRawReadme(!showRawReadme)}
+                    className="px-3 py-1 hover:bg-[#333333] text-gray-400 text-xs rounded-md transition-colors flex items-center gap-2"
+                  >
+                    {showRawReadme ? "View Rendered" : "View Raw"}
+                  </button>
+                  {!showRawReadme && (
+                    <button
+                      onClick={() => handleSaveAsImage(selectedFile.content, selectedFile.name)}
+                      className="px-3 py-1 hover:bg-[#333333] text-gray-400 text-xs rounded-md transition-colors flex items-center gap-2"
+                    >
+                      <svg
+                        className="w-4 h-4"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"
+                        />
+                      </svg>
+                      Save as Image
+                    </button>
+                  )}
+                </>
               )}
               <button
-                onClick={() =>
-                  navigator.clipboard.writeText(selectedFile.content)
-                }
+                onClick={() => navigator.clipboard.writeText(selectedFile.content)}
                 className="px-3 py-1 hover:bg-[#333333] text-gray-400 text-xs rounded-md transition-colors flex items-center gap-2"
               >
                 <svg
