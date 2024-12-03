@@ -23,6 +23,7 @@ import Editor from "@monaco-editor/react";
 import AIConfigModal from "@/components/audit/AIConfigModal";
 import { analyzeContract } from "@/services/audit/contractAnalyzer";
 import { useAIConfig, getModelName, getAIConfig } from "@/utils/ai";
+import html2canvas from 'html2canvas';
 
 type TabType = "address" | "single-file" | "multi-files";
 
@@ -94,20 +95,16 @@ contract MyContract {
         content: contractCode,
       };
 
-      // const result = await analyzeContract({
-      //   files: [contractFile],
-      //   contractName: "Contract",
-      //   signal: controller.signal,
-      // });
+      const result = await analyzeContract({
+        files: [contractFile],
+        contractName: "Contract",
+        signal: controller.signal,
+      });
 
-      // let analysisContent = result.report.analysis;
-      // if (!analysisContent.match(/^#\s+/m)) {
-      //   analysisContent = `# Smart Contract Security Analysis Report\n\n${analysisContent}`;
-      // }
-
-      // TODO: test
-      let analysisContent;
-      analysisContent = getModelName(getAIConfig(config));
+      let analysisContent = result.report.analysis;
+      if (!analysisContent.match(/^#\s+/m)) {
+        analysisContent = `# Smart Contract Security Analysis Report\n\n${analysisContent}`;
+      }
 
       let languageCfg = getAIConfig(config).language;
       languageCfg = languageCfg === "english" ? "" : `-${languageCfg}`;
@@ -152,14 +149,15 @@ contract MyContract {
     }
   };
 
-  const handleViewReport = (content: string) => {
+  const handleViewReport = (content: string, fileName: string) => {
     const newWindow = window.open();
     if (newWindow) {
       newWindow.document.write(`
         <html>
           <head>
-            <title>Analysis Report</title>
+            <title>${fileName}</title>
             <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+            <script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
             <style>
               body {
                 font-family: system-ui, -apple-system, sans-serif;
@@ -226,11 +224,40 @@ contract MyContract {
           </head>
           <body>
             <div id="content"></div>
+            <button id="saveAsImage" style="
+              position: fixed;
+              top: 20px;
+              right: 20px;
+              padding: 8px 16px;
+              background: #252526;
+              color: #FF8B3E;
+              border: 1px solid rgba(255,139,62,0.2);
+              border-radius: 6px;
+              cursor: pointer;
+              font-family: system-ui;
+              transition: all 0.2s;
+            ">Save as Image</button>
             <script>
-              document.getElementById('content').innerHTML = marked.parse(\`${content.replace(
-                /`/g,
-                "\\`"
-              )}\`);
+              document.getElementById('content').innerHTML = marked.parse(\`${content.replace(/`/g, '\\`')}\`);
+              
+              document.getElementById('saveAsImage').addEventListener('click', async () => {
+                const content = document.getElementById('content');
+                try {
+                  const canvas = await html2canvas(content, {
+                    backgroundColor: '#1A1A1A',
+                    scale: 2,
+                    useCORS: true,
+                    logging: false
+                  });
+                  
+                  const link = document.createElement('a');
+                  link.download = '${fileName.replace('.md', '')}.png';
+                  link.href = canvas.toDataURL('image/png');
+                  link.click();
+                } catch (error) {
+                  console.error('Error generating image:', error);
+                }
+              });
             </script>
           </body>
         </html>
@@ -478,7 +505,7 @@ contract MyContract {
                           </span>
                           <div className="flex items-center gap-2">
                             <button
-                              onClick={() => handleViewReport(file.content)}
+                              onClick={() => handleViewReport(file.content, file.name)}
                               className="text-gray-400 text-sm hover:text-gray-300 flex items-center gap-1 px-2 py-1 rounded hover:bg-[#333333] transition-colors duration-150"
                             >
                               <svg
