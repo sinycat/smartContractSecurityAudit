@@ -16,7 +16,7 @@ const config: Config = {
         'mush-green': '#4EC9B0',
       },
       animation: {
-        'bounce-slow': 'bounce 3s infinite',
+        'bounce-slow': 'bounce 2s infinite',
       },
       keyframes: {
         bounce: {

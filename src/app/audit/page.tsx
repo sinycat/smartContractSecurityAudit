@@ -525,9 +525,21 @@ contract MyContract {
 
               {isAnalyzing && (
                 <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center">
-                  <div className="bg-[#1E1E1E] rounded-lg p-8">
-                    <div className="animate-spin rounded-full h-12 w-12 border-4 border-[#FF8B3E] border-t-transparent"></div>
-                    <p className="text-white mt-4">Analyzing contract...</p>
+                  <div className="bg-[#1E1E1E] rounded-lg p-8 flex flex-col items-center">
+                    <div className="relative w-24 h-24 mb-4">
+                      <div className="absolute inset-0 border-4 border-t-[#FF8B3E] border-r-[#FF8B3E]/50 border-b-[#FF8B3E]/30 border-l-[#FF8B3E]/10 rounded-full animate-spin" />
+                      <div className="absolute inset-2 bg-[#1E1E1E] rounded-full flex items-center justify-center">
+                        <Image
+                          src="/mush.png"
+                          alt="Loading"
+                          width={40}
+                          height={40}
+                          className="animate-bounce-slow"
+                        />
+                      </div>
+                    </div>
+                    <p className="text-[#E5E5E5] text-lg mb-2">Analyzing Contract</p>
+                    <p className="text-gray-400 text-sm">This may take a few moments...</p>
                   </div>
                 </div>
               )}
