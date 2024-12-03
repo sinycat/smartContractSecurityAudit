@@ -20,6 +20,7 @@ import {
   AIIcon,
 } from "@/components/Icons";
 import Editor from "@monaco-editor/react";
+import AIConfigModal from "@/components/audit/AIConfigModal";
 
 type TabType = "address" | "single-file" | "multi-files";
 
@@ -28,6 +29,8 @@ export default function AuditPage() {
   const [loading, setLoading] = useState(false);
   const [chainInfo, setChainInfo] = useState<ChainContractInfo | null>(null);
   const [activeTab, setActiveTab] = useState<TabType>("address");
+  const [isAIConfigModalOpen, setIsAIConfigModalOpen] = useState(false);
+  const [contractCode, setContractCode] = useState("");
 
   const handleAddressChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     let value = e.target.value.trim();
@@ -61,6 +64,11 @@ export default function AuditPage() {
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleStartAnalysis = () => {
+    console.log("Starting analysis with code:", contractCode);
+    setIsAIConfigModalOpen(false);
   };
 
   return (
@@ -245,6 +253,7 @@ export default function AuditPage() {
                 height="400px"
                 defaultLanguage="sol"
                 theme="vs-dark"
+                onChange={(value) => setContractCode(value || "")}
                 options={{
                   minimap: { enabled: false },
                   fontSize: 14,
@@ -265,6 +274,7 @@ contract MyContract {
 }`}
               />
               <button
+                onClick={() => setIsAIConfigModalOpen(true)}
                 className="self-end h-11 inline-flex items-center gap-2 px-5
                          bg-[#1E1E1E] text-mush-orange text-base font-normal
                          border border-[#333333] rounded-lg
@@ -287,6 +297,12 @@ contract MyContract {
                   />
                 </svg>
               </button>
+
+              <AIConfigModal
+                isOpen={isAIConfigModalOpen}
+                onClose={() => setIsAIConfigModalOpen(false)}
+                onStartAnalysis={handleStartAnalysis}
+              />
             </div>
           )}
 
