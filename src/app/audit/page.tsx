@@ -36,13 +36,15 @@ export default function AuditPage() {
   const [analysisFiles, setAnalysisFiles] = useState<ContractFile[]>([]);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const { config } = useAIConfig();
-  const [editorContent, setEditorContent] = useState(`// SPDX-License-Identifier: MIT
+  const [editorContent, setEditorContent] =
+    useState(`// SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
 contract MyContract {
     // Your code here
 }`);
-  const [abortController, setAbortController] = useState<AbortController | null>(null);
+  const [abortController, setAbortController] =
+    useState<AbortController | null>(null);
 
   const handleAddressChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     let value = e.target.value.trim();
@@ -89,34 +91,44 @@ contract MyContract {
       const contractFile = {
         name: "Contract.sol",
         path: "Contract.sol",
-        content: contractCode
+        content: contractCode,
       };
 
-      const result = await analyzeContract({
-        files: [contractFile],
-        contractName: "Contract",
-        signal: controller.signal,
-      });
+      // const result = await analyzeContract({
+      //   files: [contractFile],
+      //   contractName: "Contract",
+      //   signal: controller.signal,
+      // });
 
-      let analysisContent = result.report.analysis;
-      if (!analysisContent.match(/^#\s+/m)) {
-        analysisContent = `# Smart Contract Security Analysis Report\n\n${analysisContent}`;
-      }
+      // let analysisContent = result.report.analysis;
+      // if (!analysisContent.match(/^#\s+/m)) {
+      //   analysisContent = `# Smart Contract Security Analysis Report\n\n${analysisContent}`;
+      // }
+
+      // TODO: test
+      let analysisContent;
+      analysisContent = getModelName(getAIConfig(config));
 
       let languageCfg = getAIConfig(config).language;
       languageCfg = languageCfg === "english" ? "" : `-${languageCfg}`;
-      let withSuperPrompt = getAIConfig(config).superPrompt ? "-SuperPrompt" : "";
-      
-      const reportFileName = `report-analysis-${getModelName(getAIConfig(config))}${languageCfg}${withSuperPrompt}.md`;
-      
+      let withSuperPrompt = getAIConfig(config).superPrompt
+        ? "-SuperPrompt"
+        : "";
+
+      const reportFileName = `report-analysis-${getModelName(
+        getAIConfig(config)
+      )}${languageCfg}${withSuperPrompt}.md`;
+
       const reportFile = {
         name: reportFileName,
         path: reportFileName,
-        content: analysisContent
+        content: analysisContent,
       };
 
-      setAnalysisFiles(prev => {
-        const filesWithoutCurrentModelReport = prev.filter(f => f.path !== reportFileName);
+      setAnalysisFiles((prev) => {
+        const filesWithoutCurrentModelReport = prev.filter(
+          (f) => f.path !== reportFileName
+        );
         return [...filesWithoutCurrentModelReport, reportFile];
       });
 
@@ -215,7 +227,10 @@ contract MyContract {
           <body>
             <div id="content"></div>
             <script>
-              document.getElementById('content').innerHTML = marked.parse(\`${content.replace(/`/g, '\\`')}\`);
+              document.getElementById('content').innerHTML = marked.parse(\`${content.replace(
+                /`/g,
+                "\\`"
+              )}\`);
             </script>
           </body>
         </html>
@@ -224,16 +239,16 @@ contract MyContract {
   };
 
   const handleDownloadReport = (file: ContractFile) => {
-    const blob = new Blob([file.content], { type: 'text/markdown' });
-    
+    const blob = new Blob([file.content], { type: "text/markdown" });
+
     const url = window.URL.createObjectURL(blob);
-    const a = document.createElement('a');
+    const a = document.createElement("a");
     a.href = url;
     a.download = file.name;
-    
+
     document.body.appendChild(a);
     a.click();
-    
+
     document.body.removeChild(a);
     window.URL.revokeObjectURL(url);
   };
@@ -325,9 +340,11 @@ contract MyContract {
           </div>
         </div>
 
-        <div className="bg-gradient-to-br from-[#252526] to-[#1E1E1E] rounded-xl p-8 mb-8 border border-[#333333]/50 relative overflow-hidden
+        <div
+          className="bg-gradient-to-br from-[#252526] to-[#1E1E1E] rounded-xl p-8 mb-8 border border-[#333333]/50 relative overflow-hidden
             before:absolute before:inset-0 before:p-[1px] before:-m-[1px] before:bg-gradient-to-r before:from-mush-orange/0 before:via-mush-orange/20 before:to-mush-orange/0 before:rounded-xl before:-z-10
-            after:absolute after:inset-0 after:p-[1px] after:-m-[1px] after:bg-gradient-to-b after:from-white/10 after:via-white/0 after:to-white/5 after:rounded-xl after:-z-10">
+            after:absolute after:inset-0 after:p-[1px] after:-m-[1px] after:bg-gradient-to-b after:from-white/10 after:via-white/0 after:to-white/5 after:rounded-xl after:-z-10"
+        >
           <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-mush-orange/0 via-mush-orange/30 to-mush-orange/0" />
 
           <div className="mb-6">
@@ -432,7 +449,8 @@ contract MyContract {
                 options={{
                   minimap: { enabled: false },
                   fontSize: 14,
-                  fontFamily: "ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace",
+                  fontFamily:
+                    "ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace",
                   padding: { top: 16, bottom: 16 },
                   scrollBeyondLastLine: false,
                   lineNumbers: "on",
@@ -442,10 +460,12 @@ contract MyContract {
                   wordWrap: "on",
                 }}
               />
-              
+
               {analysisFiles.length > 0 && (
                 <div className="border-t border-[#333333] mt-4 pt-4">
-                  <h3 className="text-gray-300 text-sm font-medium mb-2">Analysis Reports:</h3>
+                  <h3 className="text-gray-300 text-sm font-medium mb-2">
+                    Analysis Reports:
+                  </h3>
                   <div className="space-y-2">
                     {analysisFiles.map((file) => (
                       <div
@@ -453,7 +473,9 @@ contract MyContract {
                         className="bg-[#252526] p-3 rounded-lg border border-[#333333]"
                       >
                         <div className="flex items-center justify-between">
-                          <span className="text-gray-300 text-sm">{file.name}</span>
+                          <span className="text-gray-300 text-sm">
+                            {file.name}
+                          </span>
                           <div className="flex items-center gap-2">
                             <button
                               onClick={() => handleViewReport(file.content)}
@@ -553,8 +575,12 @@ contract MyContract {
                         />
                       </div>
                     </div>
-                    <p className="text-[#E5E5E5] text-lg mb-2">Analyzing Contract</p>
-                    <p className="text-gray-400 text-sm mb-4">This may take a few moments...</p>
+                    <p className="text-[#E5E5E5] text-lg mb-2">
+                      Analyzing Contract
+                    </p>
+                    <p className="text-gray-400 text-sm mb-4">
+                      This may take a few moments...
+                    </p>
                     <button
                       onClick={handleCancelAnalysis}
                       className="px-4 py-2 bg-[#252526] text-[#FF8B3E] rounded-md 
