@@ -85,7 +85,7 @@ function removeDuplicateHeaders(content: string): string {
 // Add save as image function
 const handleSaveAsImage = async (content: string, fileName: string) => {
   // Create a temporary div to render Markdown
-  const tempDiv = document.createElement('div');
+  const tempDiv = document.createElement("div");
   tempDiv.style.cssText = `
     position: fixed;
     top: -9999px;
@@ -103,19 +103,19 @@ const handleSaveAsImage = async (content: string, fileName: string) => {
 
   try {
     const canvas = await html2canvas(tempDiv, {
-      backgroundColor: '#1A1A1A',
+      backgroundColor: "#1A1A1A",
       scale: 2,
       useCORS: true,
-      logging: false
+      logging: false,
     });
 
-    const link = document.createElement('a');
-    link.download = `${fileName.replace('.md', '')}.png`;
-    link.href = canvas.toDataURL('image/png');
+    const link = document.createElement("a");
+    link.download = `${fileName.replace(".md", "")}.png`;
+    link.href = canvas.toDataURL("image/png");
     link.click();
   } catch (error) {
-    console.error('Error generating image:', error);
-    toast.error('Failed to generate image');
+    console.error("Error generating image:", error);
+    toast.error("Failed to generate image");
   } finally {
     document.body.removeChild(tempDiv);
   }
@@ -336,22 +336,22 @@ export default function SourcePreview({
       const controller = new AbortController();
       setAbortController(controller);
 
-      // const result = await analyzeContract({
-      //   files,
-      //   contractName,
-      //   chain: chainId,
-      //   signal: controller.signal,
-      // });
+      const result = await analyzeContract({
+        files,
+        contractName,
+        chain: chainId,
+        signal: controller.signal,
+      });
 
-      // // Check if there's a main title, if not add it
-      // let analysisContent = result.report.analysis;
-      // if (!analysisContent.match(/^#\s+/m)) {
-      //   analysisContent = `# Smart Contract Security Analysis Report\n\n${analysisContent}`;
-      // }
+      // Check if there's a main title, if not add it
+      let analysisContent = result.report.analysis;
+      if (!analysisContent.match(/^#\s+/m)) {
+        analysisContent = `# Smart Contract Security Analysis Report\n\n${analysisContent}`;
+      }
 
-      // TODO: test
-      let analysisContent;
-      analysisContent = getModelName(getAIConfig(config));
+      // // TODO: test
+      // let analysisContent;
+      // analysisContent = getModelName(getAIConfig(config));
 
       // Remove duplicate titles
       analysisContent = removeDuplicateHeaders(analysisContent);
@@ -553,7 +553,12 @@ export default function SourcePreview({
                 <>
                   {!showRawReadme && (
                     <button
-                      onClick={() => handleSaveAsImage(selectedFile.content, selectedFile.name)}
+                      onClick={() =>
+                        handleSaveAsImage(
+                          selectedFile.content,
+                          selectedFile.name
+                        )
+                      }
                       className="px-3 py-1 hover:bg-[#333333] text-gray-400 text-xs rounded-md transition-colors flex items-center gap-2"
                     >
                       <svg
@@ -605,7 +610,9 @@ export default function SourcePreview({
                 </>
               )}
               <button
-                onClick={() => navigator.clipboard.writeText(selectedFile.content)}
+                onClick={() =>
+                  navigator.clipboard.writeText(selectedFile.content)
+                }
                 className="px-3 py-1 hover:bg-[#333333] text-gray-400 text-xs rounded-md transition-colors flex items-center gap-2"
               >
                 <svg
