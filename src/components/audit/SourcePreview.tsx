@@ -551,12 +551,6 @@ export default function SourcePreview({
             <div className="flex items-center gap-2">
               {selectedFile.path.endsWith(".md") && (
                 <>
-                  <button
-                    onClick={() => setShowRawReadme(!showRawReadme)}
-                    className="px-3 py-1 hover:bg-[#333333] text-gray-400 text-xs rounded-md transition-colors flex items-center gap-2"
-                  >
-                    {showRawReadme ? "View Rendered" : "View Raw"}
-                  </button>
                   {!showRawReadme && (
                     <button
                       onClick={() => handleSaveAsImage(selectedFile.content, selectedFile.name)}
@@ -578,6 +572,36 @@ export default function SourcePreview({
                       Save as Image
                     </button>
                   )}
+                  <button
+                    onClick={() => setShowRawReadme(!showRawReadme)}
+                    className="px-3 py-1 hover:bg-[#333333] text-gray-400 text-xs rounded-md transition-colors flex items-center gap-2"
+                  >
+                    <svg
+                      className="w-4 h-4"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      {showRawReadme ? (
+                        // Review icon - for View Rendered
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M15 12a3 3 0 11-6 0 3 3 0 016 0z M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
+                        />
+                      ) : (
+                        // Code icon - for View Raw
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"
+                        />
+                      )}
+                    </svg>
+                    {showRawReadme ? "View Rendered" : "View Raw"}
+                  </button>
                 </>
               )}
               <button
