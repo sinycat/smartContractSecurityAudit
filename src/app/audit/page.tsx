@@ -407,8 +407,12 @@ contract MyContract {
                 theme="vs-dark"
                 value={editorContent}
                 onChange={(value) => {
-                  setEditorContent(value || "");
-                  setContractCode(value || "");
+                  const newContent = value || "";
+                  if (newContent !== contractCode) {
+                    setAnalysisFiles([]);
+                  }
+                  setEditorContent(newContent);
+                  setContractCode(newContent);
                 }}
                 options={{
                   minimap: { enabled: false },
