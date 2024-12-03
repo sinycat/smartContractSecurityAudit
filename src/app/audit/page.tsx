@@ -23,7 +23,7 @@ import Editor from "@monaco-editor/react";
 import AIConfigModal from "@/components/audit/AIConfigModal";
 import { analyzeContract } from "@/services/audit/contractAnalyzer";
 import { useAIConfig, getModelName, getAIConfig } from "@/utils/ai";
-import html2canvas from 'html2canvas';
+import html2canvas from "html2canvas";
 
 type TabType = "address" | "single-file" | "multi-files";
 
@@ -95,16 +95,20 @@ contract MyContract {
         content: contractCode,
       };
 
-      const result = await analyzeContract({
-        files: [contractFile],
-        contractName: "Contract",
-        signal: controller.signal,
-      });
+      // const result = await analyzeContract({
+      //   files: [contractFile],
+      //   contractName: "Contract",
+      //   signal: controller.signal,
+      // });
 
-      let analysisContent = result.report.analysis;
-      if (!analysisContent.match(/^#\s+/m)) {
-        analysisContent = `# Smart Contract Security Analysis Report\n\n${analysisContent}`;
-      }
+      // let analysisContent = result.report.analysis;
+      // if (!analysisContent.match(/^#\s+/m)) {
+      //   analysisContent = `# Smart Contract Security Analysis Report\n\n${analysisContent}`;
+      // }
+
+      // // TODO: test
+      let analysisContent;
+      analysisContent = getModelName(getAIConfig(config));
 
       let languageCfg = getAIConfig(config).language;
       languageCfg = languageCfg === "english" ? "" : `-${languageCfg}`;
@@ -238,7 +242,10 @@ contract MyContract {
               transition: all 0.2s;
             ">Save as Image</button>
             <script>
-              document.getElementById('content').innerHTML = marked.parse(\`${content.replace(/`/g, '\\`')}\`);
+              document.getElementById('content').innerHTML = marked.parse(\`${content.replace(
+                /`/g,
+                "\\`"
+              )}\`);
               
               document.getElementById('saveAsImage').addEventListener('click', async () => {
                 const content = document.getElementById('content');
@@ -251,7 +258,7 @@ contract MyContract {
                   });
                   
                   const link = document.createElement('a');
-                  link.download = '${fileName.replace('.md', '')}.png';
+                  link.download = '${fileName.replace(".md", "")}.png';
                   link.href = canvas.toDataURL('image/png');
                   link.click();
                 } catch (error) {
@@ -505,7 +512,9 @@ contract MyContract {
                           </span>
                           <div className="flex items-center gap-2">
                             <button
-                              onClick={() => handleViewReport(file.content, file.name)}
+                              onClick={() =>
+                                handleViewReport(file.content, file.name)
+                              }
                               className="text-gray-400 text-sm hover:text-gray-300 flex items-center gap-1 px-2 py-1 rounded hover:bg-[#333333] transition-colors duration-150"
                             >
                               <svg
