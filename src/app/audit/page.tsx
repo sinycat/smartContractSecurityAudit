@@ -5,7 +5,7 @@ import { ethers } from "ethers";
 import { toast } from "react-hot-toast";
 import { checkContractOnChains } from "@/utils/blockchain";
 import { getRpcUrl } from "@/utils/chainServices";
-import type { ChainContractInfo } from "@/types/blockchain";
+import type { ChainContractInfo, ContractFile } from "@/types/blockchain";
 import ContractInfoCard from "@/components/audit/ContractInfoCard";
 import Image from "next/image";
 import Link from "next/link";
@@ -21,6 +21,8 @@ import {
 } from "@/components/Icons";
 import Editor from "@monaco-editor/react";
 import AIConfigModal from "@/components/audit/AIConfigModal";
+import { analyzeContract } from "@/services/audit/contractAnalyzer";
+import { useAIConfig, getModelName, getAIConfig } from "@/utils/ai";
 
 type TabType = "address" | "single-file" | "multi-files";
 
@@ -31,6 +33,9 @@ export default function AuditPage() {
   const [activeTab, setActiveTab] = useState<TabType>("address");
   const [isAIConfigModalOpen, setIsAIConfigModalOpen] = useState(false);
   const [contractCode, setContractCode] = useState("");
+  const [analysisFiles, setAnalysisFiles] = useState<ContractFile[]>([]);
+  const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const { config } = useAIConfig();
 
   const handleAddressChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     let value = e.target.value.trim();
@@ -66,9 +71,150 @@ export default function AuditPage() {
     }
   };
 
-  const handleStartAnalysis = () => {
-    console.log("Starting analysis with code:", contractCode);
-    setIsAIConfigModalOpen(false);
+  const handleStartAnalysis = async () => {
+    try {
+      setIsAnalyzing(true);
+      setIsAIConfigModalOpen(false);
+
+      const contractFile = {
+        name: "Contract.sol",
+        path: "Contract.sol",
+        content: contractCode
+      };
+
+      const result = await analyzeContract({
+        files: [contractFile],
+        contractName: "Contract",
+        signal: new AbortController().signal,
+      });
+
+      let analysisContent = result.report.analysis;
+      if (!analysisContent.match(/^#\s+/m)) {
+        analysisContent = `# Smart Contract Security Analysis Report\n\n${analysisContent}`;
+      }
+
+      let languageCfg = getAIConfig(config).language;
+      languageCfg = languageCfg === "english" ? "" : `-${languageCfg}`;
+      let withSuperPrompt = getAIConfig(config).superPrompt ? "-SuperPrompt" : "";
+      
+      const reportFileName = `report-analysis-${getModelName(getAIConfig(config))}${languageCfg}${withSuperPrompt}.md`;
+      
+      const reportFile = {
+        name: reportFileName,
+        path: reportFileName,
+        content: analysisContent
+      };
+
+      setAnalysisFiles(prev => {
+        const filesWithoutCurrentModelReport = prev.filter(f => f.path !== reportFileName);
+        return [...filesWithoutCurrentModelReport, reportFile];
+      });
+
+      toast.success("Analysis completed");
+    } catch (error) {
+      console.error("Error in analysis:", error);
+      toast.error("Error during analysis");
+    } finally {
+      setIsAnalyzing(false);
+    }
+  };
+
+  const handleViewReport = (content: string) => {
+    const newWindow = window.open();
+    if (newWindow) {
+      newWindow.document.write(`
+        <html>
+          <head>
+            <title>Analysis Report</title>
+            <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+            <style>
+              body {
+                font-family: system-ui, -apple-system, sans-serif;
+                line-height: 1.6;
+                max-width: 800px;
+                margin: 0 auto;
+                padding: 20px;
+                background: #1A1A1A;
+                color: #E5E5E5;
+              }
+              h1 {
+                color: #E5E5E5;
+                border-bottom: 1px solid #333;
+                padding-bottom: 0.5em;
+              }
+              h2 {
+                color: #FF8B3E;
+                margin-top: 1.5em;
+              }
+              pre {
+                background: #252526;
+                padding: 16px;
+                border-radius: 4px;
+                overflow-x: auto;
+                border: 1px solid #333;
+              }
+              code {
+                font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+                font-size: 0.9em;
+              }
+              p {
+                margin: 1em 0;
+              }
+              ul, ol {
+                padding-left: 2em;
+              }
+              a {
+                color: #FF8B3E;
+                text-decoration: none;
+              }
+              a:hover {
+                text-decoration: underline;
+              }
+              blockquote {
+                border-left: 4px solid #FF8B3E;
+                margin: 1em 0;
+                padding-left: 1em;
+                color: #CCCCCC;
+              }
+              table {
+                border-collapse: collapse;
+                width: 100%;
+                margin: 1em 0;
+              }
+              th, td {
+                border: 1px solid #333;
+                padding: 8px;
+                text-align: left;
+              }
+              th {
+                background: #252526;
+              }
+            </style>
+          </head>
+          <body>
+            <div id="content"></div>
+            <script>
+              document.getElementById('content').innerHTML = marked.parse(\`${content.replace(/`/g, '\\`')}\`);
+            </script>
+          </body>
+        </html>
+      `);
+    }
+  };
+
+  const handleDownloadReport = (file: ContractFile) => {
+    const blob = new Blob([file.content], { type: 'text/markdown' });
+    
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = file.name;
+    
+    document.body.appendChild(a);
+    a.click();
+    
+    document.body.removeChild(a);
+    window.URL.revokeObjectURL(url);
   };
 
   return (
@@ -273,6 +419,71 @@ contract MyContract {
     // Your code here
 }`}
               />
+              
+              {analysisFiles.length > 0 && (
+                <div className="border-t border-[#333333] mt-4 pt-4">
+                  <h3 className="text-gray-300 text-sm font-medium mb-2">Analysis Reports:</h3>
+                  <div className="space-y-2">
+                    {analysisFiles.map((file) => (
+                      <div
+                        key={file.path}
+                        className="bg-[#252526] p-3 rounded-lg border border-[#333333]"
+                      >
+                        <div className="flex items-center justify-between">
+                          <span className="text-gray-300 text-sm">{file.name}</span>
+                          <div className="flex items-center gap-2">
+                            <button
+                              onClick={() => handleViewReport(file.content)}
+                              className="text-gray-400 text-sm hover:text-gray-300 flex items-center gap-1 px-2 py-1 rounded hover:bg-[#333333] transition-colors duration-150"
+                            >
+                              <svg
+                                className="w-4 h-4"
+                                fill="none"
+                                stroke="currentColor"
+                                viewBox="0 0 24 24"
+                              >
+                                <path
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                  strokeWidth={2}
+                                  d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
+                                />
+                                <path
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                  strokeWidth={2}
+                                  d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
+                                />
+                              </svg>
+                              View
+                            </button>
+                            <button
+                              onClick={() => handleDownloadReport(file)}
+                              className="text-gray-400 text-sm hover:text-gray-300 flex items-center gap-1 px-2 py-1 rounded hover:bg-[#333333] transition-colors duration-150"
+                            >
+                              <svg
+                                className="w-4 h-4"
+                                fill="none"
+                                stroke="currentColor"
+                                viewBox="0 0 24 24"
+                              >
+                                <path
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                  strokeWidth={2}
+                                  d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"
+                                />
+                              </svg>
+                              Download
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
               <button
                 onClick={() => setIsAIConfigModalOpen(true)}
                 className="self-end h-11 inline-flex items-center gap-2 px-5
@@ -303,6 +514,15 @@ contract MyContract {
                 onClose={() => setIsAIConfigModalOpen(false)}
                 onStartAnalysis={handleStartAnalysis}
               />
+
+              {isAnalyzing && (
+                <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center">
+                  <div className="bg-[#1E1E1E] rounded-lg p-8">
+                    <div className="animate-spin rounded-full h-12 w-12 border-4 border-[#FF8B3E] border-t-transparent"></div>
+                    <p className="text-white mt-4">Analyzing contract...</p>
+                  </div>
+                </div>
+              )}
             </div>
           )}
 

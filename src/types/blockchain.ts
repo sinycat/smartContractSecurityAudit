@@ -23,8 +23,8 @@ export interface ChainContractInfo {
 
 export interface ContractFile {
   name: string;
-  content: string;
   path: string;
+  content: string;
 }
 
 export interface Analysis {
