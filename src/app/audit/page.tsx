@@ -42,6 +42,7 @@ pragma solidity ^0.8.0;
 contract MyContract {
     // Your code here
 }`);
+  const [abortController, setAbortController] = useState<AbortController | null>(null);
 
   const handleAddressChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     let value = e.target.value.trim();
@@ -82,6 +83,9 @@ contract MyContract {
       setIsAnalyzing(true);
       setIsAIConfigModalOpen(false);
 
+      const controller = new AbortController();
+      setAbortController(controller);
+
       const contractFile = {
         name: "Contract.sol",
         path: "Contract.sol",
@@ -91,7 +95,7 @@ contract MyContract {
       const result = await analyzeContract({
         files: [contractFile],
         contractName: "Contract",
-        signal: new AbortController().signal,
+        signal: controller.signal,
       });
 
       let analysisContent = result.report.analysis;
@@ -117,11 +121,22 @@ contract MyContract {
       });
 
       toast.success("Analysis completed");
-    } catch (error) {
-      console.error("Error in analysis:", error);
-      toast.error("Error during analysis");
+    } catch (error: unknown) {
+      if (error instanceof Error && error.name === "AbortError") {
+        toast.success("Analysis cancelled");
+      } else {
+        console.error("Error in analysis:", error);
+        toast.error("Error during analysis");
+      }
     } finally {
       setIsAnalyzing(false);
+      setAbortController(null);
+    }
+  };
+
+  const handleCancelAnalysis = () => {
+    if (abortController) {
+      abortController.abort();
     }
   };
 
@@ -539,7 +554,16 @@ contract MyContract {
                       </div>
                     </div>
                     <p className="text-[#E5E5E5] text-lg mb-2">Analyzing Contract</p>
-                    <p className="text-gray-400 text-sm">This may take a few moments...</p>
+                    <p className="text-gray-400 text-sm mb-4">This may take a few moments...</p>
+                    <button
+                      onClick={handleCancelAnalysis}
+                      className="px-4 py-2 bg-[#252526] text-[#FF8B3E] rounded-md 
+                               border border-[#FF8B3E]/20
+                               hover:bg-[#FF8B3E]/10 transition-colors
+                               font-medium"
+                    >
+                      Cancel Analysis
+                    </button>
                   </div>
                 </div>
               )}
