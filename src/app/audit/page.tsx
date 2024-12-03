@@ -95,20 +95,20 @@ contract MyContract {
         content: contractCode,
       };
 
-      // const result = await analyzeContract({
-      //   files: [contractFile],
-      //   contractName: "Contract",
-      //   signal: controller.signal,
-      // });
+      const result = await analyzeContract({
+        files: [contractFile],
+        contractName: "Contract",
+        signal: controller.signal,
+      });
 
-      // let analysisContent = result.report.analysis;
-      // if (!analysisContent.match(/^#\s+/m)) {
-      //   analysisContent = `# Smart Contract Security Analysis Report\n\n${analysisContent}`;
-      // }
+      let analysisContent = result.report.analysis;
+      if (!analysisContent.match(/^#\s+/m)) {
+        analysisContent = `# Smart Contract Security Analysis Report\n\n${analysisContent}`;
+      }
 
       // // TODO: test
-      let analysisContent;
-      analysisContent = getModelName(getAIConfig(config));
+      //let analysisContent;
+      //analysisContent = getModelName(getAIConfig(config));
 
       let languageCfg = getAIConfig(config).language;
       languageCfg = languageCfg === "english" ? "" : `-${languageCfg}`;
