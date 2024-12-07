@@ -41,9 +41,12 @@ html {
 }
 
 @keyframes bounce-slow {
-  0%, 100% {
+
+  0%,
+  100% {
     transform: translateY(0);
   }
+
   50% {
     transform: translateY(-10px);
   }
@@ -149,7 +152,7 @@ pre[class*="language-"].line-numbers {
   counter-reset: linenumber;
 }
 
-pre[class*="language-"].line-numbers > code {
+pre[class*="language-"].line-numbers>code {
   position: relative;
   white-space: inherit;
 }
@@ -160,7 +163,8 @@ pre[class*="language-"].line-numbers > code {
   top: 0;
   font-size: 100%;
   left: -3.8em;
-  width: 3em; /* works for line-numbers below 1000 lines */
+  width: 3em;
+  /* works for line-numbers below 1000 lines */
   letter-spacing: -1px;
   border-right: 1px solid #333;
   user-select: none;
@@ -169,13 +173,13 @@ pre[class*="language-"].line-numbers > code {
   -ms-user-select: none;
 }
 
-.line-numbers-rows > span {
+.line-numbers-rows>span {
   display: block;
   counter-increment: linenumber;
   pointer-events: none;
 }
 
-.line-numbers-rows > span:before {
+.line-numbers-rows>span:before {
   content: counter(linenumber);
   color: #666;
   display: block;
@@ -211,7 +215,7 @@ pre[class*="language-"].line-numbers.whitespace-pre-wrap code {
   white-space: nowrap !important;
 }
 
-.line-numbers-rows > span {
+.line-numbers-rows>span {
   pointer-events: none;
   display: block;
 }
@@ -253,12 +257,15 @@ pre[class*="language-"].line-numbers.whitespace-pre-wrap code {
 
 /* Hide scrollbar but keep functionality */
 .no-scrollbar {
-  -ms-overflow-style: none;  /* IE and Edge */
-  scrollbar-width: none;  /* Firefox */
+  -ms-overflow-style: none;
+  /* IE and Edge */
+  scrollbar-width: none;
+  /* Firefox */
 }
 
 .no-scrollbar::-webkit-scrollbar {
-  display: none;  /* Chrome, Safari and Opera */
+  display: none;
+  /* Chrome, Safari and Opera */
 }
 
 /* File Explorer scrollbar */
