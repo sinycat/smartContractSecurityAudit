@@ -821,30 +821,102 @@ contract MyContract {
               )}
 
               {uploadedFiles.length > 0 && (
-                <button
-                  onClick={() => setIsAIConfigModalOpen(true)}
-                  className="self-end h-11 inline-flex items-center gap-2 px-5
-                           bg-[#1E1E1E] text-mush-orange text-base font-normal
-                           border border-[#333333] rounded-lg
-                           transition-all duration-300
-                           hover:bg-mush-orange/10 hover:border-mush-orange/50
-                           whitespace-nowrap"
-                >
-                  <span>Analyze Contract</span>
-                  <svg
-                    className="w-4 h-4"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
+                <>
+                  <button
+                    onClick={() => setIsAIConfigModalOpen(true)}
+                    className="self-end h-11 inline-flex items-center gap-2 px-5
+                             bg-[#1E1E1E] text-mush-orange text-base font-normal
+                             border border-[#333333] rounded-lg
+                             transition-all duration-300
+                             hover:bg-mush-orange/10 hover:border-mush-orange/50
+                             whitespace-nowrap"
                   >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M9 5l7 7-7 7"
-                    />
-                  </svg>
-                </button>
+                    <span>Analyze Contract</span>
+                    <svg
+                      className="w-4 h-4"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M9 5l7 7-7 7"
+                      />
+                    </svg>
+                  </button>
+
+                  {analysisFiles.length > 0 && (
+                    <div className="border-t border-[#333333] mt-4 pt-4">
+                      <h3 className="text-gray-300 text-sm font-medium mb-2">
+                        Analysis Reports:
+                      </h3>
+                      <div className="space-y-2">
+                        {analysisFiles.map((file) => (
+                          <div
+                            key={file.path}
+                            className="bg-[#252526] p-3 rounded-lg border border-[#333333]"
+                          >
+                            <div className="flex items-center justify-between">
+                              <span className="text-gray-300 text-sm">
+                                {file.name}
+                              </span>
+                              <div className="flex items-center gap-2">
+                                <button
+                                  onClick={() =>
+                                    handleViewReport(file.content, file.name)
+                                  }
+                                  className="text-gray-400 text-sm hover:text-gray-300 flex items-center gap-1 px-2 py-1 rounded hover:bg-[#333333] transition-colors duration-150"
+                                >
+                                  <svg
+                                    className="w-4 h-4"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    viewBox="0 0 24 24"
+                                  >
+                                    <path
+                                      strokeLinecap="round"
+                                      strokeLinejoin="round"
+                                      strokeWidth={2}
+                                      d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
+                                    />
+                                    <path
+                                      strokeLinecap="round"
+                                      strokeLinejoin="round"
+                                      strokeWidth={2}
+                                      d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
+                                    />
+                                  </svg>
+                                  View
+                                </button>
+                                <button
+                                  onClick={() => handleDownloadReport(file)}
+                                  className="text-gray-400 text-sm hover:text-gray-300 flex items-center gap-1 px-2 py-1 rounded hover:bg-[#333333] transition-colors duration-150"
+                                >
+                                  <svg
+                                    className="w-4 h-4"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    viewBox="0 0 24 24"
+                                  >
+                                    <path
+                                      strokeLinecap="round"
+                                      strokeLinejoin="round"
+                                      strokeWidth={2}
+                                      d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"
+                                    />
+                                  </svg>
+                                  Download
+                                </button>
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </>
               )}
 
               <AIConfigModal
@@ -852,6 +924,40 @@ contract MyContract {
                 onClose={() => setIsAIConfigModalOpen(false)}
                 onStartAnalysis={handleMultiFileAnalysis}
               />
+
+              {isAnalyzing && (
+                <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center">
+                  <div className="bg-[#1E1E1E] rounded-lg p-8 flex flex-col items-center">
+                    <div className="relative w-24 h-24 mb-4">
+                      <div className="absolute inset-0 border-4 border-t-[#FF8B3E] border-r-[#FF8B3E]/50 border-b-[#FF8B3E]/30 border-l-[#FF8B3E]/10 rounded-full animate-spin" />
+                      <div className="absolute inset-2 bg-[#1E1E1E] rounded-full flex items-center justify-center">
+                        <Image
+                          src="/mush.png"
+                          alt="Loading"
+                          width={40}
+                          height={40}
+                          className="animate-bounce-slow"
+                        />
+                      </div>
+                    </div>
+                    <p className="text-[#E5E5E5] text-lg mb-2">
+                      Analyzing Contract
+                    </p>
+                    <p className="text-gray-400 text-sm mb-4">
+                      This may take a few moments...
+                    </p>
+                    <button
+                      onClick={handleCancelAnalysis}
+                      className="px-4 py-2 bg-[#252526] text-[#FF8B3E] rounded-md 
+                               border border-[#FF8B3E]/20
+                               hover:bg-[#FF8B3E]/10 transition-colors
+                               font-medium"
+                    >
+                      Cancel Analysis
+                    </button>
+                  </div>
+                </div>
+              )}
             </div>
           )}
         </div>
