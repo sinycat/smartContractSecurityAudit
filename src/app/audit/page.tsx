@@ -349,11 +349,11 @@ contract MyContract {
       const controller = new AbortController();
       setAbortController(controller);
 
-      // Debug: Check merged content before analysis
-      const mergedContent = mergeContractContents(uploadedFiles, false);
-      console.log('=== Merged Contract Files ===');
-      console.log(mergedContent);
-      console.log('=== End of Merged Content ===');
+      // // Debug: Check merged content before analysis
+      // const mergedContent = mergeContractContents(uploadedFiles, false);
+      // console.log('=== Merged Contract Files ===');
+      // console.log(mergedContent);
+      // console.log('=== End of Merged Content ===');
 
       // Analyze all uploaded files together
       const result = await analyzeContract({
