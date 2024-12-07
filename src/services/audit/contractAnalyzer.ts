@@ -129,7 +129,7 @@ export async function analyzeContract(params: {
       }
 
       // Debug: Check merged code before analysis
-      console.log("Merged code:", mergedCode);
+      // console.log("Merged code:", mergedCode);
 
       let finalPrompt = createPromptWithLanguage(
         SECURITY_AUDIT_PROMPT.replace("${mergedCode}", mergedCode).replace(
