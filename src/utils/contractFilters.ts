@@ -49,14 +49,17 @@ export function shouldExcludeFile(path: string): boolean {
   return false;
 }
 
-// Filter contract files
-export function filterContractFiles(files: ContractFile[]): ContractFile[] {
+// Filter contract files with optional filtering control
+export function filterContractFiles(files: ContractFile[], applyFilter: boolean = true): ContractFile[] {
+  if (!applyFilter) {
+    return files; // Return all files without filtering when applyFilter is false
+  }
   return files.filter((file) => !shouldExcludeFile(file.path));
 }
 
-// Extract main contract file
-export function findMainContract(files: ContractFile[]): ContractFile | null {
-  const filteredFiles = filterContractFiles(files);
+// Find main contract file
+export function findMainContract(files: ContractFile[], applyFilter: boolean = true): ContractFile | null {
+  const filteredFiles = filterContractFiles(files, applyFilter);
 
   // If there is only one file, return it directly
   if (filteredFiles.length === 1) {
@@ -68,14 +71,62 @@ export function findMainContract(files: ContractFile[]): ContractFile | null {
   return filteredFiles[0] || null;
 }
 
-// Merge the contents of multiple contract files
-export function mergeContractContents(files: ContractFile[]): string {
-  const filteredFiles = filterContractFiles(files);
+// Define file type priorities (lower number = higher priority)
+const FILE_PRIORITIES: Record<string, number> = {
+  ".sol": 1, // Main contract files
+  ".t.sol": 2, // Test files
+  ".s.sol": 2, // Script files
+  ".test.sol": 2, // Alternative test files
+  ".script.sol": 2, // Alternative script files
+  ".mock.sol": 3, // Mock contracts
+  ".lib.sol": 4, // Library files
+};
 
-  return filteredFiles
-    .map((file) => {
-      // Add file separator and file path comment
-      return `\n// File: ${file.path}\n${file.content}`;
-    })
-    .join("\n");
+// Get file priority (lower number = higher priority)
+function getFilePriority(filename: string): number {
+  // Check each known extension pattern
+  for (const [ext, priority] of Object.entries(FILE_PRIORITIES)) {
+    if (filename.toLowerCase().endsWith(ext)) {
+      return priority;
+    }
+  }
+  // Default priority for unknown patterns
+  return 99;
+}
+
+// Merge multiple Solidity files with import resolution
+export function mergeContractContents(files: ContractFile[], applyFilter: boolean = true): string {
+  const filteredFiles = filterContractFiles(files, applyFilter);
+  
+  // Sort files by priority and name
+  const sortedFiles = [...filteredFiles].sort((a, b) => {
+    // First compare by priority
+    const priorityA = getFilePriority(a.name);
+    const priorityB = getFilePriority(b.name);
+    if (priorityA !== priorityB) {
+      return priorityA - priorityB;
+    }
+    // If priorities are equal, sort alphabetically
+    return a.name.localeCompare(b.name);
+  });
+
+  // Process each file independently
+  const processedContents = sortedFiles.map((file) => {
+    // Clean up content and remove multiple empty lines
+    const content = file.content
+      .trim()
+      .replace(/\n\s*\n\s*\n/g, "\n\n") // Replace 3+ newlines with 2
+      .replace(/^\s*import\s+[^;]+;\s*\n*/gm, ""); // Remove import statements
+
+    return {
+      name: file.name,
+      content: content,
+    };
+  });
+
+  // Combine all files with proper headers and spacing
+  return processedContents
+    .map(({ name, content }) => `// File: ${name}\n${content}`)
+    .join("\n\n")
+    .replace(/\n\s*\n\s*\n/g, "\n\n"); // Final cleanup of multiple empty lines
 }

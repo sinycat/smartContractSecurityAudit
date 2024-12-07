@@ -52,12 +52,12 @@ export async function analyzeContract(params: {
   contractName?: string;
   chain?: string;
   signal?: AbortSignal;
+  isMultiFile?: boolean;
 }): Promise<AnalysisResult> {
-  const maxRetries = 3; // max retry count
+  const maxRetries = 3;
   let retryCount = 0;
   let lastError: any;
 
-  // Get AI config
   const savedConfig = localStorage.getItem("ai_config");
   if (!savedConfig) {
     throw new Error("AI configuration not found");
@@ -70,56 +70,66 @@ export async function analyzeContract(params: {
         throw new Error("Analysis cancelled");
       }
 
-      // Filter out interface files and third-party library files
-      const filteredFiles = params.files.filter((file) => {
-        if (
-          file.path.includes("/interfaces/") ||
-          file.path.includes("Interface") ||
-          file.path.startsWith("IERC") ||
-          file.path.startsWith("ERC") ||
-          file.path.startsWith("EIP")
-        ) {
-          return false;
-        }
+      // Skip filtering for multi-file mode
+      let filesToAnalyze = params.isMultiFile
+        ? params.files
+        : params.files.filter((file) => {
+            if (
+              file.path.includes("/interfaces/") ||
+              file.path.includes("Interface") ||
+              file.path.startsWith("IERC") ||
+              file.path.startsWith("ERC") ||
+              file.path.startsWith("EIP")
+            ) {
+              return false;
+            }
 
-        if (
-          file.path.includes("@openzeppelin/") ||
-          file.path.includes("node_modules/") ||
-          file.path.includes("@paulrberg/")
-        ) {
-          return false;
-        }
+            if (
+              file.path.includes("@openzeppelin/") ||
+              file.path.includes("node_modules/") ||
+              file.path.includes("@paulrberg/")
+            ) {
+              return false;
+            }
 
-        return true;
-      });
+            return true;
+          });
 
-      if (filteredFiles.length === 0) {
+      if (filesToAnalyze.length === 0) {
         throw new Error("No contract files to analyze after filtering");
       }
 
-      // Separate proxy and implementation contract files
-      const proxyFiles = filteredFiles.filter((f) =>
-        f.path.startsWith("proxy/")
-      );
-      const implementationFiles = filteredFiles.filter((f) =>
-        f.path.startsWith("implementation/")
-      );
-      const regularFiles = filteredFiles.filter(
-        (f) =>
-          !f.path.startsWith("proxy/") && !f.path.startsWith("implementation/")
-      );
+      // For non-multi-file mode, handle proxy/implementation separation
+      if (!params.isMultiFile) {
+        const proxyFiles = filesToAnalyze.filter((f) =>
+          f.path.startsWith("proxy/")
+        );
+        const implementationFiles = filesToAnalyze.filter((f) =>
+          f.path.startsWith("implementation/")
+        );
+        const regularFiles = filesToAnalyze.filter(
+          (f) =>
+            !f.path.startsWith("proxy/") &&
+            !f.path.startsWith("implementation/")
+        );
 
-      // Determine which files to analyze
-      let filesToAnalyze = regularFiles;
-      if (proxyFiles.length > 0 && implementationFiles.length > 0) {
-        // For proxy contracts, prioritize analyzing implementation contracts
-        filesToAnalyze = implementationFiles;
+        if (proxyFiles.length > 0 && implementationFiles.length > 0) {
+          filesToAnalyze = implementationFiles;
+        } else {
+          filesToAnalyze = regularFiles;
+        }
       }
 
-      const mergedCode = mergeContractContents(filesToAnalyze);
+      const mergedCode = mergeContractContents(
+        filesToAnalyze,
+        !params.isMultiFile
+      );
       if (!mergedCode) {
         throw new Error("No valid contract code to analyze");
       }
+
+      // Debug: Check merged code before analysis
+      // console.log("Merged code:", mergedCode);
 
       let finalPrompt = createPromptWithLanguage(
         SECURITY_AUDIT_PROMPT.replace("${mergedCode}", mergedCode).replace(
@@ -161,7 +171,7 @@ export async function analyzeContract(params: {
       });
 
       return {
-        filteredFiles,
+        filteredFiles: filesToAnalyze,
         vulnerabilities: [],
         optimizations: [],
         report: {

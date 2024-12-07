@@ -24,6 +24,10 @@ import AIConfigModal from "@/components/audit/AIConfigModal";
 import { analyzeContract } from "@/services/audit/contractAnalyzer";
 import { useAIConfig, getModelName, getAIConfig } from "@/utils/ai";
 import html2canvas from "html2canvas";
+import {
+  findMainContract,
+  mergeContractContents,
+} from "@/utils/contractFilters";
 
 type TabType = "address" | "single-file" | "multi-files";
 
@@ -41,11 +45,75 @@ export default function AuditPage() {
     useState(`// SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
-contract MyContract {
-    // Your code here
+contract VaultLogic {
+    address public owner; // slot 0
+    bytes32 private password; // slot 1
+
+    constructor(bytes32 _password) public {
+        owner = msg.sender;
+        password = _password;
+    }
+
+    function changeOwner(bytes32 _password, address newOwner) public {
+        if (password == _password) {
+            owner = newOwner;
+        } else {
+            revert("password error");
+        }
+    }
+}
+
+contract Vault {
+    address public owner; // slot 0
+    VaultLogic logic; // slot 1
+    mapping(address => uint256) deposites; // slot 2
+    bool public canWithdraw = false; // slot 3
+
+    constructor(address _logicAddress) public {
+        logic = VaultLogic(_logicAddress);
+        owner = msg.sender;
+    }
+
+    fallback() external {
+        (bool result,) = address(logic).delegatecall(msg.data);
+        if (result) {
+            this;
+        }
+    }
+
+    receive() external payable { }
+
+    function deposite() public payable {
+        deposites[msg.sender] += msg.value;
+    }
+
+    function isSolve() external view returns (bool) {
+        if (address(this).balance == 0) {
+            return true;
+        }
+    }
+
+    function openWithdraw() external {
+        if (owner == msg.sender) {
+            canWithdraw = true;
+        } else {
+            revert("not owner");
+        }
+    }
+
+    function withdraw() public {
+        if (canWithdraw && deposites[msg.sender] >= 0) {
+            (bool result,) = msg.sender.call{ value: deposites[msg.sender] }("");
+            if (result) {
+                deposites[msg.sender] = 0;
+            }
+        }
+    }
 }`);
+
   const [abortController, setAbortController] =
     useState<AbortController | null>(null);
+  const [uploadedFiles, setUploadedFiles] = useState<ContractFile[]>([]);
 
   const handleAddressChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     let value = e.target.value.trim();
@@ -83,6 +151,11 @@ contract MyContract {
 
   const handleStartAnalysis = async () => {
     try {
+      if (!editorContent.trim()) {
+        toast.error("Please enter contract code");
+        return;
+      }
+
       setIsAnalyzing(true);
       setIsAIConfigModalOpen(false);
 
@@ -92,7 +165,7 @@ contract MyContract {
       const contractFile = {
         name: "Contract.sol",
         path: "Contract.sol",
-        content: contractCode,
+        content: editorContent,
       };
 
       const result = await analyzeContract({
@@ -105,10 +178,6 @@ contract MyContract {
       if (!analysisContent.match(/^#\s+/m)) {
         analysisContent = `# Smart Contract Security Analysis Report\n\n${analysisContent}`;
       }
-
-      // // TODO: test
-      //let analysisContent;
-      //analysisContent = getModelName(getAIConfig(config));
 
       let languageCfg = getAIConfig(config).language;
       languageCfg = languageCfg === "english" ? "" : `-${languageCfg}`;
@@ -285,6 +354,116 @@ contract MyContract {
 
     document.body.removeChild(a);
     window.URL.revokeObjectURL(url);
+  };
+
+  const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const files = event.target.files;
+    if (!files) return;
+
+    // Reset previous analysis results
+    setAnalysisFiles([]);
+
+    // Process each uploaded file
+    Array.from(files).forEach((file) => {
+      const reader = new FileReader();
+      reader.onload = async (e: ProgressEvent<FileReader>) => {
+        if (!e.target) return;
+        const content = e.target.result as string;
+
+        // Create ContractFile object for each uploaded file
+        const contractFile = {
+          name: file.name,
+          path: file.name, // Use filename as path for local files
+          content: content,
+        };
+
+        // Add to files array, preventing duplicates by file name
+        setUploadedFiles((prev) => {
+          // Check if file with same name already exists
+          const exists = prev.some((f) => f.name === file.name);
+          if (exists) {
+            // Replace the existing file
+            return prev.map((f) => (f.name === file.name ? contractFile : f));
+          }
+          // Add new file
+          return [...prev, contractFile];
+        });
+      };
+      reader.readAsText(file);
+    });
+
+    // Reset input value so the same file can be selected again
+    event.target.value = "";
+  };
+
+  const handleRemoveFile = (path: string) => {
+    setUploadedFiles((prev) => prev.filter((file) => file.path !== path));
+  };
+
+  const handleMultiFileAnalysis = async () => {
+    if (uploadedFiles.length === 0) {
+      toast.error("Please upload contract files first");
+      return;
+    }
+
+    try {
+      setIsAnalyzing(true);
+      setIsAIConfigModalOpen(false);
+
+      const controller = new AbortController();
+      setAbortController(controller);
+
+      // Analyze all uploaded files together
+      const result = await analyzeContract({
+        files: uploadedFiles,
+        contractName:
+          findMainContract(uploadedFiles, false)?.name.replace(".sol", "") ||
+          "MultiContract",
+        signal: controller.signal,
+        isMultiFile: true,
+      });
+
+      let analysisContent = result.report.analysis;
+      if (!analysisContent.match(/^#\s+/m)) {
+        analysisContent = `# Smart Contract Security Analysis Report\n\n${analysisContent}`;
+      }
+
+      // Generate report filename with model info
+      let languageCfg = getAIConfig(config).language;
+      languageCfg = languageCfg === "english" ? "" : `-${languageCfg}`;
+      let withSuperPrompt = getAIConfig(config).superPrompt
+        ? "-SuperPrompt"
+        : "";
+
+      const reportFileName = `report-analysis-${getModelName(
+        getAIConfig(config)
+      )}${languageCfg}${withSuperPrompt}.md`;
+
+      const reportFile = {
+        name: reportFileName,
+        path: reportFileName,
+        content: analysisContent,
+      };
+
+      setAnalysisFiles((prev) => {
+        const filesWithoutCurrentModelReport = prev.filter(
+          (f) => f.path !== reportFileName
+        );
+        return [...filesWithoutCurrentModelReport, reportFile];
+      });
+
+      toast.success("Analysis completed");
+    } catch (error) {
+      console.error("Analysis failed:", error);
+      toast.error("Analysis failed");
+    } finally {
+      setIsAnalyzing(false);
+      setAbortController(null);
+    }
+  };
+
+  const handleRemoveReport = (path: string) => {
+    setAnalysisFiles((prev) => prev.filter((file) => file.path !== path));
   };
 
   return (
@@ -557,6 +736,24 @@ contract MyContract {
                               </svg>
                               Download
                             </button>
+                            <button
+                              onClick={() => handleRemoveReport(file.path)}
+                              className="text-gray-400 hover:text-red-400 p-1 rounded hover:bg-[#333333] transition-colors duration-150"
+                            >
+                              <svg
+                                className="w-4 h-4"
+                                fill="none"
+                                stroke="currentColor"
+                                viewBox="0 0 24 24"
+                              >
+                                <path
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                  strokeWidth={2}
+                                  d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                                />
+                              </svg>
+                            </button>
                           </div>
                         </div>
                       </div>
@@ -639,7 +836,7 @@ contract MyContract {
                   <FilesIcon className="w-12 h-12 text-gray-500" />
                   <div className="text-center">
                     <p className="text-gray-300 mb-1">
-                      Drag and drop your contract files here
+                      Drag and drop contract files here
                     </p>
                     <p className="text-gray-500 text-sm">or</p>
                   </div>
@@ -649,72 +846,217 @@ contract MyContract {
                       multiple
                       accept=".sol"
                       className="hidden"
+                      onChange={handleFileUpload}
                     />
                     <span
                       className="h-9 inline-flex items-center gap-2 px-4
-                                  bg-[#1E1E1E] text-mush-orange text-sm font-normal
-                                  border border-[#333333] rounded-lg
-                                  transition-all duration-300
-                                  hover:bg-mush-orange/10 hover:border-mush-orange/50
-                                  cursor-pointer"
+                      bg-[#1E1E1E] text-mush-orange text-sm font-normal
+                      border border-[#333333] rounded-lg
+                      transition-all duration-300
+                      hover:bg-mush-orange/10 hover:border-mush-orange/50
+                      cursor-pointer"
                     >
-                      Browse Files
+                      Browse files
                     </span>
                   </label>
                 </div>
               </div>
 
-              <div className="flex flex-col gap-2">
-                <div className="text-sm text-gray-400">Selected files:</div>
-                <div className="space-y-2">
-                  {/* 这里可以添加已选文件列表的状态和渲染 */}
-                  <div className="flex items-center justify-between p-3 bg-[#1A1A1A] border border-[#333333] rounded-lg">
-                    <div className="flex items-center gap-2">
-                      <FileIcon className="w-4 h-4 text-gray-400" />
-                      <span className="text-gray-300 text-sm">Token.sol</span>
-                    </div>
-                    <button className="text-gray-500 hover:text-gray-300">
-                      <svg
-                        className="w-4 h-4"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        stroke="currentColor"
+              {uploadedFiles.length > 0 && (
+                <div className="flex flex-col gap-2">
+                  <div className="text-sm text-gray-400">Selected files:</div>
+                  <div className="space-y-2">
+                    {uploadedFiles.map((file) => (
+                      <div
+                        key={file.path}
+                        className="flex items-center justify-between p-3 bg-[#1A1A1A] border border-[#333333] rounded-lg"
                       >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M6 18L18 6M6 6l12 12"
+                        <div className="flex items-center gap-2">
+                          <FileIcon className="w-4 h-4 text-gray-400" />
+                          <span className="text-gray-300 text-sm">
+                            {file.name}
+                          </span>
+                        </div>
+                        <button
+                          onClick={() => handleRemoveFile(file.path)}
+                          className="text-gray-500 hover:text-gray-300"
+                        >
+                          <svg
+                            className="w-4 h-4"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            stroke="currentColor"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M6 18L18 6M6 6l12 12"
+                            />
+                          </svg>
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {uploadedFiles.length > 0 && (
+                <>
+                  <button
+                    onClick={() => setIsAIConfigModalOpen(true)}
+                    className="self-end h-11 inline-flex items-center gap-2 px-5
+                             bg-[#1E1E1E] text-mush-orange text-base font-normal
+                             border border-[#333333] rounded-lg
+                             transition-all duration-300
+                             hover:bg-mush-orange/10 hover:border-mush-orange/50
+                             whitespace-nowrap"
+                  >
+                    <span>Analyze Contract</span>
+                    <svg
+                      className="w-4 h-4"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M9 5l7 7-7 7"
+                      />
+                    </svg>
+                  </button>
+
+                  {analysisFiles.length > 0 && (
+                    <div className="border-t border-[#333333] mt-4 pt-4">
+                      <h3 className="text-gray-300 text-sm font-medium mb-2">
+                        Analysis Reports:
+                      </h3>
+                      <div className="space-y-2">
+                        {analysisFiles.map((file) => (
+                          <div
+                            key={file.path}
+                            className="bg-[#252526] p-3 rounded-lg border border-[#333333]"
+                          >
+                            <div className="flex items-center justify-between">
+                              <span className="text-gray-300 text-sm">
+                                {file.name}
+                              </span>
+                              <div className="flex items-center gap-2">
+                                <button
+                                  onClick={() =>
+                                    handleViewReport(file.content, file.name)
+                                  }
+                                  className="text-gray-400 text-sm hover:text-gray-300 flex items-center gap-1 px-2 py-1 rounded hover:bg-[#333333] transition-colors duration-150"
+                                >
+                                  <svg
+                                    className="w-4 h-4"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    viewBox="0 0 24 24"
+                                  >
+                                    <path
+                                      strokeLinecap="round"
+                                      strokeLinejoin="round"
+                                      strokeWidth={2}
+                                      d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
+                                    />
+                                    <path
+                                      strokeLinecap="round"
+                                      strokeLinejoin="round"
+                                      strokeWidth={2}
+                                      d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
+                                    />
+                                  </svg>
+                                  View
+                                </button>
+                                <button
+                                  onClick={() => handleDownloadReport(file)}
+                                  className="text-gray-400 text-sm hover:text-gray-300 flex items-center gap-1 px-2 py-1 rounded hover:bg-[#333333] transition-colors duration-150"
+                                >
+                                  <svg
+                                    className="w-4 h-4"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    viewBox="0 0 24 24"
+                                  >
+                                    <path
+                                      strokeLinecap="round"
+                                      strokeLinejoin="round"
+                                      strokeWidth={2}
+                                      d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"
+                                    />
+                                  </svg>
+                                  Download
+                                </button>
+                                <button
+                                  onClick={() => handleRemoveReport(file.path)}
+                                  className="text-gray-400 hover:text-red-400 p-1 rounded hover:bg-[#333333] transition-colors duration-150"
+                                >
+                                  <svg
+                                    className="w-4 h-4"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    viewBox="0 0 24 24"
+                                  >
+                                    <path
+                                      strokeLinecap="round"
+                                      strokeLinejoin="round"
+                                      strokeWidth={2}
+                                      d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                                    />
+                                  </svg>
+                                </button>
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </>
+              )}
+
+              <AIConfigModal
+                isOpen={isAIConfigModalOpen}
+                onClose={() => setIsAIConfigModalOpen(false)}
+                onStartAnalysis={handleMultiFileAnalysis}
+              />
+
+              {isAnalyzing && (
+                <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center">
+                  <div className="bg-[#1E1E1E] rounded-lg p-8 flex flex-col items-center">
+                    <div className="relative w-24 h-24 mb-4">
+                      <div className="absolute inset-0 border-4 border-t-[#FF8B3E] border-r-[#FF8B3E]/50 border-b-[#FF8B3E]/30 border-l-[#FF8B3E]/10 rounded-full animate-spin" />
+                      <div className="absolute inset-2 bg-[#1E1E1E] rounded-full flex items-center justify-center">
+                        <Image
+                          src="/mush.png"
+                          alt="Loading"
+                          width={40}
+                          height={40}
+                          className="animate-bounce-slow"
                         />
-                      </svg>
+                      </div>
+                    </div>
+                    <p className="text-[#E5E5E5] text-lg mb-2">
+                      Analyzing Contract
+                    </p>
+                    <p className="text-gray-400 text-sm mb-4">
+                      This may take a few moments...
+                    </p>
+                    <button
+                      onClick={handleCancelAnalysis}
+                      className="px-4 py-2 bg-[#252526] text-[#FF8B3E] rounded-md 
+                               border border-[#FF8B3E]/20
+                               hover:bg-[#FF8B3E]/10 transition-colors
+                               font-medium"
+                    >
+                      Cancel Analysis
                     </button>
                   </div>
                 </div>
-              </div>
-
-              <button
-                className="self-end h-11 inline-flex items-center gap-2 px-5
-                         bg-[#1E1E1E] text-mush-orange text-base font-normal
-                         border border-[#333333] rounded-lg
-                         transition-all duration-300
-                         hover:bg-mush-orange/10 hover:border-mush-orange/50
-                         whitespace-nowrap"
-              >
-                <span>Analyze Contracts</span>
-                <svg
-                  className="w-4 h-4"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M9 5l7 7-7 7"
-                  />
-                </svg>
-              </button>
+              )}
             </div>
           )}
         </div>
