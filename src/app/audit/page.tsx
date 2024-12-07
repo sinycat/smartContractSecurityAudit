@@ -151,6 +151,11 @@ contract Vault {
 
   const handleStartAnalysis = async () => {
     try {
+      if (!editorContent.trim()) {
+        toast.error("Please enter contract code");
+        return;
+      }
+
       setIsAnalyzing(true);
       setIsAIConfigModalOpen(false);
 
@@ -160,7 +165,7 @@ contract Vault {
       const contractFile = {
         name: "Contract.sol",
         path: "Contract.sol",
-        content: contractCode,
+        content: editorContent,
       };
 
       const result = await analyzeContract({
@@ -173,10 +178,6 @@ contract Vault {
       if (!analysisContent.match(/^#\s+/m)) {
         analysisContent = `# Smart Contract Security Analysis Report\n\n${analysisContent}`;
       }
-
-      // // TODO: test
-      //let analysisContent;
-      //analysisContent = getModelName(getAIConfig(config));
 
       let languageCfg = getAIConfig(config).language;
       languageCfg = languageCfg === "english" ? "" : `-${languageCfg}`;
