@@ -463,7 +463,7 @@ contract Vault {
   };
 
   const handleRemoveReport = (path: string) => {
-    setAnalysisFiles(prev => prev.filter(file => file.path !== path));
+    setAnalysisFiles((prev) => prev.filter((file) => file.path !== path));
   };
 
   return (
