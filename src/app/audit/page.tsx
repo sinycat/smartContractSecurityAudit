@@ -350,18 +350,17 @@ contract MyContract {
       setAbortController(controller);
 
       // Debug: Check merged content before analysis
-      const mergedContent = mergeContractContents(uploadedFiles);
-      //console.log('=== Merged Contract Files ===');
-      //console.log(mergedContent);
-      //console.log('=== End of Merged Content ===');
+      const mergedContent = mergeContractContents(uploadedFiles, false);
+      console.log('=== Merged Contract Files ===');
+      console.log(mergedContent);
+      console.log('=== End of Merged Content ===');
 
       // Analyze all uploaded files together
       const result = await analyzeContract({
         files: uploadedFiles,
-        contractName:
-          findMainContract(uploadedFiles)?.name.replace(".sol", "") ||
-          "MultiContract",
+        contractName: findMainContract(uploadedFiles, false)?.name.replace('.sol', '') || "MultiContract",
         signal: controller.signal,
+        isMultiFile: true
       });
 
       let analysisContent = result.report.analysis;

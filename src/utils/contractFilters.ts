@@ -49,14 +49,17 @@ export function shouldExcludeFile(path: string): boolean {
   return false;
 }
 
-// Filter contract files
-export function filterContractFiles(files: ContractFile[]): ContractFile[] {
+// Filter contract files with optional filtering control
+export function filterContractFiles(files: ContractFile[], applyFilter: boolean = true): ContractFile[] {
+  if (!applyFilter) {
+    return files; // Return all files without filtering when applyFilter is false
+  }
   return files.filter((file) => !shouldExcludeFile(file.path));
 }
 
-// Extract main contract file
-export function findMainContract(files: ContractFile[]): ContractFile | null {
-  const filteredFiles = filterContractFiles(files);
+// Find main contract file
+export function findMainContract(files: ContractFile[], applyFilter: boolean = true): ContractFile | null {
+  const filteredFiles = filterContractFiles(files, applyFilter);
 
   // If there is only one file, return it directly
   if (filteredFiles.length === 1) {
@@ -92,9 +95,9 @@ function getFilePriority(filename: string): number {
 }
 
 // Merge multiple Solidity files with import resolution
-export function mergeContractContents(files: ContractFile[]): string {
-  const filteredFiles = filterContractFiles(files);
-
+export function mergeContractContents(files: ContractFile[], applyFilter: boolean = true): string {
+  const filteredFiles = filterContractFiles(files, applyFilter);
+  
   // Sort files by priority and name
   const sortedFiles = [...filteredFiles].sort((a, b) => {
     // First compare by priority
