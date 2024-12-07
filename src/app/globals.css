@@ -129,66 +129,17 @@ html {
 pre[class*="language-"] {
   background: #2A2A2A !important;
   border-radius: 0.5rem;
-  margin: 0;
+  margin: 0 !important;
   overflow: auto;
-  padding: 1rem;
+  padding: 1rem !important;
+  font-size: 14px;
+  line-height: 1.5;
 }
 
 code[class*="language-"] {
   text-shadow: none !important;
-}
-
-/* Code line numbers */
-.line-numbers {
-  counter-reset: line;
-  padding-left: 3.5rem !important;
-}
-
-.line-numbers .line-numbers-rows {
-  position: absolute;
-  pointer-events: none;
-  top: 0;
-  font-size: 100%;
-  left: 0;
-  width: 3rem;
-  border-right: 1px solid #333;
-  -webkit-user-select: none;
-  -moz-user-select: none;
-  -ms-user-select: none;
-  user-select: none;
-}
-
-.line-numbers-rows > span {
-  display: block;
-  counter-increment: line;
-}
-
-.line-numbers-rows > span:before {
-  content: counter(line);
-  color: #666;
-  display: block;
-  padding-right: 0.8em;
-  text-align: right;
-}
-
-/* Code container */
-pre[class*="language-"] {
-  position: relative;
-  padding-left: 3.5rem !important;
-  counter-reset: line;
-}
-
-/* Line highlight */
-.line-highlight {
-  position: absolute;
-  left: 0;
-  right: 0;
-  padding: inherit 0;
-  margin-top: 1em;
-  background: hsla(24, 20%, 50%, 0.08);
-  pointer-events: none;
-  line-height: inherit;
-  white-space: pre;
+  padding: 0;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
 }
 
 /* Line Numbers */
@@ -232,19 +183,6 @@ pre[class*="language-"].line-numbers > code {
   text-align: right;
 }
 
-/* 优化代码容器样式 */
-pre[class*="language-"] {
-  margin: 0;
-  padding: 1rem;
-  background: #2A2A2A !important;
-  overflow: auto;
-}
-
-code[class*="language-"] {
-  text-shadow: none !important;
-  padding: 0;
-}
-
 /* Code container styles */
 pre[class*="language-"] {
   margin: 0 !important;
@@ -253,9 +191,9 @@ pre[class*="language-"] {
   overflow: auto;
 }
 
-/* Horizontal scrollbar for code */
-pre[class*="language-"]:not(.whitespace-pre-wrap) {
-  overflow-x: auto;
+code[class*="language-"] {
+  text-shadow: none !important;
+  padding: 0;
 }
 
 /* Line numbers container */
@@ -276,22 +214,6 @@ pre[class*="language-"].line-numbers.whitespace-pre-wrap code {
 .line-numbers-rows > span {
   pointer-events: none;
   display: block;
-}
-
-/* Ensure line numbers stay fixed when content wraps */
-.line-numbers .line-numbers-rows {
-  position: absolute;
-  top: 0;
-  left: -3.8em;
-  border-right: 1px solid #333;
-  user-select: none;
-  pointer-events: none;
-}
-
-/* Improve readability for wrapped lines */
-.whitespace-pre-wrap .token {
-  white-space: pre-wrap !important;
-  word-break: break-word !important;
 }
 
 /* Custom scrollbar for FileExplorer */
