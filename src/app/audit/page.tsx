@@ -24,6 +24,10 @@ import AIConfigModal from "@/components/audit/AIConfigModal";
 import { analyzeContract } from "@/services/audit/contractAnalyzer";
 import { useAIConfig, getModelName, getAIConfig } from "@/utils/ai";
 import html2canvas from "html2canvas";
+import {
+  findMainContract,
+  mergeContractContents,
+} from "@/utils/contractFilters";
 
 type TabType = "address" | "single-file" | "multi-files";
 
@@ -46,6 +50,7 @@ contract MyContract {
 }`);
   const [abortController, setAbortController] =
     useState<AbortController | null>(null);
+  const [uploadedFiles, setUploadedFiles] = useState<ContractFile[]>([]);
 
   const handleAddressChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     let value = e.target.value.trim();
@@ -285,6 +290,117 @@ contract MyContract {
 
     document.body.removeChild(a);
     window.URL.revokeObjectURL(url);
+  };
+
+  const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const files = event.target.files;
+    if (!files) return;
+
+    // Reset previous analysis results
+    setAnalysisFiles([]);
+
+    // Process each uploaded file
+    Array.from(files).forEach((file) => {
+      const reader = new FileReader();
+      reader.onload = async (e: ProgressEvent<FileReader>) => {
+        if (!e.target) return;
+        const content = e.target.result as string;
+
+        // Create ContractFile object for each uploaded file
+        const contractFile = {
+          name: file.name,
+          path: file.name, // Use filename as path for local files
+          content: content,
+        };
+
+        // Add to files array, preventing duplicates by file name
+        setUploadedFiles((prev) => {
+          // Check if file with same name already exists
+          const exists = prev.some((f) => f.name === file.name);
+          if (exists) {
+            // Replace the existing file
+            return prev.map((f) => (f.name === file.name ? contractFile : f));
+          }
+          // Add new file
+          return [...prev, contractFile];
+        });
+      };
+      reader.readAsText(file);
+    });
+
+    // Reset input value so the same file can be selected again
+    event.target.value = "";
+  };
+
+  const handleRemoveFile = (path: string) => {
+    setUploadedFiles((prev) => prev.filter((file) => file.path !== path));
+  };
+
+  const handleMultiFileAnalysis = async () => {
+    if (uploadedFiles.length === 0) {
+      toast.error("Please upload contract files first");
+      return;
+    }
+
+    try {
+      setIsAnalyzing(true);
+      setIsAIConfigModalOpen(false);
+
+      const controller = new AbortController();
+      setAbortController(controller);
+
+      // Debug: Check merged content before analysis
+      const mergedContent = mergeContractContents(uploadedFiles);
+      //console.log('=== Merged Contract Files ===');
+      //console.log(mergedContent);
+      //console.log('=== End of Merged Content ===');
+
+      // Analyze all uploaded files together
+      const result = await analyzeContract({
+        files: uploadedFiles,
+        contractName:
+          findMainContract(uploadedFiles)?.name.replace(".sol", "") ||
+          "MultiContract",
+        signal: controller.signal,
+      });
+
+      let analysisContent = result.report.analysis;
+      if (!analysisContent.match(/^#\s+/m)) {
+        analysisContent = `# Smart Contract Security Analysis Report\n\n${analysisContent}`;
+      }
+
+      // Generate report filename with model info
+      let languageCfg = getAIConfig(config).language;
+      languageCfg = languageCfg === "english" ? "" : `-${languageCfg}`;
+      let withSuperPrompt = getAIConfig(config).superPrompt
+        ? "-SuperPrompt"
+        : "";
+
+      const reportFileName = `report-analysis-${getModelName(
+        getAIConfig(config)
+      )}${languageCfg}${withSuperPrompt}.md`;
+
+      const reportFile = {
+        name: reportFileName,
+        path: reportFileName,
+        content: analysisContent,
+      };
+
+      setAnalysisFiles((prev) => {
+        const filesWithoutCurrentModelReport = prev.filter(
+          (f) => f.path !== reportFileName
+        );
+        return [...filesWithoutCurrentModelReport, reportFile];
+      });
+
+      toast.success("Analysis completed");
+    } catch (error) {
+      console.error("Analysis failed:", error);
+      toast.error("Analysis failed");
+    } finally {
+      setIsAnalyzing(false);
+      setAbortController(null);
+    }
   };
 
   return (
@@ -639,7 +755,7 @@ contract MyContract {
                   <FilesIcon className="w-12 h-12 text-gray-500" />
                   <div className="text-center">
                     <p className="text-gray-300 mb-1">
-                      Drag and drop your contract files here
+                      Drag and drop contract files here
                     </p>
                     <p className="text-gray-500 text-sm">or</p>
                   </div>
@@ -649,72 +765,93 @@ contract MyContract {
                       multiple
                       accept=".sol"
                       className="hidden"
+                      onChange={handleFileUpload}
                     />
                     <span
                       className="h-9 inline-flex items-center gap-2 px-4
-                                  bg-[#1E1E1E] text-mush-orange text-sm font-normal
-                                  border border-[#333333] rounded-lg
-                                  transition-all duration-300
-                                  hover:bg-mush-orange/10 hover:border-mush-orange/50
-                                  cursor-pointer"
+                      bg-[#1E1E1E] text-mush-orange text-sm font-normal
+                      border border-[#333333] rounded-lg
+                      transition-all duration-300
+                      hover:bg-mush-orange/10 hover:border-mush-orange/50
+                      cursor-pointer"
                     >
-                      Browse Files
+                      Browse files
                     </span>
                   </label>
                 </div>
               </div>
 
-              <div className="flex flex-col gap-2">
-                <div className="text-sm text-gray-400">Selected files:</div>
-                <div className="space-y-2">
-                  {/* 这里可以添加已选文件列表的状态和渲染 */}
-                  <div className="flex items-center justify-between p-3 bg-[#1A1A1A] border border-[#333333] rounded-lg">
-                    <div className="flex items-center gap-2">
-                      <FileIcon className="w-4 h-4 text-gray-400" />
-                      <span className="text-gray-300 text-sm">Token.sol</span>
-                    </div>
-                    <button className="text-gray-500 hover:text-gray-300">
-                      <svg
-                        className="w-4 h-4"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        stroke="currentColor"
+              {uploadedFiles.length > 0 && (
+                <div className="flex flex-col gap-2">
+                  <div className="text-sm text-gray-400">Selected files:</div>
+                  <div className="space-y-2">
+                    {uploadedFiles.map((file) => (
+                      <div
+                        key={file.path}
+                        className="flex items-center justify-between p-3 bg-[#1A1A1A] border border-[#333333] rounded-lg"
                       >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M6 18L18 6M6 6l12 12"
-                        />
-                      </svg>
-                    </button>
+                        <div className="flex items-center gap-2">
+                          <FileIcon className="w-4 h-4 text-gray-400" />
+                          <span className="text-gray-300 text-sm">
+                            {file.name}
+                          </span>
+                        </div>
+                        <button
+                          onClick={() => handleRemoveFile(file.path)}
+                          className="text-gray-500 hover:text-gray-300"
+                        >
+                          <svg
+                            className="w-4 h-4"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            stroke="currentColor"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M6 18L18 6M6 6l12 12"
+                            />
+                          </svg>
+                        </button>
+                      </div>
+                    ))}
                   </div>
                 </div>
-              </div>
+              )}
 
-              <button
-                className="self-end h-11 inline-flex items-center gap-2 px-5
-                         bg-[#1E1E1E] text-mush-orange text-base font-normal
-                         border border-[#333333] rounded-lg
-                         transition-all duration-300
-                         hover:bg-mush-orange/10 hover:border-mush-orange/50
-                         whitespace-nowrap"
-              >
-                <span>Analyze Contracts</span>
-                <svg
-                  className="w-4 h-4"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
+              {uploadedFiles.length > 0 && (
+                <button
+                  onClick={() => setIsAIConfigModalOpen(true)}
+                  className="self-end h-11 inline-flex items-center gap-2 px-5
+                           bg-[#1E1E1E] text-mush-orange text-base font-normal
+                           border border-[#333333] rounded-lg
+                           transition-all duration-300
+                           hover:bg-mush-orange/10 hover:border-mush-orange/50
+                           whitespace-nowrap"
                 >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M9 5l7 7-7 7"
-                  />
-                </svg>
-              </button>
+                  <span>Analyze Contract</span>
+                  <svg
+                    className="w-4 h-4"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M9 5l7 7-7 7"
+                    />
+                  </svg>
+                </button>
+              )}
+
+              <AIConfigModal
+                isOpen={isAIConfigModalOpen}
+                onClose={() => setIsAIConfigModalOpen(false)}
+                onStartAnalysis={handleMultiFileAnalysis}
+              />
             </div>
           )}
         </div>
