@@ -71,8 +71,8 @@ export async function analyzeContract(params: {
       }
 
       // Skip filtering for multi-file mode
-      let filesToAnalyze = params.isMultiFile 
-        ? params.files 
+      let filesToAnalyze = params.isMultiFile
+        ? params.files
         : params.files.filter((file) => {
             if (
               file.path.includes("/interfaces/") ||
@@ -109,7 +109,8 @@ export async function analyzeContract(params: {
         );
         const regularFiles = filesToAnalyze.filter(
           (f) =>
-            !f.path.startsWith("proxy/") && !f.path.startsWith("implementation/")
+            !f.path.startsWith("proxy/") &&
+            !f.path.startsWith("implementation/")
         );
 
         if (proxyFiles.length > 0 && implementationFiles.length > 0) {
@@ -119,10 +120,16 @@ export async function analyzeContract(params: {
         }
       }
 
-      const mergedCode = mergeContractContents(filesToAnalyze, !params.isMultiFile);
+      const mergedCode = mergeContractContents(
+        filesToAnalyze,
+        !params.isMultiFile
+      );
       if (!mergedCode) {
         throw new Error("No valid contract code to analyze");
       }
+
+      // Debug: Check merged code before analysis
+      console.log("Merged code:", mergedCode);
 
       let finalPrompt = createPromptWithLanguage(
         SECURITY_AUDIT_PROMPT.replace("${mergedCode}", mergedCode).replace(
