@@ -137,6 +137,8 @@ interface FileExplorerProps {
     evmVersion: string;
     creationCode?: string;
     deployedBytecode?: string;
+    creator?: string;
+    creationTxHash?: string;
   };
   evmVersion?: string;
   tokenName?: string;
@@ -144,6 +146,8 @@ interface FileExplorerProps {
   deployedBytecode?: string;
   abi?: any[];
   implementationAbi?: any[];
+  creator?: string;
+  creationTxHash?: string;
 }
 
 export default function FileExplorer({ 
@@ -169,6 +173,8 @@ export default function FileExplorer({
   deployedBytecode,
   abi,
   implementationAbi,
+  creator,
+  creationTxHash,
 }: FileExplorerProps) {
   const [width, setWidth] = useState(300);
   const [isResizing, setIsResizing] = useState(false);
@@ -207,8 +213,10 @@ export default function FileExplorer({
       evmVersion,
       address,
       chainId,
-      creationCode: creationCode,
-      deployedBytecode: deployedBytecode
+      creationCode,
+      deployedBytecode,
+      creator,
+      creationTxHash
     },
     implementationInfo: implementationInfo ? {
       ...implementationInfo

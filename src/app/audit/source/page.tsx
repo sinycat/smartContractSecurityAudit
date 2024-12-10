@@ -23,9 +23,13 @@ interface ContractSource {
     optimization: boolean;
     runs: number;
     evmVersion: string;
+    creator?: string;
+    creationTxHash?: string;
   };
   creationCode?: string;
   deployedBytecode?: string;
+  creator?: string;
+  creationTxHash?: string;
   abi?: any[];
   implementationAbi?: any[];
 }
@@ -84,6 +88,10 @@ function SourceContent() {
             address
           );
           //console.log("creation code2:", contractData.creationCode);
+          if (contractData.creationCode === "") {
+            contractData.creationCode =
+              "api not found, you need to view the contract on the blockchain explorer manually";
+          }
         }
 
         let implementationInfo;
@@ -98,6 +106,10 @@ function SourceContent() {
                 implementationInfo.creationCode =
                   await fetchCreationCodeFromExplorer(chain, implementation);
                 //console.log("imp creation code2:", implementationInfo.creationCode);
+                if (implementationInfo.creationCode === "") {
+                  implementationInfo.creationCode =
+                    "api not found, you need to view the contract on the blockchain explorer manually";
+                }
               }
             } else {
               const errorData = await implResponse.json();
@@ -126,6 +138,8 @@ function SourceContent() {
           implementationInfo: implementationInfo || undefined,
           creationCode: contractData.creationCode,
           deployedBytecode: contractData.deployedBytecode,
+          creator: contractData.creator,
+          creationTxHash: contractData.creationTxHash,
         });
       } catch (error) {
         console.error("Error:", error);
@@ -218,6 +232,8 @@ function SourceContent() {
       deployedBytecode={sourceData.deployedBytecode}
       abi={sourceData.abi}
       implementationAbi={sourceData.implementationAbi}
+      creator={sourceData.creator}
+      creationTxHash={sourceData.creationTxHash}
     />
   );
 }

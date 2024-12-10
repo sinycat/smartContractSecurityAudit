@@ -16,6 +16,8 @@ interface ContractInfo {
   chainId?: string;
   creationCode?: string;
   deployedBytecode?: string;
+  creator?: string;
+  creationTxHash?: string;
 }
 
 interface ImplementationInfo {
@@ -26,6 +28,8 @@ interface ImplementationInfo {
   evmVersion: string;
   creationCode?: string;
   deployedBytecode?: string;
+  creator?: string;
+  creationTxHash?: string;
 }
 
 // Format file tree structure
@@ -102,6 +106,8 @@ export const generateReadme = ({
 - **Contract Address:** ${proxyInfo.address || 'Unknown'}
 - **EVM Version:** ${proxyInfo.evmVersion || 'default'}
 ${proxyInfo.chainId ? `- **Chain:** ${getChainDisplayName(proxyInfo.chainId)}` : ''}
+${proxyInfo.creator ? `- **Creator:** \`${proxyInfo.creator}\`` : ''}
+${proxyInfo.creationTxHash ? `- **Creation Transaction:** \`${proxyInfo.creationTxHash}\`` : ''}
 
 ## Implementation Contract Information
 - **Contract Name:** ${implementationInfo?.contractName || 'Unknown'}
@@ -109,7 +115,9 @@ ${proxyInfo.chainId ? `- **Chain:** ${getChainDisplayName(proxyInfo.chainId)}` :
 - **Optimization Enabled:** ${implementationInfo?.optimization ? `Yes with ${implementationInfo.runs} runs` : 'No'}
 - **Contract Address:** ${implementationAddress || 'Unknown'}
 - **EVM Version:** ${implementationInfo?.evmVersion || 'default'}
-${proxyInfo.chainId ? `- **Chain:** ${getChainDisplayName(proxyInfo.chainId)}` : ''}`;
+${proxyInfo.chainId ? `- **Chain:** ${getChainDisplayName(proxyInfo.chainId)}` : ''}
+${implementationInfo?.creator ? `- **Creator:** ${implementationInfo.creator}` : ''}
+${implementationInfo?.creationTxHash ? `- **Creation Transaction:** ${implementationInfo.creationTxHash}` : ''}`;
   } else {
     readme = `# ${tokenName || proxyInfo.contractName}
 
@@ -119,7 +127,9 @@ ${proxyInfo.chainId ? `- **Chain:** ${getChainDisplayName(proxyInfo.chainId)}` :
 - **Optimization Enabled:** ${proxyInfo.optimization ? `Yes with ${proxyInfo.runs} runs` : 'No'}
 - **Contract Address:** ${proxyInfo.address || 'Unknown'}
 - **EVM Version:** ${proxyInfo.evmVersion || 'default'}
-${proxyInfo.chainId ? `- **Chain:** ${getChainDisplayName(proxyInfo.chainId)}` : ''}`;
+${proxyInfo.chainId ? `- **Chain:** ${getChainDisplayName(proxyInfo.chainId)}` : ''}
+${proxyInfo.creator ? `- **Creator:** ${proxyInfo.creator}` : ''}
+${proxyInfo.creationTxHash ? `- **Creation Transaction:** ${proxyInfo.creationTxHash}` : ''}`;
   }
 
   // Add file structure section

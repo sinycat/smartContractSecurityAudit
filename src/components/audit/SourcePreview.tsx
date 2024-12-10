@@ -50,6 +50,8 @@ interface SourcePreviewProps {
     evmVersion: string;
     creationCode?: string;
     deployedBytecode?: string;
+    creator?: string;
+    creationTxHash?: string;
   };
   evmVersion?: string;
   tokenName?: string;
@@ -57,6 +59,8 @@ interface SourcePreviewProps {
   deployedBytecode?: string;
   abi?: any[];
   implementationAbi?: any[];
+  creator?: string;
+  creationTxHash?: string;
 }
 
 // Remove duplicate markdown headers
@@ -138,6 +142,8 @@ export default function SourcePreview({
   deployedBytecode,
   abi,
   implementationAbi,
+  creator,
+  creationTxHash,
 }: SourcePreviewProps) {
   const [files, setFiles] = useState<ContractFile[]>(initialFiles);
   const [selectedFile, setSelectedFile] = useState<ContractFile>(files[0]);
@@ -243,6 +249,10 @@ export default function SourcePreview({
         evmVersion,
         address,
         chainId,
+        creationCode,
+        deployedBytecode,
+        creator,
+        creationTxHash
       },
       implementationInfo: implementationInfo
         ? {
@@ -543,6 +553,8 @@ export default function SourcePreview({
           deployedBytecode={deployedBytecode}
           abi={abi}
           implementationAbi={implementationAbi}
+          creator={creator}
+          creationTxHash={creationTxHash}
         />
 
         <div className="flex-1 flex flex-col bg-[#1E1E1E] min-w-0">
