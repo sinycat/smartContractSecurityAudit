@@ -153,6 +153,32 @@ export const CHAINS: Record<string, ChainConfig> = {
       },
     },
   },
+  polygon: {
+    id: "137",
+    name: "polygon",
+    displayName: "Polygon",
+    nativeCurrency: {
+      name: "POL",
+      symbol: "POL",
+      decimals: 18,
+    },
+    rpcUrls: {
+      default: "https://polygon-rpc.com",
+      fallbacks: [
+        "https://polygon.llamarpc.com",
+        "https://polygon.publicnode.com",
+        "https://polygon.meowrpc.com",
+      ],
+    },
+    blockExplorers: {
+      default: {
+        name: "PolygonScan",
+        url: "https://polygonscan.com",
+        apiUrl: "https://api.polygonscan.com/api",
+        apiKey: process.env.NEXT_PUBLIC_POLYGONSCAN_API_KEY,
+      },
+    },
+  },
 } as const;
 
 export const KNOWN_CONTRACTS: Record<
