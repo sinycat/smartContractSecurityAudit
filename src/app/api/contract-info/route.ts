@@ -21,22 +21,25 @@ export async function GET(request: NextRequest) {
     const bytecodeResponse = await fetch(bytecodeUrl);
     const bytecodeData = await bytecodeResponse.json();
 
-    // 2. Get contract creation code
+    // 2. Get contract creation code and creator info
     const creationUrl = `${apiUrl}?module=contract&action=getcontractcreation&contractaddresses=${address}&apikey=${apiKey}`;
     const creationResponse = await fetch(creationUrl);
     const creationData = await creationResponse.json();
 
     let creationCode = "";
+    let creator = "";
+    let creationTxHash = "";
 
-    // First try to get from creation transaction
-    if (creationData.status === "1" && creationData.result?.[0]?.txHash) {
+    // Get creation info
+    if (creationData.status === "1" && creationData.result?.[0]) {
       creationCode = creationData.result[0].creationBytecode;
+      creator = creationData.result[0].contractCreator;
+      creationTxHash = creationData.result[0].txHash;
     }
 
     // not found
     if (creationCode === "" || creationCode === undefined) {
-      creationCode =
-        "api not found, you need to view the contract on the blockchain explorer manually";
+      creationCode = "";
     }
 
     // Get contract source code information
@@ -48,8 +51,7 @@ export async function GET(request: NextRequest) {
     let deployedBytecode = bytecodeData.result || "";
     // not found
     if (deployedBytecode === "" || deployedBytecode === undefined) {
-      deployedBytecode =
-        "api not found, you need to view the contract on the blockchain explorer manually";
+      deployedBytecode = "";
     }
 
     return NextResponse.json({
@@ -61,6 +63,8 @@ export async function GET(request: NextRequest) {
       creationCode,
       deployedBytecode: deployedBytecode,
       implementation: sourceData.result[0]?.Implementation,
+      creator,
+      creationTxHash,
     });
   } catch (error) {
     console.error("Error details:", error);
