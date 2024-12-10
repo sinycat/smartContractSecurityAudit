@@ -41,6 +41,8 @@ Mush Audit is an AI-powered smart contract security analysis platform that lever
 - Optimism
 - BSC
 - Polygon
+- Avalanche-C
+- Aurora
 - More chains coming soon
 
 ### 🚀 Super Prompt

@@ -179,6 +179,56 @@ export const CHAINS: Record<string, ChainConfig> = {
       },
     },
   },
+  avalanche: {
+    id: "43114",
+    name: "avalanche",
+    displayName: "Avalanche C-Chain",
+    nativeCurrency: {
+      name: "AVAX",
+      symbol: "AVAX",
+      decimals: 18,
+    },
+    rpcUrls: {
+      default: "https://api.avax.network/ext/bc/C/rpc",
+      fallbacks: [
+        "https://avalanche.public-rpc.com",
+        "https://avalanche.api.onfinality.io/public",
+        "https://avalanche.publicnode.com"
+      ],
+    },
+    blockExplorers: {
+      default: {
+        name: "SnowTrace",
+        url: "https://snowtrace.io",
+        apiUrl: "https://api.snowtrace.io/api"
+      },
+    },
+  },
+  aurora: {
+    id: "1313161554",
+    name: "aurora",
+    displayName: "Aurora",
+    nativeCurrency: {
+      name: "Ethereum",
+      symbol: "ETH",
+      decimals: 18,
+    },
+    rpcUrls: {
+      default: "https://mainnet.aurora.dev",
+      fallbacks: [
+        "https://aurora.drpc.org",
+        "https://endpoints.omniatech.io/v1/aurora/mainnet/public",
+        "https://1rpc.io/aurora"
+      ],
+    },
+    blockExplorers: {
+      default: {
+        name: "Aurora Explorer",
+        url: "https://explorer.aurora.dev",
+        apiUrl: "https://explorer.aurora.dev/api"
+      },
+    },
+  },
 } as const;
 
 export const KNOWN_CONTRACTS: Record<
