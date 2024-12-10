@@ -204,6 +204,31 @@ export const CHAINS: Record<string, ChainConfig> = {
       },
     },
   },
+  aurora: {
+    id: "1313161554",
+    name: "aurora",
+    displayName: "Aurora",
+    nativeCurrency: {
+      name: "Ethereum",
+      symbol: "ETH",
+      decimals: 18,
+    },
+    rpcUrls: {
+      default: "https://mainnet.aurora.dev",
+      fallbacks: [
+        "https://aurora.drpc.org",
+        "https://endpoints.omniatech.io/v1/aurora/mainnet/public",
+        "https://1rpc.io/aurora"
+      ],
+    },
+    blockExplorers: {
+      default: {
+        name: "Aurora Explorer",
+        url: "https://explorer.aurora.dev",
+        apiUrl: "https://explorer.aurora.dev/api"
+      },
+    },
+  },
 } as const;
 
 export const KNOWN_CONTRACTS: Record<
