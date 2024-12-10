@@ -44,6 +44,14 @@ export async function GET(request: NextRequest) {
     const sourceResponse = await fetch(sourceUrl);
     const sourceData = await sourceResponse.json();
 
+    // Get deployed bytecode
+    let deployedBytecode = bytecodeData.result || "";
+    // not found
+    if (deployedBytecode === "" || deployedBytecode === undefined) {
+      deployedBytecode =
+        "api not found, you need to view the contract on the blockchain explorer manually";
+    }
+
     return NextResponse.json({
       contractName: sourceData.result[0]?.ContractName || "",
       compiler: sourceData.result[0]?.CompilerVersion || "",
@@ -51,7 +59,7 @@ export async function GET(request: NextRequest) {
       runs: parseInt(sourceData.result[0]?.Runs) || 200,
       evmVersion: sourceData.result[0]?.EVMVersion || "default",
       creationCode,
-      deployedBytecode: bytecodeData.result || "",
+      deployedBytecode: deployedBytecode,
       implementation: sourceData.result[0]?.Implementation,
     });
   } catch (error) {
