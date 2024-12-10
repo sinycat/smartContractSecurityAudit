@@ -252,7 +252,7 @@ export default function SourcePreview({
         creationCode,
         deployedBytecode,
         creator,
-        creationTxHash
+        creationTxHash,
       },
       implementationInfo: implementationInfo
         ? {

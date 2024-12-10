@@ -1,8 +1,8 @@
-import { CHAINS } from './constants';
+import { CHAINS } from "./constants";
 
 // Get chain display name
 function getChainDisplayName(chainId: string): string {
-  const chain = Object.values(CHAINS).find(c => c.id === chainId);
+  const chain = Object.values(CHAINS).find((c) => c.id === chainId);
   return chain?.displayName || chainId;
 }
 
@@ -35,14 +35,14 @@ interface ImplementationInfo {
 // Format file tree structure
 export const formatFileTree = (files: string[]): string => {
   // First filter out .md files
-  const filteredFiles = files.filter(file => !file.endsWith('.md'));
-  
+  const filteredFiles = files.filter((file) => !file.endsWith(".md"));
+
   // Build tree structure
   const tree: { [key: string]: any } = {};
-  
+
   // Build tree structure
-  filteredFiles.forEach(path => {
-    const parts = path.split('/');
+  filteredFiles.forEach((path) => {
+    const parts = path.split("/");
     let current = tree;
     parts.forEach((part, i) => {
       if (i === parts.length - 1) {
@@ -55,22 +55,22 @@ export const formatFileTree = (files: string[]): string => {
   });
 
   // Recursively generate tree string
-  const printTree = (node: any, prefix = '', isLast = true): string => {
-    let result = '';
+  const printTree = (node: any, prefix = "", isLast = true): string => {
+    let result = "";
     const entries = Object.entries(node);
-    
+
     entries.forEach(([key, value], index) => {
       const isLastEntry = index === entries.length - 1;
-      const linePrefix = prefix + (isLast ? '└── ' : '├── ');
-      const nextPrefix = prefix + (isLast ? '    ' : '│   ');
-      
-      result += linePrefix + key + '\n';
-      
+      const linePrefix = prefix + (isLast ? "└── " : "├── ");
+      const nextPrefix = prefix + (isLast ? "    " : "│   ");
+
+      result += linePrefix + key + "\n";
+
       if (value !== null) {
         result += printTree(value, nextPrefix, isLastEntry);
       }
     });
-    
+
     return result;
   };
 
@@ -82,7 +82,7 @@ export const generateReadme = ({
   tokenName,
   proxyInfo,
   implementationInfo,
-  implementationAddress
+  implementationAddress,
 }: {
   files: { path: string }[];
   tokenName?: string;
@@ -91,45 +91,84 @@ export const generateReadme = ({
   implementationAddress?: string;
 }): string => {
   // Check if it's a proxy contract
-  const isProxy = files.some(f => f.path.startsWith('proxy/')) && 
-                 files.some(f => f.path.startsWith('implementation/'));
+  const isProxy =
+    files.some((f) => f.path.startsWith("proxy/")) &&
+    files.some((f) => f.path.startsWith("implementation/"));
 
-  let readme = '';
-  
+  let readme = "";
+
   if (isProxy) {
-    readme = `# ${tokenName || implementationInfo?.contractName || proxyInfo.contractName}
+    readme = `# ${
+      tokenName || implementationInfo?.contractName || proxyInfo.contractName
+    }
 
 ## Proxy Contract Information
 - **Contract Name:** ${proxyInfo.contractName}
 - **Compiler Version:** ${proxyInfo.compiler}
-- **Optimization Enabled:** ${proxyInfo.optimization ? `Yes with ${proxyInfo.runs} runs` : 'No'}
-- **Contract Address:** ${proxyInfo.address || 'Unknown'}
-- **EVM Version:** ${proxyInfo.evmVersion || 'default'}
-${proxyInfo.chainId ? `- **Chain:** ${getChainDisplayName(proxyInfo.chainId)}` : ''}
-${proxyInfo.creator ? `- **Creator:** \`${proxyInfo.creator}\`` : ''}
-${proxyInfo.creationTxHash ? `- **Creation Transaction:** \`${proxyInfo.creationTxHash}\`` : ''}
+- **Optimization Enabled:** ${
+      proxyInfo.optimization ? `Yes with ${proxyInfo.runs} runs` : "No"
+    }
+- **Contract Address:** ${proxyInfo.address || "Unknown"}
+- **EVM Version:** ${proxyInfo.evmVersion || "default"}
+${
+  proxyInfo.chainId
+    ? `- **Chain:** ${getChainDisplayName(proxyInfo.chainId)}`
+    : ""
+}
+${proxyInfo.creator ? `- **Creator:** \`${proxyInfo.creator}\`` : ""}
+${
+  proxyInfo.creationTxHash
+    ? `- **Creation Transaction:** \`${proxyInfo.creationTxHash}\``
+    : ""
+}
 
 ## Implementation Contract Information
-- **Contract Name:** ${implementationInfo?.contractName || 'Unknown'}
-- **Compiler Version:** ${implementationInfo?.compiler || 'Unknown'}
-- **Optimization Enabled:** ${implementationInfo?.optimization ? `Yes with ${implementationInfo.runs} runs` : 'No'}
-- **Contract Address:** ${implementationAddress || 'Unknown'}
-- **EVM Version:** ${implementationInfo?.evmVersion || 'default'}
-${proxyInfo.chainId ? `- **Chain:** ${getChainDisplayName(proxyInfo.chainId)}` : ''}
-${implementationInfo?.creator ? `- **Creator:** ${implementationInfo.creator}` : ''}
-${implementationInfo?.creationTxHash ? `- **Creation Transaction:** ${implementationInfo.creationTxHash}` : ''}`;
+- **Contract Name:** ${implementationInfo?.contractName || "Unknown"}
+- **Compiler Version:** ${implementationInfo?.compiler || "Unknown"}
+- **Optimization Enabled:** ${
+      implementationInfo?.optimization
+        ? `Yes with ${implementationInfo.runs} runs`
+        : "No"
+    }
+- **Contract Address:** ${implementationAddress || "Unknown"}
+- **EVM Version:** ${implementationInfo?.evmVersion || "default"}
+${
+  proxyInfo.chainId
+    ? `- **Chain:** ${getChainDisplayName(proxyInfo.chainId)}`
+    : ""
+}
+${
+  implementationInfo?.creator
+    ? `- **Creator:** ${implementationInfo.creator}`
+    : ""
+}
+${
+  implementationInfo?.creationTxHash
+    ? `- **Creation Transaction:** ${implementationInfo.creationTxHash}`
+    : ""
+}`;
   } else {
     readme = `# ${tokenName || proxyInfo.contractName}
 
 ## Contract Information
 - **Contract Name:** ${proxyInfo.contractName}
 - **Compiler Version:** ${proxyInfo.compiler}
-- **Optimization Enabled:** ${proxyInfo.optimization ? `Yes with ${proxyInfo.runs} runs` : 'No'}
-- **Contract Address:** ${proxyInfo.address || 'Unknown'}
-- **EVM Version:** ${proxyInfo.evmVersion || 'default'}
-${proxyInfo.chainId ? `- **Chain:** ${getChainDisplayName(proxyInfo.chainId)}` : ''}
-${proxyInfo.creator ? `- **Creator:** ${proxyInfo.creator}` : ''}
-${proxyInfo.creationTxHash ? `- **Creation Transaction:** ${proxyInfo.creationTxHash}` : ''}`;
+- **Optimization Enabled:** ${
+      proxyInfo.optimization ? `Yes with ${proxyInfo.runs} runs` : "No"
+    }
+- **Contract Address:** ${proxyInfo.address || "Unknown"}
+- **EVM Version:** ${proxyInfo.evmVersion || "default"}
+${
+  proxyInfo.chainId
+    ? `- **Chain:** ${getChainDisplayName(proxyInfo.chainId)}`
+    : ""
+}
+${proxyInfo.creator ? `- **Creator:** ${proxyInfo.creator}` : ""}
+${
+  proxyInfo.creationTxHash
+    ? `- **Creation Transaction:** ${proxyInfo.creationTxHash}`
+    : ""
+}`;
   }
 
   // Add file structure section
@@ -137,6 +176,6 @@ ${proxyInfo.creationTxHash ? `- **Creation Transaction:** ${proxyInfo.creationTx
 
 ## Source Code Structure
 \`\`\`
-${formatFileTree(files.map(f => f.path))}
+${formatFileTree(files.map((f) => f.path))}
 \`\`\``;
-}; 
+};
