@@ -35,7 +35,8 @@ export async function GET(request: NextRequest) {
 
     // not found
     if (creationCode === "" || creationCode === undefined) {
-      creationCode = "";
+      creationCode =
+        "api not found, you need to view the contract on the blockchain explorer manually";
     }
 
     // Get contract source code information
