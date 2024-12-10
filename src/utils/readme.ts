@@ -115,10 +115,10 @@ ${
     ? `- **Chain:** ${getChainDisplayName(proxyInfo.chainId)}`
     : ""
 }
-${proxyInfo.creator ? `- **Creator:** \`${proxyInfo.creator}\`` : ""}
+${proxyInfo.creator ? `- **Creator:** ${proxyInfo.creator}` : ""}
 ${
   proxyInfo.creationTxHash
-    ? `- **Creation Transaction:** \`${proxyInfo.creationTxHash}\``
+    ? `- **Creation Transaction:** ${proxyInfo.creationTxHash}`
     : ""
 }
 
