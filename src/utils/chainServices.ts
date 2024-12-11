@@ -1,4 +1,4 @@
-import { CHAINS } from './constants';
+import { CHAINS } from "./constants";
 
 // Get chainId function
 export function getChainId(chain: string): string | undefined {
@@ -15,25 +15,33 @@ export function getRpcUrl(chain: string): string {
 }
 
 // Get API Scan configuration
-export function getApiScanConfig(chain: string): { url: string; apiKey: string } {
+export function getApiScanConfig(chain: string): {
+  url: string;
+  apiKey: string;
+} {
   const chainConfig = CHAINS[chain.toLowerCase()];
   if (!chainConfig) throw new Error(`Unsupported chain: ${chain}`);
   return {
     url: chainConfig.blockExplorers.default.apiUrl,
-    apiKey: chainConfig.blockExplorers.default.apiKey || '',
+    apiKey: chainConfig.blockExplorers.default.apiKey || "",
   };
 }
 
 // Get block explorer URL
 export function getExplorerUrl(chain: string, address: string): string {
   const chainConfig = CHAINS[chain.toLowerCase()];
-  if (!chainConfig) return '#';
+  if (!chainConfig) return "#";
   return `${chainConfig.blockExplorers.default.url}/address/${address}`;
-} 
+}
 
 // Get block explorer URL for tokens
 export function getExplorerTokenUrl(chain: string, address: string): string {
   const chainConfig = CHAINS[chain.toLowerCase()];
-  if (!chainConfig) return '#';
+  if (!chainConfig) return "#";
   return `${chainConfig.blockExplorers.default.url}/token/${address}`;
-} 
+}
+
+// Get AVAX C-Chain specific explorer URL for codes
+export function getAVAXCExplorerCodeUrl(address: string): string {
+  return `https://snowtrace.io/token/${address}/contract/code?chainid=43114`;
+}
