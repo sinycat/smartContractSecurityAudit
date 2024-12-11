@@ -41,7 +41,12 @@ export function getExplorerTokenUrl(chain: string, address: string): string {
   return `${chainConfig.blockExplorers.default.url}/token/${address}`;
 }
 
-// Get AVAX C-Chain specific explorer URL for codes
-export function getAVAXCExplorerCodeUrl(address: string): string {
+// Get AVAX C-Chain specific explorer URL for bytecode
+export function getAVAXCExplorerBytecodeUrl(address: string): string {
   return `https://snowtrace.io/token/${address}/contract/code?chainid=43114`;
+}
+
+// Get Aurora specific explorer URL for bytecode
+export function getAuroraExplorerBytecodeUrl(address: string): string {
+  return `https://explorer.mainnet.aurora.dev/api/v2/smart-contracts/${address}`;
 }

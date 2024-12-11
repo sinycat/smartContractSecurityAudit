@@ -14,6 +14,41 @@ export async function GET(request: NextRequest) {
   }
 
   try {
+    // Aurora chain
+    if (chain === "aurora") {
+      const auroraUrl = `https://explorer.mainnet.aurora.dev/api/v2/smart-contracts/${address}`;
+      const response = await fetch(auroraUrl);
+      const data = await response.json();
+
+      const { url: apiUrl, apiKey } = getApiScanConfig(chain);
+      const creationUrl = `${apiUrl}?module=contract&action=getcontractcreation&contractaddresses=${address}&apikey=${apiKey}`;
+      const creationResponse = await fetch(creationUrl);
+      const creationData = await creationResponse.json();
+
+      let creator = "";
+      let creationTxHash = "";
+
+      // Get creation info
+      if (creationData.status === "1" && creationData.result?.[0]) {
+        creator = creationData.result[0].contractCreator;
+        creationTxHash = creationData.result[0].txHash;
+      }
+
+      return NextResponse.json({
+        contractName: data.name || "",
+        compiler: data.compiler_version || "",
+        optimization: data.optimization_enabled || false,
+        runs: data.optimization_runs || 200,
+        evmVersion: data.evm_version || "default",
+        creationCode: data.creation_bytecode || "",
+        deployedBytecode: data.deployed_bytecode || "",
+        implementation: data.proxy_type ? data.implementations[0] : null,
+        creator: creator,
+        creationTxHash: creationTxHash,
+      });
+    }
+
+    // other chain
     const { url: apiUrl, apiKey } = getApiScanConfig(chain);
 
     // 1. Get contract bytecode

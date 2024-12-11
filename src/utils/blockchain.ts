@@ -5,7 +5,7 @@ import {
   getRpcUrl,
   getExplorerUrl,
   getExplorerTokenUrl,
-  getAVAXCExplorerCodeUrl,
+  getAVAXCExplorerBytecodeUrl,
 } from "@/utils/chainServices";
 import type { ContractBasicInfo, ContractFile } from "@/types/blockchain";
 import * as cheerio from "cheerio";
@@ -347,7 +347,7 @@ export async function fetchCreationCodeFromExplorer(
 ): Promise<string> {
   const urls =
     chain.toLowerCase() === "avalanche"
-      ? [getAVAXCExplorerCodeUrl(address)]
+      ? [getAVAXCExplorerBytecodeUrl(address)]
       : [getExplorerTokenUrl(chain, address), getExplorerUrl(chain, address)];
 
   // Try different CORS proxies
