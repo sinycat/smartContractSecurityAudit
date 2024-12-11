@@ -5,11 +5,15 @@ import {
   getRpcUrl,
   getExplorerUrl,
   getExplorerTokenUrl,
+  getAVAXCExplorerCodeUrl,
 } from "@/utils/chainServices";
 import type { ContractBasicInfo, ContractFile } from "@/types/blockchain";
 import * as cheerio from "cheerio";
 
-function findContractInfo(address: string): { labels?: string[]; projectName?: string } {
+function findContractInfo(address: string): {
+  labels?: string[];
+  projectName?: string;
+} {
   const lowerAddress = address.toLowerCase();
   for (const [addr, info] of Object.entries(KNOWN_CONTRACTS)) {
     if (addr.toLowerCase() === lowerAddress) {
@@ -80,7 +84,7 @@ export async function checkContractOnChains(
           );
 
           let decimals: number | undefined = undefined;
-          
+
           // Check contract interfaces
           let isERC721 = false;
           let isERC1155 = false;
@@ -100,7 +104,8 @@ export async function checkContractOnChains(
               result[chainName]!.decimals = decimals;
             } catch (error) {
               // Skip error logging for known Permit2 contract
-              if (!contractInfo.labels?.includes("Permit2")) {}
+              if (!contractInfo.labels?.includes("Permit2")) {
+              }
             }
           }
 
@@ -108,9 +113,7 @@ export async function checkContractOnChains(
             contract.name().catch(() => null),
             contract.symbol().catch(() => null),
             contract.totalSupply().catch(() => null),
-            contract.owner().catch(() => 
-              contract.getOwner().catch(() => null)
-            ),
+            contract.owner().catch(() => contract.getOwner().catch(() => null)),
           ]);
 
           // Set contract type
@@ -124,12 +127,16 @@ export async function checkContractOnChains(
           if (name) result[chainName]!.name = name;
           if (symbol) result[chainName]!.symbol = symbol;
           if (decimals !== undefined) result[chainName]!.decimals = decimals;
-          if (totalSupply) result[chainName]!.totalSupply = totalSupply.toString();
+          if (totalSupply)
+            result[chainName]!.totalSupply = totalSupply.toString();
           if (owner) result[chainName]!.owner = owner;
 
           // Check proxy contract
           try {
-            const implementationResult = await getImplementationAddress(address, chainName);
+            const implementationResult = await getImplementationAddress(
+              address,
+              chainName
+            );
             if (implementationResult.address) {
               result[chainName] = {
                 ...result[chainName],
@@ -170,7 +177,8 @@ export async function checkContractOnChains(
 
                 if (name) result[chainName]!.name = name;
                 if (symbol) result[chainName]!.symbol = symbol;
-                if (totalSupply) result[chainName]!.totalSupply = totalSupply.toString();
+                if (totalSupply)
+                  result[chainName]!.totalSupply = totalSupply.toString();
               } catch (e) {
                 console.error("Failed to get implementation contract info:", e);
               }
@@ -337,11 +345,10 @@ export async function fetchCreationCodeFromExplorer(
   chain: string,
   address: string
 ): Promise<string> {
-  // Try with token URL first, then fallback to address URL
-  const urls = [
-    getExplorerTokenUrl(chain, address),
-    getExplorerUrl(chain, address),
-  ];
+  const urls =
+    chain.toLowerCase() === "avalanche"
+      ? [getAVAXCExplorerCodeUrl(address)]
+      : [getExplorerTokenUrl(chain, address), getExplorerUrl(chain, address)];
 
   // Try different CORS proxies
   const corsProxies = [
@@ -386,12 +393,28 @@ export async function fetchCreationCodeFromExplorer(
       }
 
       const $ = cheerio.load(html);
+      //console.log("html:", html);
       let creationCode = "";
 
-      // Only use the verified bytecode selector
-      const text = $("#verifiedbytecode2").text().trim();
-      if (text && text.match(/^[0-9a-fA-F]+$/)) {
-        creationCode = text;
+      // avalanche chain
+      if (chain.toLowerCase() === "avalanche") {
+        // find the div contains "Contract Creation Code"
+        $('div:contains("Contract Creation Code")').each((_, element) => {
+          // find the next pre tag
+          const preElement = $(element).nextAll("pre").first();
+          const text = preElement.text().trim();
+          //console.log("Found text:", text);
+          if (text && text.match(/^[0-9a-fA-F]+$/)) {
+            creationCode = text;
+            //console.log("Found creation code:", creationCode);
+          }
+        });
+      } else {
+        // other chains
+        const text = $("#verifiedbytecode2").text().trim();
+        if (text && text.match(/^[0-9a-fA-F]+$/)) {
+          creationCode = text;
+        }
       }
 
       if (creationCode) {
