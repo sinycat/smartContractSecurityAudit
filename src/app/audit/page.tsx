@@ -356,48 +356,20 @@ contract Vault {
     window.URL.revokeObjectURL(url);
   };
 
-  const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const files = event.target.files;
-    if (!files) return;
-
-    // Reset previous analysis results
-    setAnalysisFiles([]);
-
-    // Process each uploaded file
-    Array.from(files).forEach((file) => {
-      const reader = new FileReader();
-      reader.onload = async (e: ProgressEvent<FileReader>) => {
-        if (!e.target) return;
-        const content = e.target.result as string;
-
-        // Create ContractFile object for each uploaded file
-        const contractFile = {
-          name: file.name,
-          path: file.name, // Use filename as path for local files
-          content: content,
-        };
-
-        // Add to files array, preventing duplicates by file name
-        setUploadedFiles((prev) => {
-          // Check if file with same name already exists
-          const exists = prev.some((f) => f.name === file.name);
-          if (exists) {
-            // Replace the existing file
-            return prev.map((f) => (f.name === file.name ? contractFile : f));
-          }
-          // Add new file
-          return [...prev, contractFile];
-        });
-      };
-      reader.readAsText(file);
-    });
-
-    // Reset input value so the same file can be selected again
-    event.target.value = "";
-  };
-
   const handleRemoveFile = (path: string) => {
     setUploadedFiles((prev) => prev.filter((file) => file.path !== path));
+    // Reset analysis files when removing a file
+    setAnalysisFiles([]);
+    // Reset analyzing state and abort controller if needed
+    if (isAnalyzing) {
+      if (abortController) {
+        abortController.abort();
+      }
+      setIsAnalyzing(false);
+      setAbortController(null);
+    }
+    // Close AI config modal if open
+    setIsAIConfigModalOpen(false);
   };
 
   const handleMultiFileAnalysis = async () => {
@@ -464,6 +436,79 @@ contract Vault {
 
   const handleRemoveReport = (path: string) => {
     setAnalysisFiles((prev) => prev.filter((file) => file.path !== path));
+  };
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+  };
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    
+    const files = Array.from(e.dataTransfer.files);
+    handleFiles(files);
+  };
+
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files) {
+      const files = Array.from(e.target.files);
+      handleFiles(files);
+    }
+  };
+
+  const handleFiles = async (files: File[]) => {
+    try {
+      // Reset analysis states
+      setAnalysisFiles([]);
+      setIsAnalyzing(false);
+      setIsAIConfigModalOpen(false);
+      if (abortController) {
+        abortController.abort();
+        setAbortController(null);
+      }
+
+      // Reset input value so the same file can be selected again
+      const fileInput = document.querySelector('input[type="file"]') as HTMLInputElement;
+      if (fileInput) {
+        fileInput.value = '';
+      }
+
+      const contractFiles: ContractFile[] = await Promise.all(
+        files.map(async (file) => {
+          const content = await file.text();
+          return {
+            name: file.name,
+            path: file.name,
+            content: content,
+          };
+        })
+      );
+      
+      // Update file list, overwrite existing files with the same name
+      setUploadedFiles(prevFiles => {
+        const newFiles = [...prevFiles];
+        
+        contractFiles.forEach(newFile => {
+          const existingIndex = newFiles.findIndex(f => f.name === newFile.name);
+          if (existingIndex !== -1) {
+            // If file exists, replace it
+            newFiles[existingIndex] = newFile;
+          } else {
+            // If file doesn't exist, add it
+            newFiles.push(newFile);
+          }
+        });
+        
+        return newFiles;
+      });
+
+      toast.success(`Successfully uploaded ${files.length} file(s)`);
+    } catch (error) {
+      console.error('Error processing files:', error);
+      toast.error('Failed to process files');
+    }
   };
 
   return (
@@ -831,7 +876,11 @@ contract Vault {
 
           {activeTab === "multi-files" && (
             <div className="flex flex-col gap-4">
-              <div className="border border-dashed border-[#333333] rounded-lg p-8 bg-[#1A1A1A] hover:border-[#505050] transition-colors duration-200">
+              <div 
+                onDragOver={handleDragOver}
+                onDrop={handleDrop}
+                className="border border-dashed border-[#333333] rounded-lg p-8 bg-[#1A1A1A] hover:border-[#505050] transition-colors duration-200"
+              >
                 <div className="flex flex-col items-center gap-3">
                   <FilesIcon className="w-12 h-12 text-gray-500" />
                   <div className="text-center">
@@ -846,7 +895,7 @@ contract Vault {
                       multiple
                       accept=".sol"
                       className="hidden"
-                      onChange={handleFileUpload}
+                      onChange={handleFileSelect}
                     />
                     <span
                       className="h-9 inline-flex items-center gap-2 px-4
