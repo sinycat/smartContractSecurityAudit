@@ -193,14 +193,14 @@ export const CHAINS: Record<string, ChainConfig> = {
       fallbacks: [
         "https://avalanche.public-rpc.com",
         "https://avalanche.api.onfinality.io/public",
-        "https://avalanche.publicnode.com"
+        "https://avalanche.publicnode.com",
       ],
     },
     blockExplorers: {
       default: {
         name: "SnowTrace",
         url: "https://snowtrace.io",
-        apiUrl: "https://api.snowtrace.io/api"
+        apiUrl: "https://api.snowtrace.io/api",
       },
     },
   },
@@ -218,14 +218,14 @@ export const CHAINS: Record<string, ChainConfig> = {
       fallbacks: [
         "https://aurora.drpc.org",
         "https://endpoints.omniatech.io/v1/aurora/mainnet/public",
-        "https://1rpc.io/aurora"
+        "https://1rpc.io/aurora",
       ],
     },
     blockExplorers: {
       default: {
         name: "Aurora Explorer",
         url: "https://explorer.aurora.dev",
-        apiUrl: "https://explorer.aurora.dev/api"
+        apiUrl: "https://explorer.aurora.dev/api",
       },
     },
   },
