@@ -356,48 +356,20 @@ contract Vault {
     window.URL.revokeObjectURL(url);
   };
 
-  const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const files = event.target.files;
-    if (!files) return;
-
-    // Reset previous analysis results
-    setAnalysisFiles([]);
-
-    // Process each uploaded file
-    Array.from(files).forEach((file) => {
-      const reader = new FileReader();
-      reader.onload = async (e: ProgressEvent<FileReader>) => {
-        if (!e.target) return;
-        const content = e.target.result as string;
-
-        // Create ContractFile object for each uploaded file
-        const contractFile = {
-          name: file.name,
-          path: file.name, // Use filename as path for local files
-          content: content,
-        };
-
-        // Add to files array, preventing duplicates by file name
-        setUploadedFiles((prev) => {
-          // Check if file with same name already exists
-          const exists = prev.some((f) => f.name === file.name);
-          if (exists) {
-            // Replace the existing file
-            return prev.map((f) => (f.name === file.name ? contractFile : f));
-          }
-          // Add new file
-          return [...prev, contractFile];
-        });
-      };
-      reader.readAsText(file);
-    });
-
-    // Reset input value so the same file can be selected again
-    event.target.value = "";
-  };
-
   const handleRemoveFile = (path: string) => {
     setUploadedFiles((prev) => prev.filter((file) => file.path !== path));
+    // Reset analysis files when removing a file
+    setAnalysisFiles([]);
+    // Reset analyzing state and abort controller if needed
+    if (isAnalyzing) {
+      if (abortController) {
+        abortController.abort();
+      }
+      setIsAnalyzing(false);
+      setAbortController(null);
+    }
+    // Close AI config modal if open
+    setIsAIConfigModalOpen(false);
   };
 
   const handleMultiFileAnalysis = async () => {
@@ -488,6 +460,21 @@ contract Vault {
 
   const handleFiles = async (files: File[]) => {
     try {
+      // Reset analysis states
+      setAnalysisFiles([]);
+      setIsAnalyzing(false);
+      setIsAIConfigModalOpen(false);
+      if (abortController) {
+        abortController.abort();
+        setAbortController(null);
+      }
+
+      // Reset input value so the same file can be selected again
+      const fileInput = document.querySelector('input[type="file"]') as HTMLInputElement;
+      if (fileInput) {
+        fileInput.value = '';
+      }
+
       const contractFiles: ContractFile[] = await Promise.all(
         files.map(async (file) => {
           const content = await file.text();
