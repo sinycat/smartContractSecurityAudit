@@ -466,6 +466,64 @@ contract Vault {
     setAnalysisFiles((prev) => prev.filter((file) => file.path !== path));
   };
 
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+  };
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    
+    const files = Array.from(e.dataTransfer.files);
+    handleFiles(files);
+  };
+
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files) {
+      const files = Array.from(e.target.files);
+      handleFiles(files);
+    }
+  };
+
+  const handleFiles = async (files: File[]) => {
+    try {
+      const contractFiles: ContractFile[] = await Promise.all(
+        files.map(async (file) => {
+          const content = await file.text();
+          return {
+            name: file.name,
+            path: file.name,
+            content: content,
+          };
+        })
+      );
+      
+      // Update file list, overwrite existing files with the same name
+      setUploadedFiles(prevFiles => {
+        const newFiles = [...prevFiles];
+        
+        contractFiles.forEach(newFile => {
+          const existingIndex = newFiles.findIndex(f => f.name === newFile.name);
+          if (existingIndex !== -1) {
+            // If file exists, replace it
+            newFiles[existingIndex] = newFile;
+          } else {
+            // If file doesn't exist, add it
+            newFiles.push(newFile);
+          }
+        });
+        
+        return newFiles;
+      });
+
+      toast.success(`Successfully uploaded ${files.length} file(s)`);
+    } catch (error) {
+      console.error('Error processing files:', error);
+      toast.error('Failed to process files');
+    }
+  };
+
   return (
     <div className="min-h-screen bg-[#1A1A1A]">
       <div className="absolute top-4 right-4 text-gray-400">
@@ -831,7 +889,11 @@ contract Vault {
 
           {activeTab === "multi-files" && (
             <div className="flex flex-col gap-4">
-              <div className="border border-dashed border-[#333333] rounded-lg p-8 bg-[#1A1A1A] hover:border-[#505050] transition-colors duration-200">
+              <div 
+                onDragOver={handleDragOver}
+                onDrop={handleDrop}
+                className="border border-dashed border-[#333333] rounded-lg p-8 bg-[#1A1A1A] hover:border-[#505050] transition-colors duration-200"
+              >
                 <div className="flex flex-col items-center gap-3">
                   <FilesIcon className="w-12 h-12 text-gray-500" />
                   <div className="text-center">
@@ -846,7 +908,7 @@ contract Vault {
                       multiple
                       accept=".sol"
                       className="hidden"
-                      onChange={handleFileUpload}
+                      onChange={handleFileSelect}
                     />
                     <span
                       className="h-9 inline-flex items-center gap-2 px-4
