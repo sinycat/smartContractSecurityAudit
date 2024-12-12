@@ -23,12 +23,12 @@ Brief overview of the contract's purpose and main functionality.
 - Gas: Optimizations for reducing gas costs
 
 ## For each finding, provide:
-Title: [Name of the finding]
-Severity: [Critical/High/Medium/Low/Gas]
-Description: [Detailed explanation]
-Impact: [What could happen if exploited]
-Location: [File name and line numbers]
-Recommendation: [How to fix and make sure the result of the fix is correct]
+- **Title:** [Name of the finding]
+- **Severity:** [Critical/High/Medium/Low/Gas]
+- **Description:** [Detailed explanation]
+- **Impact:** [What could happen if exploited]
+- **Location:** [File name and line numbers]
+- **Recommendation:** [How to fix and make sure the result of the fix is correct]
 
 Focus on these specific vulnerabilities and make sure the logic is correct:
 
