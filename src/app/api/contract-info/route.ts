@@ -46,61 +46,61 @@ export async function GET(request: NextRequest) {
         creator: creator,
         creationTxHash: creationTxHash,
       });
+    } else {
+      // other chain
+      const { url: apiUrl, apiKey } = getApiScanConfig(chain);
+
+      // 1. Get contract bytecode
+      const bytecodeUrl = `${apiUrl}?module=proxy&action=eth_getCode&address=${address}&tag=latest&apikey=${apiKey}`;
+      const bytecodeResponse = await fetch(bytecodeUrl);
+      const bytecodeData = await bytecodeResponse.json();
+
+      // 2. Get contract creation code and creator info
+      const creationUrl = `${apiUrl}?module=contract&action=getcontractcreation&contractaddresses=${address}&apikey=${apiKey}`;
+      const creationResponse = await fetch(creationUrl);
+      const creationData = await creationResponse.json();
+
+      let creationCode = "";
+      let creator = "";
+      let creationTxHash = "";
+
+      // Get creation info
+      if (creationData.status === "1" && creationData.result?.[0]) {
+        creationCode = creationData.result[0].creationBytecode;
+        creator = creationData.result[0].contractCreator;
+        creationTxHash = creationData.result[0].txHash;
+      }
+
+      // not found
+      if (creationCode === "" || creationCode === undefined) {
+        creationCode = "";
+      }
+
+      // Get contract source code information
+      const sourceUrl = `${apiUrl}?module=contract&action=getsourcecode&address=${address}&apikey=${apiKey}`;
+      const sourceResponse = await fetch(sourceUrl);
+      const sourceData = await sourceResponse.json();
+
+      // Get deployed bytecode
+      let deployedBytecode = bytecodeData.result || "";
+      // not found
+      if (deployedBytecode === "" || deployedBytecode === undefined) {
+        deployedBytecode = "";
+      }
+
+      return NextResponse.json({
+        contractName: sourceData.result[0]?.ContractName || "",
+        compiler: sourceData.result[0]?.CompilerVersion || "",
+        optimization: sourceData.result[0]?.OptimizationUsed === "1",
+        runs: parseInt(sourceData.result[0]?.Runs) || 200,
+        evmVersion: sourceData.result[0]?.EVMVersion || "default",
+        creationCode,
+        deployedBytecode: deployedBytecode,
+        implementation: sourceData.result[0]?.Implementation,
+        creator,
+        creationTxHash,
+      });
     }
-
-    // other chain
-    const { url: apiUrl, apiKey } = getApiScanConfig(chain);
-
-    // 1. Get contract bytecode
-    const bytecodeUrl = `${apiUrl}?module=proxy&action=eth_getCode&address=${address}&tag=latest&apikey=${apiKey}`;
-    const bytecodeResponse = await fetch(bytecodeUrl);
-    const bytecodeData = await bytecodeResponse.json();
-
-    // 2. Get contract creation code and creator info
-    const creationUrl = `${apiUrl}?module=contract&action=getcontractcreation&contractaddresses=${address}&apikey=${apiKey}`;
-    const creationResponse = await fetch(creationUrl);
-    const creationData = await creationResponse.json();
-
-    let creationCode = "";
-    let creator = "";
-    let creationTxHash = "";
-
-    // Get creation info
-    if (creationData.status === "1" && creationData.result?.[0]) {
-      creationCode = creationData.result[0].creationBytecode;
-      creator = creationData.result[0].contractCreator;
-      creationTxHash = creationData.result[0].txHash;
-    }
-
-    // not found
-    if (creationCode === "" || creationCode === undefined) {
-      creationCode = "";
-    }
-
-    // Get contract source code information
-    const sourceUrl = `${apiUrl}?module=contract&action=getsourcecode&address=${address}&apikey=${apiKey}`;
-    const sourceResponse = await fetch(sourceUrl);
-    const sourceData = await sourceResponse.json();
-
-    // Get deployed bytecode
-    let deployedBytecode = bytecodeData.result || "";
-    // not found
-    if (deployedBytecode === "" || deployedBytecode === undefined) {
-      deployedBytecode = "";
-    }
-
-    return NextResponse.json({
-      contractName: sourceData.result[0]?.ContractName || "",
-      compiler: sourceData.result[0]?.CompilerVersion || "",
-      optimization: sourceData.result[0]?.OptimizationUsed === "1",
-      runs: parseInt(sourceData.result[0]?.Runs) || 200,
-      evmVersion: sourceData.result[0]?.EVMVersion || "default",
-      creationCode,
-      deployedBytecode: deployedBytecode,
-      implementation: sourceData.result[0]?.Implementation,
-      creator,
-      creationTxHash,
-    });
   } catch (error) {
     console.error("Error details:", error);
     return NextResponse.json(
