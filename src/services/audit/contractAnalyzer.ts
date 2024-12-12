@@ -10,20 +10,7 @@ import { AIConfig } from "@/types/ai";
 // Format AI response content
 function formatAIResponse(content: string): string {
   if (!content) return "";
-
-  // Remove redundant Title lines and Title fields
-  let formatted = content
-    .replace(/### Title:.*\n/g, "")
-    .replace(/- Title:.*\n/g, "");
-
-  // Add dashes only to fields without them
-  formatted = formatted.replace(
-    /^(?!- )(Severity|Description|Impact|Location|Recommendation):/gm,
-    "- $1:"
-  );
-
-  // bold text
-  formatted = formatted.replace(/(\*\*[^*]+\*\*):/g, (match) => `\n${match}\n`);
+  let formatted = content;
 
   // make sure each ### title has a newline after it
   formatted = formatted.replace(/(### [^\n]+)(\n\*\*)/g, "$1\n$2");
