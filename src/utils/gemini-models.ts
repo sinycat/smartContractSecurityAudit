@@ -7,6 +7,12 @@ export interface GeminiModel {
 
 export const GEMINI_MODELS: GeminiModel[] = [
   {
+    id: "gemini-2.0-flash-exp",
+    name: "gemini-2.0-flash-exp",
+    description: "Experimental flash model with enhanced capabilities",
+    contextWindow: 128000,
+  },
+  {
     id: "gemini-1.5-flash",
     name: "gemini-1.5-flash",
     description: "Fast and efficient model for quick responses",
@@ -36,14 +42,10 @@ export const GEMINI_MODELS: GeminiModel[] = [
     description: "Experimental version for testing",
     contextWindow: 128000,
   },
-  {
-    id: "gemini-2.0-flash-exp",
-    name: "gemini-2.0-flash-exp",
-    description: "Experimental flash model with enhanced capabilities",
-    contextWindow: 128000,
-  },
 ];
 
-export const getGeminiModelById = (modelId: string): GeminiModel | undefined => {
+export const getGeminiModelById = (
+  modelId: string
+): GeminiModel | undefined => {
   return GEMINI_MODELS.find((model) => model.id === modelId);
-}; 
+};
