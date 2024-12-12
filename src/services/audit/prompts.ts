@@ -79,6 +79,15 @@ d) Protocol-Specific Risks
 - Unexpected Ether handling
 - Forcibly sent ether through selfdestruct
 - Pre-sent ether handling
+- First Depositor Vulnerability
+  * Price manipulation during initial deposit
+  * Share calculation exploitation with minimal deposits
+  * Missing minimum deposit amount checks
+  * Special cases in share minting logic for first deposit
+  * Lack of virtual reserves or price manipulation protection
+  * Initial share ratio manipulation
+  * Missing checks for pool initialization
+  * Absence of minimum liquidity locks
 
 e) Token-Related Issues
 - ERC20 approval/transfer issues
