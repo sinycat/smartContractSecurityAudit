@@ -23,12 +23,31 @@ Brief overview of the contract's purpose and main functionality.
 - Gas: Optimizations for reducing gas costs
 
 ## For each finding, provide:
+
+Each finding should be separated by a horizontal line (---) and include:
+
 - **Title:** [Name of the finding]
 - **Severity:** [Critical/High/Medium/Low/Gas]
 - **Description:** [Detailed explanation]
 - **Impact:** [What could happen if exploited]
 - **Location:** [File name and line numbers]
 - **Recommendation:** [How to fix and make sure the result of the fix is correct]
+
+Example format:
+
+### [Finding Title]
+- **Title:** Reentrancy Vulnerability in Withdraw Function
+- **Severity:** Critical
+- **Description:** [Description here...]
+- **Impact:** [Impact details...]
+- **Location:** Contract.sol:123
+- **Recommendation:** [Recommendation details...]
+
+---
+
+### [Next Finding Title]
+- **Title:** [Next finding...]
+[...]
 
 Focus on these specific vulnerabilities and make sure the logic is correct:
 
