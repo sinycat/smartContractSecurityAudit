@@ -9,6 +9,7 @@ import {
 } from "@/utils/chainServices";
 import type { ContractBasicInfo, ContractFile } from "@/types/blockchain";
 import * as cheerio from "cheerio";
+import { WEBSITE_URL } from "@/utils/constants";
 
 function findContractInfo(address: string): {
   labels?: string[];
@@ -375,15 +376,13 @@ export async function fetchCreationCodeFromExplorer(
       "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8",
     "Accept-Language": "en-US,en;q=0.5",
     "Accept-Encoding": "gzip, deflate, br",
+    Origin: `https://${WEBSITE_URL}`,
+    Referer: `https://${WEBSITE_URL}`,
     DNT: "1",
     Connection: "keep-alive",
-    "Upgrade-Insecure-Requests": "1",
     "Sec-Fetch-Dest": "document",
-    "Sec-Fetch-Mode": "navigate",
-    "Sec-Fetch-Site": "none",
-    "Sec-Fetch-User": "?1",
-    "Cache-Control": "no-cache",
-    Pragma: "no-cache",
+    "Sec-Fetch-Mode": "cors",
+    "Sec-Fetch-Site": "cross-site",
   };
 
   for (const explorerUrl of urls) {
@@ -402,6 +401,7 @@ export async function fetchCreationCodeFromExplorer(
             mode: "cors",
             credentials: "omit",
             redirect: "follow",
+            referrerPolicy: "no-referrer-when-downgrade",
           });
 
           if (response.ok) {
@@ -414,7 +414,7 @@ export async function fetchCreationCodeFromExplorer(
             ) {
               html = text;
               proxySuccess = true;
-              console.log(`Successfully fetched with proxy: ${proxy}`);
+              //console.log(`Successfully fetched with proxy: ${proxy}`);
               //await delay(1);
               //await delay(1000);
               break;
