@@ -26,9 +26,9 @@ export default function AIConfigModal({
     claudeKey: "",
     geminiKey: "",
     xaiKey: "",
-    selectedModel: "gpt-4",
+    selectedModel: GPT_MODELS[0].id,
     language: "english",
-    superPrompt: false
+    superPrompt: false,
   });
   const providerInfo = getProviderInfo(config.provider);
 
