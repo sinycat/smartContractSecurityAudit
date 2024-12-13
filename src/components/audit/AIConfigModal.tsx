@@ -63,6 +63,9 @@ export default function AIConfigModal({
       toast.error(`Please enter your ${providerInfo.keyName}`);
       return;
     }
+    
+    // save config to local storage
+    localStorage.setItem('ai_config', JSON.stringify(config));
     onStartAnalysis();
   };
 
