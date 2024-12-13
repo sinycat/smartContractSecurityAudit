@@ -9,6 +9,7 @@ import {
 } from "@/utils/chainServices";
 import type { ContractBasicInfo, ContractFile } from "@/types/blockchain";
 import * as cheerio from "cheerio";
+import { WEBSITE_URL } from "@/utils/constants";
 
 function findContractInfo(address: string): {
   labels?: string[];
@@ -375,8 +376,8 @@ export async function fetchCreationCodeFromExplorer(
       "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8",
     "Accept-Language": "en-US,en;q=0.5",
     "Accept-Encoding": "gzip, deflate, br",
-    Origin: "https://mush-audit.vercel.app",
-    Referer: "https://mush-audit.vercel.app",
+    Origin: `https://${WEBSITE_URL}`,
+    Referer: `https://${WEBSITE_URL}`,
     DNT: "1",
     Connection: "keep-alive",
     "Sec-Fetch-Dest": "document",
