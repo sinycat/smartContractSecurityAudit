@@ -341,6 +341,8 @@ export async function getImplementationAddress(
   }
 }
 
+const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+
 export async function fetchCreationCodeFromExplorer(
   chain: string,
   address: string
@@ -352,13 +354,39 @@ export async function fetchCreationCodeFromExplorer(
 
   // Try different CORS proxies
   const corsProxies = [
-    "https://api.allorigins.win/raw?url=",
     "https://corsproxy.io/?",
+    "https://api.allorigins.win/raw?url=",
+    "https://api.codetabs.com/v1/proxy?quest=",
+    "https://proxy.cors.sh/",
+    "https://cors-anywhere.herokuapp.com/",
+    "https://cors.bridged.cc/",
+    "https://cors-proxy.htmldriven.com/?url=",
+    "https://cors.eu.org/",
+    "https://yacdn.org/proxy/",
     "https://cors-proxy.fringe.zone/",
     "https://cors.streamlit.app/",
     "https://crossorigin.me/",
     "https://thingproxy.freeboard.io/fetch/",
   ];
+
+  // Add more headers
+  const headers = {
+    "User-Agent":
+      "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Firefox/121.0",
+    Accept:
+      "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8",
+    "Accept-Language": "en-US,en;q=0.5",
+    "Accept-Encoding": "gzip, deflate, br",
+    DNT: "1",
+    Connection: "keep-alive",
+    "Upgrade-Insecure-Requests": "1",
+    "Sec-Fetch-Dest": "document",
+    "Sec-Fetch-Mode": "navigate",
+    "Sec-Fetch-Site": "none",
+    "Sec-Fetch-User": "?1",
+    "Cache-Control": "no-cache",
+    Pragma: "no-cache",
+  };
 
   for (const explorerUrl of urls) {
     try {
@@ -368,22 +396,40 @@ export async function fetchCreationCodeFromExplorer(
       // Try each proxy until one works
       for (const proxy of corsProxies) {
         try {
-          const response = await fetch(
-            proxy + encodeURIComponent(explorerUrl),
-            {
-              headers: {
-                "User-Agent":
-                  "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36",
-              },
-            }
-          );
+          // console.log(`Trying proxy: ${proxy}`);
+          const proxyUrl = proxy + encodeURIComponent(explorerUrl);
+
+          const response = await fetch(proxyUrl, {
+            headers,
+            mode: "cors",
+            credentials: "omit",
+            redirect: "follow",
+          });
 
           if (response.ok) {
-            html = await response.text();
-            proxySuccess = true;
-            break;
+            const text = await response.text();
+            // Validate the returned content
+            if (
+              text &&
+              !text.includes("Access Denied") &&
+              !text.includes("Too Many Requests")
+            ) {
+              html = text;
+              proxySuccess = true;
+              console.log(`Successfully fetched with proxy: ${proxy}`);
+              //await delay(1);
+              //await delay(1000);
+              break;
+            } else {
+              //console.log(`Invalid response from proxy: ${proxy}`);
+              // await delay(1);
+            }
+          } else {
+            //console.log(`Failed with proxy ${proxy}: ${response.status}`);
+            //await delay(1);
           }
         } catch (proxyError) {
+          //console.warn(`Error with proxy ${proxy}:`, proxyError);
           continue;
         }
       }
