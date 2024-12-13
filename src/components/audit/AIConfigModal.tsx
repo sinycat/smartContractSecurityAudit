@@ -20,7 +20,16 @@ export default function AIConfigModal({
   onClose,
   onStartAnalysis,
 }: AIConfigModalProps) {
-  const { config, setConfig } = useAIConfig();
+  const [config, setConfig] = useState<AIConfig>({
+    provider: "gpt",
+    gptKey: "",
+    claudeKey: "",
+    geminiKey: "",
+    xaiKey: "",
+    selectedModel: GPT_MODELS[0].id,
+    language: "english",
+    superPrompt: true,
+  });
   const providerInfo = getProviderInfo(config.provider);
 
   // Handle provider change
@@ -54,6 +63,9 @@ export default function AIConfigModal({
       toast.error(`Please enter your ${providerInfo.keyName}`);
       return;
     }
+    
+    // save config to local storage
+    localStorage.setItem('ai_config', JSON.stringify(config));
     onStartAnalysis();
   };
 
@@ -234,7 +246,7 @@ export default function AIConfigModal({
                 xaiKey: "",
                 selectedModel: GPT_MODELS[0].id,
                 language: "english",
-                superPrompt: false,
+                superPrompt: true,
               });
             }}
             className="px-4 py-2 text-gray-400 hover:text-white transition-colors"
