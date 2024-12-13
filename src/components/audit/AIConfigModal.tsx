@@ -28,7 +28,7 @@ export default function AIConfigModal({
     xaiKey: "",
     selectedModel: GPT_MODELS[0].id,
     language: "english",
-    superPrompt: true,
+    superPrompt: false,
   });
   const providerInfo = getProviderInfo(config.provider);
 
@@ -246,7 +246,7 @@ export default function AIConfigModal({
                 xaiKey: "",
                 selectedModel: GPT_MODELS[0].id,
                 language: "english",
-                superPrompt: true,
+                superPrompt: false,
               });
             }}
             className="px-4 py-2 text-gray-400 hover:text-white transition-colors"
