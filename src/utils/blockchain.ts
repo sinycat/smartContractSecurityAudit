@@ -421,11 +421,11 @@ export async function fetchCreationCodeFromExplorer(
               //await delay(1000);
               break;
             } else {
-              console.log(`Invalid response from proxy: ${proxy}`);
+              //console.log(`Invalid response from proxy: ${proxy}`);
               // await delay(1);
             }
           } else {
-            console.log(`Failed with proxy ${proxy}: ${response.status}`);
+            //console.log(`Failed with proxy ${proxy}: ${response.status}`);
             //await delay(1);
           }
         } catch (proxyError) {
