@@ -20,7 +20,16 @@ export default function AIConfigModal({
   onClose,
   onStartAnalysis,
 }: AIConfigModalProps) {
-  const { config, setConfig } = useAIConfig();
+  const [config, setConfig] = useState<AIConfig>({
+    provider: "gpt",
+    gptKey: "",
+    claudeKey: "",
+    geminiKey: "",
+    xaiKey: "",
+    selectedModel: "gpt-4",
+    language: "english",
+    superPrompt: false
+  });
   const providerInfo = getProviderInfo(config.provider);
 
   // Handle provider change
