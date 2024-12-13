@@ -341,8 +341,6 @@ export async function getImplementationAddress(
   }
 }
 
-const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
-
 export async function fetchCreationCodeFromExplorer(
   chain: string,
   address: string
