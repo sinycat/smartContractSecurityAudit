@@ -20,15 +20,31 @@ export default function AIConfigModal({
   onClose,
   onStartAnalysis,
 }: AIConfigModalProps) {
-  const [config, setConfig] = useState<AIConfig>({
-    provider: "gpt",
-    gptKey: "",
-    claudeKey: "",
-    geminiKey: "",
-    xaiKey: "",
-    selectedModel: GPT_MODELS[0].id,
-    language: "english",
-    superPrompt: true,
+  const [config, setConfig] = useState<AIConfig>(() => {
+    const defaultConfig = {
+      provider: "gpt",
+      gptKey: "",
+      claudeKey: "",
+      geminiKey: "",
+      xaiKey: "",
+      selectedModel: GPT_MODELS[0].id,
+      language: "english",
+      superPrompt: true,
+    };
+
+    const savedConfig = localStorage.getItem('ai_config');
+    if (savedConfig) {
+      try {
+        return {
+          ...defaultConfig,
+          ...JSON.parse(savedConfig),
+          superPrompt: true,
+        };
+      } catch (e) {
+        console.error('Failed to parse saved config:', e);
+      }
+    }
+    return defaultConfig;
   });
   const providerInfo = getProviderInfo(config.provider);
 
