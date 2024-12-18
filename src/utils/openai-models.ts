@@ -9,14 +9,6 @@ export interface OpenAIModel {
 
 export const GPT_MODELS: OpenAIModel[] = [
   {
-    id: "o1",
-    name: "o1",
-    description: "Standard Opus One model with extended context window",
-    contextWindow: 200000,
-    trainingData: "Up to Dec 2024",
-    supportsTemperature: false,
-  },
-  {
     id: "o1-mini",
     name: "o1-mini",
     description: "Compact version of Opus One model",
@@ -30,6 +22,14 @@ export const GPT_MODELS: OpenAIModel[] = [
     description: "Preview version of next-generation Opus One model",
     contextWindow: 128000,
     trainingData: "Up to Jan 2024",
+    supportsTemperature: false,
+  },
+  {
+    id: "o1",
+    name: "o1",
+    description: "Standard Opus One model with extended context window",
+    contextWindow: 200000,
+    trainingData: "Up to Dec 2024",
     supportsTemperature: false,
   },
   {
