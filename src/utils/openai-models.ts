@@ -13,7 +13,7 @@ export const GPT_MODELS: OpenAIModel[] = [
     name: "o1",
     description: "Standard Opus One model with extended context window",
     contextWindow: 200000,
-    trainingData: "Up to Oct 2023",
+    trainingData: "Up to Dec 2024",
     supportsTemperature: false,
   },
   {
