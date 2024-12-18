@@ -127,10 +127,11 @@ export async function analyzeContract(params: {
       );
 
       // if we have super prompt, add it to the final prompt
-      // exclude o1-mini and o1-preview because they don't support super prompt
+      // exclude o1-mini and o1 because they don't support super prompt
       if (
         config.superPrompt &&
         config.selectedModel !== "o1-mini" &&
+        config.selectedModel !== "o1" &&
         config.selectedModel !== "o1-preview"
       ) {
         // console.log("Using super prompt");
