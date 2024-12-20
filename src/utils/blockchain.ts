@@ -353,7 +353,6 @@ export async function fetchCreationCodeFromExplorer(
 
   // Try different CORS proxies
   const corsProxies = [
-    "https://corsproxy.io/?",
     "https://api.allorigins.win/raw?url=",
     "https://api.codetabs.com/v1/proxy?quest=",
     "https://proxy.cors.sh/",
