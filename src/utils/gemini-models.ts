@@ -18,6 +18,18 @@ export const GEMINI_MODELS: GeminiModel[] = [
     description: "Experimental model with enhanced capabilities",
     contextWindow: 128000,
   },
+  {
+    id: "gemini-2.0-flash-thinking-exp",
+    name: "gemini-2.0-flash-thinking-exp",
+    description: "Thinking model with enhanced capabilities",
+    contextWindow: 32768,
+  },
+  {
+    id: "gemini-2.0-flash-thinking-exp-1219",
+    name: "gemini-2.0-flash-thinking-exp-1219",
+    description: "Thinking model with enhanced capabilities",
+    contextWindow: 32768,
+  },
 ];
 
 export const getGeminiModelById = (
