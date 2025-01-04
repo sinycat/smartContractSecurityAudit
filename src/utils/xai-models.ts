@@ -7,8 +7,8 @@ export interface XAIModel {
 
 export const XAI_MODELS: XAIModel[] = [
   {
-    id: "grok-beta",
-    name: "grok-beta",
+    id: "grok-2-latest",
+    name: "grok-2-latest",
     description: "xAI's Grok model for advanced language understanding",
     contextWindow: 131072,
   },
