@@ -2,6 +2,9 @@ import { WEBSITE_URL } from "./src/utils/constants";
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  compiler: {
+    removeConsole: process.env.NODE_ENV === "production",
+  },
   reactStrictMode: true,
   images: {
     domains: [WEBSITE_URL],
