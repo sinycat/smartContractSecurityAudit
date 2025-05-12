@@ -4,6 +4,9 @@ declare module 'html2canvas' {
     scale?: number;
     useCORS?: boolean;
     logging?: boolean;
+    letterRendering?: boolean;
+    allowTaint?: boolean;
+    onclone?: (document: Document) => void;
   }
   
   function html2canvas(element: HTMLElement, options?: Options): Promise<HTMLCanvasElement>;

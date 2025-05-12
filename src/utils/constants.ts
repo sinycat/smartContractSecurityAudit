@@ -113,10 +113,13 @@ export const CHAINS: Record<string, ChainConfig> = {
     rpcUrls: {
       default: "https://mainnet.base.org",
       fallbacks: [
-        "https://base.blockpi.network/v1/rpc/public",
-        "https://base.meowrpc.com",
         "https://base.publicnode.com",
-      ],
+        "https://1rpc.io/base",
+        "https://base.meowrpc.com",
+        "https://base.drpc.org",
+        "https://rpc.ankr.com/base",
+        "https://mainnet.base.org"
+      ]
     },
     blockExplorers: {
       default: {
@@ -226,6 +229,32 @@ export const CHAINS: Record<string, ChainConfig> = {
         name: "Aurora Explorer",
         url: "https://explorer.aurora.dev",
         apiUrl: "https://explorer.aurora.dev/api",
+      },
+    },
+  },
+  solana: {
+    id: "101",
+    name: "solana",
+    displayName: "Solana Mainnet",
+    nativeCurrency: {
+      name: "SOL",
+      symbol: "SOL",
+      decimals: 9,
+    },
+    rpcUrls: {
+      default: "https://api.mainnet-beta.solana.com",
+      fallbacks: [
+        "https://solana-mainnet.g.alchemy.com/v2/demo",
+        "https://rpc.ankr.com/solana",
+        "https://solana.publicnode.com",
+      ],
+    },
+    blockExplorers: {
+      default: {
+        name: "Solscan",
+        url: "https://solscan.io",
+        apiUrl: "https://api.solscan.io",
+        apiKey: process.env.NEXT_PUBLIC_SOLSCAN_API_KEY,
       },
     },
   },

@@ -101,7 +101,15 @@ export function useAIConfig() {
     localStorage.setItem("ai_config", JSON.stringify(config));
   }, [config]);
 
-  return { config, setConfig };
+  const updateConfig = (configOrFn: AIConfig | ((prev: AIConfig) => AIConfig)) => {
+    if (typeof configOrFn === 'function') {
+      setConfig(configOrFn);
+    } else {
+      setConfig(configOrFn);
+    }
+  };
+
+  return { config, updateConfig };
 }
 
 // AI analysis function

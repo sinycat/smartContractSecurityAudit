@@ -39,6 +39,7 @@ function SourceContent() {
   const router = useRouter();
   const [sourceData, setSourceData] = useState<ContractSource | null>(null);
   const [loading, setLoading] = useState(true);
+  const [analyzing, setAnalyzing] = useState(false);
 
   const address = searchParams.get("address");
   const chain = searchParams.get("chain");
@@ -47,13 +48,35 @@ function SourceContent() {
 
   const chainId = chain ? getChainId(chain) : undefined;
 
-  const handleStartAnalysis = () => {
-    if (address && chain) {
-      router.push(`/audit/analyze?address=${address}&chain=${chain}`);
-    } else {
-      toast.error("Missing address or chain information");
+  const handleAnalyze = async () => {
+    if (!sourceData || !sourceData.files || sourceData.files.length === 0) {
+      toast.error("No source code available to analyze");
+      return;
+    }
+    
+    // 检查是否为测试/模拟合约
+    const isTestContract = sourceData.files.some(
+      file => file.name === 'TestContract.sol' || file.path === 'TestContract.sol'
+    );
+    
+    if (isTestContract) {
+      toast.error("Cannot analyze test contract. This is a mock contract created for display purposes.");
+      return;
+    }
+    
+    setAnalyzing(true);
+    try {
+      // 处理合约代码分析的逻辑
+    } catch (error) {
+      console.error("Error analyzing source code:", error);
+      toast.error("Failed to analyze source code");
+    } finally {
+      setAnalyzing(false);
     }
   };
+
+  // 使用handleAnalyze替换原有的handleStartAnalysis
+  const handleStartAnalysis = handleAnalyze;
 
   useEffect(() => {
     const fetchSource = async () => {
@@ -67,10 +90,30 @@ function SourceContent() {
         const response = await fetch(
           `/api/source?address=${address}&chain=${chain}`
         );
+        
+        if (!response.ok) {
+          console.error(`API response status: ${response.status}`);
+          toast.error("Failed to fetch contract source code");
+          setLoading(false);
+          setSourceData(null);
+          return;
+        }
+        
         const data = await response.json();
 
         if (data.error) {
           toast.error(data.error);
+          setLoading(false);
+          setSourceData(null);
+          return;
+        }
+        
+        // 如果没有文件，或文件数组为空，显示错误
+        if (!data.files || data.files.length === 0) {
+          console.error("No files returned from API");
+          toast.error("No contract files found");
+          setLoading(false);
+          setSourceData(null);
           return;
         }
 
@@ -125,14 +168,18 @@ function SourceContent() {
 
         let filteredFiles = [...data.files];
 
+        // 检测是否为Solana合约
+        const isSolanaChain = chain && chain.toLowerCase() === 'solana';
+
+        // 使用正确的字段（abi用于以太坊合约，idl用于Solana合约）
         setSourceData({
           files: filteredFiles,
           settings: data.settings,
           contractName: data.contractName,
-          compiler: data.compiler,
+          compiler: data.compiler || (isSolanaChain ? "Solana BPF" : ""),
           optimization: data.optimization,
           runs: data.runs,
-          abi: data.abi,
+          abi: isSolanaChain ? data.idl : data.abi,  // 根据链类型选择正确的字段
           implementationAbi: data.implementationAbi,
           implementationAddress: implementation || undefined,
           implementationInfo: implementationInfo || undefined,
@@ -157,43 +204,44 @@ function SourceContent() {
 
   if (loading) {
     return (
-      <div className="fixed inset-0 bg-[#1E1E1E] flex items-center justify-center">
+      <div className="fixed inset-0 bg-[#1A1A1A] flex items-center justify-center">
         <div className="text-center">
-          <div className="relative w-24 h-24 mx-auto mb-6">
-            {/* Outer rotating halo */}
-            <div
-              className="absolute inset-0 border-4 border-t-mush-orange border-r-mush-orange/50 border-b-mush-orange/30 border-l-mush-orange/10 
-                          rounded-full animate-spin"
-            />
-
-            {/* Inner pulse effect */}
-            <div
-              className="absolute inset-2 border-2 border-mush-orange/50 rounded-full 
-                          animate-[ping_2s_cubic-bezier(0,0,0.2,1)_infinite]"
-            />
-
-            {/* Logo */}
-            <div
-              className="absolute inset-3 bg-[#1E1E1E] rounded-full flex items-center justify-center
-                          border border-mush-orange/20"
-            >
-              <Image
-                src="/mush.png"
-                alt="Loading"
-                width={40}
-                height={40}
-                className="animate-bounce-slow"
-              />
+          <div className="relative w-32 h-32 mx-auto mb-8">
+            {/* Outer rotating ring */}
+            <div className="absolute inset-0 border-4 border-t-[#2DD4BF] border-r-[#2DD4BF]/50 border-b-[#2DD4BF]/30 border-l-[#2DD4BF]/10 
+                          rounded-full animate-spin duration-1500" />
+            
+            {/* Middle rotating ring - opposite direction */}
+            <div className="absolute inset-4 border-4 border-r-[#2DD4BF] border-t-[#2DD4BF]/30 border-l-[#2DD4BF]/50 border-b-[#2DD4BF]/10 
+                          rounded-full animate-spin duration-2000 animate-reverse" />
+            
+            {/* Inner glowing circle */}
+            <div className="absolute inset-8 bg-[#2DD4BF]/10 rounded-full flex items-center justify-center
+                          shadow-[0_0_20px_2px_rgba(45,212,191,0.3)] animate-pulse">
+              {/* Code symbol */}
+              <svg className="w-10 h-10 text-[#2DD4BF]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" />
+              </svg>
             </div>
+            
+            {/* Particles effect */}
+            <div className="absolute -top-2 -left-2 w-3 h-3 bg-[#2DD4BF] rounded-full animate-particle1"></div>
+            <div className="absolute top-1/2 -right-4 w-2 h-2 bg-[#2DD4BF]/70 rounded-full animate-particle2"></div>
+            <div className="absolute -bottom-3 left-1/2 w-2 h-2 bg-[#2DD4BF]/60 rounded-full animate-particle3"></div>
           </div>
 
-          <div className="space-y-2">
-            <h3 className="text-xl font-medium text-white">
+          <div className="space-y-3">
+            <h3 className="text-2xl font-medium text-white">
               Loading Source Code
             </h3>
             <p className="text-sm text-gray-400">
               Fetching contract files from blockchain...
             </p>
+            <div className="flex justify-center gap-1.5 mt-2">
+              <span className="w-2 h-2 bg-[#2DD4BF]/30 rounded-full animate-pulse"></span>
+              <span className="w-2 h-2 bg-[#2DD4BF]/60 rounded-full animate-pulse delay-100"></span>
+              <span className="w-2 h-2 bg-[#2DD4BF]/90 rounded-full animate-pulse delay-200"></span>
+            </div>
           </div>
         </div>
       </div>
@@ -242,32 +290,44 @@ export default function SourcePage() {
   return (
     <Suspense
       fallback={
-        <div className="fixed inset-0 bg-[#1E1E1E] flex items-center justify-center">
+        <div className="fixed inset-0 bg-[#1A1A1A] flex items-center justify-center">
           <div className="text-center">
-            <div className="relative w-24 h-24 mx-auto mb-6">
-              {/* Outer rotating halo */}
-              <div className="absolute inset-0 border-4 border-t-mush-orange border-r-mush-orange/50 border-b-mush-orange/30 border-l-mush-orange/10 rounded-full animate-spin" />
-              {/* Inner pulse effect */}
-              <div className="absolute inset-2 border-2 border-mush-orange/50 rounded-full animate-[ping_2s_cubic-bezier(0,0,0.2,1)_infinite]" />
-              {/* Logo */}
-              <div className="absolute inset-3 bg-[#1E1E1E] rounded-full flex items-center justify-center border border-mush-orange/20">
-                <Image
-                  src="/mush.png"
-                  alt="Loading"
-                  width={32}
-                  height={32}
-                  priority
-                  className="animate-bounce-slow"
-                />
+            <div className="relative w-32 h-32 mx-auto mb-8">
+              {/* Outer rotating ring */}
+              <div className="absolute inset-0 border-4 border-t-[#2DD4BF] border-r-[#2DD4BF]/50 border-b-[#2DD4BF]/30 border-l-[#2DD4BF]/10 
+                            rounded-full animate-spin duration-1500" />
+              
+              {/* Middle rotating ring - opposite direction */}
+              <div className="absolute inset-4 border-4 border-r-[#2DD4BF] border-t-[#2DD4BF]/30 border-l-[#2DD4BF]/50 border-b-[#2DD4BF]/10 
+                            rounded-full animate-spin duration-2000 animate-reverse" />
+              
+              {/* Inner glowing circle */}
+              <div className="absolute inset-8 bg-[#2DD4BF]/10 rounded-full flex items-center justify-center
+                            shadow-[0_0_20px_2px_rgba(45,212,191,0.3)] animate-pulse">
+                {/* Code symbol */}
+                <svg className="w-10 h-10 text-[#2DD4BF]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" />
+                </svg>
               </div>
+              
+              {/* Particles effect */}
+              <div className="absolute -top-2 -left-2 w-3 h-3 bg-[#2DD4BF] rounded-full animate-particle1"></div>
+              <div className="absolute top-1/2 -right-4 w-2 h-2 bg-[#2DD4BF]/70 rounded-full animate-particle2"></div>
+              <div className="absolute -bottom-3 left-1/2 w-2 h-2 bg-[#2DD4BF]/60 rounded-full animate-particle3"></div>
             </div>
-            <div className="space-y-2">
-              <h3 className="text-xl font-medium text-white">
+
+            <div className="space-y-3">
+              <h3 className="text-2xl font-medium text-white">
                 Loading Source Code
               </h3>
               <p className="text-sm text-gray-400">
                 Fetching contract files from blockchain...
               </p>
+              <div className="flex justify-center gap-1.5 mt-2">
+                <span className="w-2 h-2 bg-[#2DD4BF]/30 rounded-full animate-pulse"></span>
+                <span className="w-2 h-2 bg-[#2DD4BF]/60 rounded-full animate-pulse delay-100"></span>
+                <span className="w-2 h-2 bg-[#2DD4BF]/90 rounded-full animate-pulse delay-200"></span>
+              </div>
             </div>
           </div>
         </div>

@@ -5,10 +5,27 @@
 :root {
   --background: #1A1A1A;
   --foreground: #FFFFFF;
-  --primary: #FF8B3E;
+  --primary: #2DD4BF;
   --primary-foreground: #FFFFFF;
   --secondary: #232323;
   --border: #333333;
+  
+  /* 增强版语法高亮颜色系统 - 更丰富的色彩区分 */
+  --syntax-blue: #3B9EFF;       /* 亮蓝色：主要关键字 */
+  --syntax-light-blue: #59BAFF; /* 浅蓝色：次要关键字 */
+  --syntax-cyan: #2DD4BF;       /* 青色：类名和类型 */
+  --syntax-bright-cyan: #06EFE0; /* 亮青色：函数名 */
+  --syntax-green: #4ADE80;      /* 亮绿色：字符串 */
+  --syntax-soft-green: #65D1A7; /* 柔和绿色：注释 */
+  --syntax-teal: #5FD9CD;       /* 浅青绿色：变量名 */
+  --syntax-lavender: #A389F4;   /* 淡紫色：属性和标签 */
+  --syntax-purple: #C792EA;     /* 紫色：特殊标识符 */
+  --syntax-pink: #FF7B9D;       /* 粉色：修饰符和装饰器 */
+  --syntax-coral: #FF7F78;      /* 珊瑚色：错误与警告 */
+  --syntax-orange: #FFB86C;     /* 橙色：常量和数字 */
+  --syntax-yellow: #FFFFA5;     /* 黄色：特殊常量 */
+  --syntax-gray: #A8B9BF;       /* 灰色：标点符号 */
+  --syntax-bright-gray: #D9E1E4;/* 亮灰色：重要标点 */
 }
 
 body {
@@ -61,11 +78,11 @@ html {
 .token.prolog,
 .token.doctype,
 .token.cdata {
-  color: #6272a4;
+  color: #6C8A95;
 }
 
 .token.punctuation {
-  color: #f8f8f2;
+  color: #A8B9BF;
 }
 
 .token.property,
@@ -73,12 +90,12 @@ html {
 .token.constant,
 .token.symbol,
 .token.deleted {
-  color: #ff79c6;
+  color: #2DD4BF;
 }
 
 .token.boolean,
 .token.number {
-  color: #bd93f9;
+  color: #79DCF2;
 }
 
 .token.selector,
@@ -87,7 +104,7 @@ html {
 .token.char,
 .token.builtin,
 .token.inserted {
-  color: #50fa7b;
+  color: #4ECCA3;
 }
 
 .token.operator,
@@ -96,23 +113,23 @@ html {
 .language-css .token.string,
 .style .token.string,
 .token.variable {
-  color: #f8f8f2;
+  color: #A8B9BF;
 }
 
 .token.atrule,
 .token.attr-value,
 .token.function,
 .token.class-name {
-  color: #f1fa8c;
+  color: #5EEAD4;
 }
 
 .token.keyword {
-  color: #ff79c6;
+  color: #0EA5E9;
 }
 
 .token.regex,
 .token.important {
-  color: #ffb86c;
+  color: #64DFDF;
 }
 
 .token.important,
@@ -285,4 +302,897 @@ pre[class*="language-"].line-numbers.whitespace-pre-wrap code {
 .scrollbar-file-explorer {
   scrollbar-width: thin;
   scrollbar-color: #424242 #252526;
+}
+
+/* Syntax Highlight Overrides for Rust code */
+code[class*="language-rust"] .token.keyword,
+pre[class*="language-rust"] .token.keyword {
+  color: #0EA5E9; /* 浅蓝色替代粉红色 */
+}
+
+code[class*="language-rust"] .token.punctuation,
+pre[class*="language-rust"] .token.punctuation {
+  color: #A8B9BF; /* 灰蓝色替代白色 */
+}
+
+code[class*="language-rust"] .token.string,
+pre[class*="language-rust"] .token.string {
+  color: #4ECCA3; /* 青绿色替代橙色 */
+}
+
+code[class*="language-rust"] .token.function,
+pre[class*="language-rust"] .token.function {
+  color: #5EEAD4; /* 浅青色替代黄色 */
+}
+
+code[class*="language-rust"] .token.parameter,
+pre[class*="language-rust"] .token.parameter {
+  color: #79DCF2; /* 天蓝色替代白色 */
+}
+
+code[class*="language-rust"] .token.operator,
+pre[class*="language-rust"] .token.operator {
+  color: #94E2CD; /* 淡青色替代白色 */
+}
+
+code[class*="language-rust"] .token.macro,
+pre[class*="language-rust"] .token.macro {
+  color: #0EA5E9; /* 浅蓝色替代红色 */
+}
+
+code[class*="language-rust"] .token.attribute,
+pre[class*="language-rust"] .token.attribute {
+  color: #0EA5E9; /* 浅蓝色替代红色 */
+}
+
+code[class*="language-rust"] .token.comment,
+pre[class*="language-rust"] .token.comment {
+  color: #6C8A95; /* 灰蓝色替代暗灰色 */
+}
+
+code[class*="language-rust"] .token.number,
+pre[class*="language-rust"] .token.number {
+  color: #79DCF2; /* 天蓝色替代紫色 */
+}
+
+code[class*="language-rust"] .token.type-definition,
+pre[class*="language-rust"] .token.type-definition,
+code[class*="language-rust"] .token.class-name,
+pre[class*="language-rust"] .token.class-name {
+  color: #5EEAD4; /* 浅青色替代黄色 */
+}
+
+/* 更强大的Rust语法高亮覆盖 */
+pre.language-rust .keyword,
+code.language-rust .keyword {
+  color: #0EA5E9 !important; /* 关键字使用蓝色 */
+}
+
+pre.language-rust .attr-name,
+code.language-rust .attr-name,
+pre.language-rust .meta,
+code.language-rust .meta,
+pre.language-rust .meta *,
+code.language-rust .meta * {
+  color: #0EA5E9 !important; /* 宏和属性使用蓝色 */
+}
+
+pre.language-rust .string,
+code.language-rust .string {
+  color: #4ECCA3 !important; /* 字符串使用绿色 */
+}
+
+pre.language-rust .punctuation,
+code.language-rust .punctuation {
+  color: #A8B9BF !important; /* 标点符号使用灰色 */
+}
+
+pre.language-rust .operator,
+code.language-rust .operator {
+  color: #94E2CD !important; /* 操作符使用浅青色 */
+}
+
+pre.language-rust .function,
+code.language-rust .function {
+  color: #5EEAD4 !important; /* 函数使用青色 */
+}
+
+pre.language-rust .number,
+code.language-rust .number {
+  color: #79DCF2 !important; /* 数字使用浅蓝色 */
+}
+
+pre.language-rust .comment,
+code.language-rust .comment {
+  color: #6C8A95 !important; /* 注释使用暗青色 */
+}
+
+/* 对于宏调用和特殊Rust语法的额外支持 */
+pre.language-rust .macro,
+code.language-rust .macro,
+pre.language-rust .attr,
+code.language-rust .attr,
+pre.language-rust .attribute,
+code.language-rust .attribute {
+  color: #0EA5E9 !important; /* 宏和属性使用蓝色 */
+}
+
+/* 确保行号使用灰色 */
+.line-numbers-rows > span:before {
+  color: #666 !important;
+}
+
+/* 特定Rust元素的样式覆盖 */
+pre.language-rust .token[class*="use"],
+code.language-rust .token[class*="use"] {
+  color: #0EA5E9 !important; /* use 语句使用蓝色 */
+}
+
+pre.language-rust .token[class*="self"],
+code.language-rust .token[class*="self"],
+pre.language-rust .token[class*="Self"],
+code.language-rust .token[class*="Self"] {
+  color: #5EEAD4 !important; /* self/Self 关键字使用青色 */
+}
+
+pre.language-rust .token[class*="derive"],
+code.language-rust .token[class*="derive"],
+pre.language-rust .token[class*="cfg"],
+code.language-rust .token[class*="cfg"] {
+  color: #0EA5E9 !important; /* 属性宏使用蓝色 */
+}
+
+pre.language-rust .token[class*="error"],
+code.language-rust .token[class*="error"] {
+  color: #0EA5E9 !important; /* error 和异常相关的关键字使用蓝色 */
+}
+
+pre.language-rust .token[class*="prelude"],
+code.language-rust .token[class*="prelude"] {
+  color: #0EA5E9 !important; /* prelude 相关的使用蓝色 */
+}
+
+pre.language-rust .token[class*="fmt"],
+code.language-rust .token[class*="fmt"],
+pre.language-rust .token[class*="str"],
+code.language-rust .token[class*="str"] {
+  color: #0EA5E9 !important; /* fmt/str 模块使用蓝色 */
+}
+
+pre.language-rust .token[class*="Display"],
+code.language-rust .token[class*="Display"],
+pre.language-rust .token[class*="FromStr"],
+code.language-rust .token[class*="FromStr"] {
+  color: #5EEAD4 !important; /* 特性使用青色 */
+}
+
+pre.language-rust [class*="write"],
+code.language-rust [class*="write"] {
+  color: #5EEAD4 !important; /* write 宏使用青色 */
+}
+
+pre.language-rust .token[class*="pub"],
+code.language-rust .token[class*="pub"],
+pre.language-rust .token[class*="fn"],
+code.language-rust .token[class*="fn"],
+pre.language-rust .token[class*="struct"],
+code.language-rust .token[class*="struct"],
+pre.language-rust .token[class*="impl"],
+code.language-rust .token[class*="impl"],
+pre.language-rust .token[class*="const"],
+code.language-rust .token[class*="const"] {
+  color: #0EA5E9 !important; /* 关键字使用蓝色 */
+}
+
+pre.language-rust .token[class*="u32"],
+code.language-rust .token[class*="u32"] {
+  color: #79DCF2 !important; /* 类型使用浅蓝色 */
+}
+
+pre.language-rust .token[class*="100"],
+code.language-rust .token[class*="100"],
+pre.language-rust .token[class*="000"],
+code.language-rust .token[class*="000"] {
+  color: #79DCF2 !important; /* 数字使用浅蓝色 */
+}
+
+/* 确保比较特殊的语法也能被覆盖 */
+pre.language-rust [class*="basis_points"],
+code.language-rust [class*="basis_points"] {
+  color: #5EEAD4 !important; /* 变量使用青色 */
+}
+
+/* 进一步优化的Rust语法高亮 */
+code[class*="language-rust"] .token,
+pre[class*="language-rust"] .token {
+  color: #A8B9BF !important; /* 默认文本颜色使用浅灰色 */
+}
+
+code[class*="language-rust"] .token.keyword,
+pre[class*="language-rust"] .token.keyword {
+  color: #0EA5E9 !important; /* 关键字使用更亮的蓝色 */
+}
+
+code[class*="language-rust"] .token.function,
+pre[class*="language-rust"] .token.function {
+  color: #2DD4BF !important; /* 函数名使用主题青色 */
+}
+
+code[class*="language-rust"] .token.string,
+pre[class*="language-rust"] .token.string {
+  color: #4ECCA3 !important; /* 字符串使用浅绿色 */
+}
+
+code[class*="language-rust"] .token.number,
+pre[class*="language-rust"] .token.number {
+  color: #79DCF2 !important; /* 数字使用浅蓝色 */
+}
+
+code[class*="language-rust"] .token.comment,
+pre[class*="language-rust"] .token.comment {
+  color: #6C8A95 !important; /* 注释使用暗青色 */
+}
+
+/* 特定Rust元素 */
+code[class*="language-rust"] .token.attribute,
+pre[class*="language-rust"] .token.attribute {
+  color: #0EA5E9 !important; /* 属性使用蓝色 */
+}
+
+code[class*="language-rust"] .token.macro,
+pre[class*="language-rust"] .token.macro,
+code[class*="language-rust"] .token.directive,
+pre[class*="language-rust"] .token.directive {
+  color: #0EA5E9 !important; /* 宏使用蓝色 */
+}
+
+/* 强制对特定的Rust语法进行高亮 */
+.token.namespace {
+  color: #0EA5E9 !important;
+  opacity: 1 !important;
+}
+
+/* Solidity语法高亮调整 */
+code[class*="language-solidity"] .token,
+pre[class*="language-solidity"] .token {
+  color: #A8B9BF !important; /* 默认文本颜色使用浅灰色 */
+}
+
+code[class*="language-solidity"] .token.keyword,
+pre[class*="language-solidity"] .token.keyword {
+  color: #0EA5E9 !important; /* 关键字使用蓝色 */
+}
+
+code[class*="language-solidity"] .token.function,
+pre[class*="language-solidity"] .token.function {
+  color: #2DD4BF !important; /* 函数名使用主题青色 */
+}
+
+code[class*="language-solidity"] .token.string,
+pre[class*="language-solidity"] .token.string {
+  color: #4ECCA3 !important; /* 字符串使用浅绿色 */
+}
+
+code[class*="language-solidity"] .token.number,
+pre[class*="language-solidity"] .token.number {
+  color: #79DCF2 !important; /* 数字使用浅蓝色 */
+}
+
+code[class*="language-solidity"] .token.comment,
+pre[class*="language-solidity"] .token.comment {
+  color: #6C8A95 !important; /* 注释使用暗青色 */
+}
+
+/* Solidity特定元素 */
+code[class*="language-solidity"] .token.builtin,
+pre[class*="language-solidity"] .token.builtin {
+  color: #2DD4BF !important; /* 内置类型使用青色 */
+}
+
+code[class*="language-solidity"] .token.operator,
+pre[class*="language-solidity"] .token.operator {
+  color: #94E2CD !important; /* 运算符使用淡青色 */
+}
+
+/* 通用的语法高亮覆盖，确保不遗漏任何语言 */
+pre[class*="language-"] .token.keyword,
+code[class*="language-"] .token.keyword {
+  color: #0EA5E9 !important; /* 所有语言的关键字都使用蓝色 */
+}
+
+pre[class*="language-"] .token.string,
+code[class*="language-"] .token.string {
+  color: #4ECCA3 !important; /* 所有语言的字符串都使用绿色 */
+}
+
+pre[class*="language-"] .token.function,
+code[class*="language-"] .token.function {
+  color: #2DD4BF !important; /* 所有语言的函数都使用青色 */
+}
+
+pre[class*="language-"] .token.number,
+code[class*="language-"] .token.number {
+  color: #79DCF2 !important; /* 所有语言的数字都使用浅蓝色 */
+}
+
+pre[class*="language-"] .token.comment,
+code[class*="language-"] .token.comment {
+  color: #6C8A95 !important; /* 所有语言的注释都使用暗青色 */
+}
+
+/* 针对图片中特定元素的显示问题修复 */
+.token.punctuation {
+  color: #A8B9BF !important; /* 标点符号使用灰色 */
+}
+
+.token.operator {
+  color: #94E2CD !important; /* 运算符使用淡青色 */
+}
+
+/* 针对Rust宏属性的特殊处理 */
+.token[class*="#"] {
+  color: #0EA5E9 !important; /* 以#开头的宏属性使用蓝色 */
+}
+
+/* 移除非标准的:contains选择器，使用更直接和有效的方式 */
+
+/* 针对Rust特定关键字 */
+code[class*="language-rust"] .keyword,
+pre[class*="language-rust"] .keyword,
+code[class*="language-rust"] .keyword-impl,
+pre[class*="language-rust"] .keyword-impl,
+code[class*="language-rust"] .keyword-pub,
+pre[class*="language-rust"] .keyword-pub,
+code[class*="language-rust"] .keyword-struct,
+pre[class*="language-rust"] .keyword-struct,
+code[class*="language-rust"] .keyword-fn,
+pre[class*="language-rust"] .keyword-fn,
+code[class*="language-rust"] .keyword-use,
+pre[class*="language-rust"] .keyword-use,
+code[class*="language-rust"] .keyword-const,
+pre[class*="language-rust"] .keyword-const,
+code[class*="language-rust"] .keyword-static,
+pre[class*="language-rust"] .keyword-static,
+code[class*="language-rust"] .keyword-self,
+pre[class*="language-rust"] .keyword-self,
+code[class*="language-rust"] .keyword-Self,
+pre[class*="language-rust"] .keyword-Self {
+  color: #0EA5E9 !important; /* 关键字统一使用蓝色 */
+}
+
+/* 针对Rust类型 */
+code[class*="language-rust"] .type,
+pre[class*="language-rust"] .type,
+code[class*="language-rust"] .class-name,
+pre[class*="language-rust"] .class-name {
+  color: #2DD4BF !important; /* 类型使用青色 */
+}
+
+/* 针对Solidity特定关键字 */
+code[class*="language-solidity"] .keyword,
+pre[class*="language-solidity"] .keyword,
+code[class*="language-solidity"] .keyword-pragma,
+pre[class*="language-solidity"] .keyword-pragma,
+code[class*="language-solidity"] .keyword-contract,
+pre[class*="language-solidity"] .keyword-contract,
+code[class*="language-solidity"] .keyword-import,
+pre[class*="language-solidity"] .keyword-import,
+code[class*="language-solidity"] .keyword-function,
+pre[class*="language-solidity"] .keyword-function,
+code[class*="language-solidity"] .keyword-event,
+pre[class*="language-solidity"] .keyword-event,
+code[class*="language-solidity"] .keyword-address,
+pre[class*="language-solidity"] .keyword-address,
+code[class*="language-solidity"] .keyword-mapping,
+pre[class*="language-solidity"] .keyword-mapping,
+code[class*="language-solidity"] .keyword-public,
+pre[class*="language-solidity"] .keyword-public,
+code[class*="language-solidity"] .keyword-return,
+pre[class*="language-solidity"] .keyword-return,
+code[class*="language-solidity"] .keyword-require,
+pre[class*="language-solidity"] .keyword-require,
+code[class*="language-solidity"] .keyword-external,
+pre[class*="language-solidity"] .keyword-external,
+code[class*="language-solidity"] .keyword-constructor,
+pre[class*="language-solidity"] .keyword-constructor {
+  color: #0EA5E9 !important; /* 关键字统一使用蓝色 */
+}
+
+/* 更直接的选择器匹配特定代码元素 */
+code[class*="language-solidity"] .property,
+pre[class*="language-solidity"] .property,
+code[class*="language-solidity"] .builtin,
+pre[class*="language-solidity"] .builtin,
+code[class*="language-solidity"] .class-name,
+pre[class*="language-solidity"] .class-name {
+  color: #2DD4BF !important; /* 特性和类名使用青色 */
+}
+
+/* 完全覆盖默认颜色，使其更符合主题风格 */
+.token.punctuation {
+  color: #A8B9BF !important; /* 标点符号使用灰色 */
+  opacity: 0.7 !important; /* 稍微降低不重要元素的透明度 */
+}
+
+.token.operator {
+  color: #94E2CD !important; /* 运算符使用淡青色 */
+}
+
+.token.comment {
+  color: #6C8A95 !important; /* 注释使用暗青色 */
+  font-style: italic !important; /* 注释使用斜体 */
+}
+
+/* 强调特定元素 */
+.token.keyword {
+  color: #0EA5E9 !important; /* 关键字使用蓝色 */
+  font-weight: normal !important; 
+}
+
+.token.function {
+  color: #2DD4BF !important; /* 函数使用青色 */
+}
+
+.token.string {
+  color: #4ECCA3 !important; /* 字符串使用绿色 */
+}
+
+.token.number {
+  color: #79DCF2 !important; /* 数字使用浅蓝色 */
+}
+
+/* 针对截图中的具体文件处理 */
+/* Rust liq_pool.rs */
+.token.directive, .token.tag {
+  color: #0EA5E9 !important; /* 指令和标签使用蓝色 */
+}
+
+/* Rust特定关键字 */
+.token.property, .token.entity {
+  color: #2DD4BF !important; /* 属性使用青色 */
+}
+
+/* Solidity特定元素 */
+.token.unit {
+  color: #79DCF2 !important; /* 单位使用浅蓝色 */
+}
+
+/* 为确保所有高亮样式覆盖原始主题，增加优先级 */
+.token.keyword, .token.keyword-impl, .token.keyword-pub, 
+.token.keyword-struct, .token.keyword-fn, .token.keyword-use {
+  color: #0EA5E9 !important;
+}
+
+/* 更具针对性的样式，针对截图中的特定元素 */
+
+/* 为特定的Rust/Solidity关键字和标识符添加样式 */
+[class*="language"] .token[class*="Self"],
+[class*="language"] .token[class*="impl"],
+[class*="language"] .token[class*="pub"],
+[class*="language"] .token[class*="struct"],
+[class*="language"] .token[class*="fn"],
+[class*="language"] .token[class*="use"],
+[class*="language"] .token[class*="const"],
+[class*="language"] .token[class*="static"],
+[class*="language"] .token[class*="pragma"],
+[class*="language"] .token[class*="import"],
+[class*="language"] .token[class*="contract"],
+[class*="language"] .token[class*="function"],
+[class*="language"] .token[class*="event"],
+[class*="language"] .token[class*="address"],
+[class*="language"] .token[class*="mapping"],
+[class*="language"] .token[class*="public"],
+[class*="language"] .token[class*="return"],
+[class*="language"] .token[class*="require"],
+[class*="language"] .token[class*="external"],
+[class*="language"] .token[class*="constructor"] {
+  color: #0EA5E9 !important; /* 关键字统一使用蓝色 */
+}
+
+/* 其他编程元素 */
+[class*="language"] .token[class*="string"],
+[class*="language"] .token.string {
+  color: #4ECCA3 !important; /* 字符串使用绿色 */
+}
+
+[class*="language"] .token[class*="func"],
+[class*="language"] .token.function,
+[class*="language"] .token[class*="method"] {
+  color: #2DD4BF !important; /* 函数使用青色 */
+}
+
+[class*="language"] .token[class*="number"],
+[class*="language"] .token.number,
+[class*="language"] .token[class*="u8"],
+[class*="language"] .token[class*="u32"],
+[class*="language"] .token[class*="u64"],
+[class*="language"] .token[class*="uint"] {
+  color: #79DCF2 !important; /* 数字和数字类型使用浅蓝色 */
+}
+
+/* 针对Solidity */
+/* 为了确保Solidity代码正确显示，增加更多特定的选择器 */
+[class*="solidity"] .token.keyword,
+[class*="solidity"] .token.keyword-pragma,
+[class*="solidity"] .token.keyword-import,
+[class*="solidity"] .token.keyword-contract,
+[class*="solidity"] .token.keyword-function,
+[class*="solidity"] .token.keyword-address,
+[class*="solidity"] .token.keyword-mapping,
+[class*="solidity"] .token.keyword-public,
+[class*="solidity"] .token.keyword-return,
+[class*="solidity"] .token.keyword-require,
+[class*="solidity"] .token.keyword-event,
+[class*="solidity"] .token.keyword-constructor,
+[class*="solidity"] [class*="keyword"] {
+  color: #0EA5E9 !important; /* 关键字蓝色 */
+}
+
+/* 强制Solidity元素的风格 */
+.language-solidity .keyword,
+.language-solidity .token.keyword {
+  color: #0EA5E9 !important;
+}
+
+.language-solidity .string,
+.language-solidity .token.string {
+  color: #4ECCA3 !important;
+}
+
+.language-solidity .function,
+.language-solidity .token.function {
+  color: #2DD4BF !important;
+}
+
+.language-solidity .number,
+.language-solidity .token.number {
+  color: #79DCF2 !important;
+}
+
+/* 直接匹配特定文本 */
+[class*="solidity"] [class*="pragma"],
+[class*="solidity"] [class*="solidity"],
+[class*="solidity"] [class*="contract"],
+[class*="solidity"] [class*="import"],
+[class*="solidity"] [class*="function"],
+[class*="solidity"] [class*="address"],
+[class*="solidity"] [class*="mapping"],
+[class*="solidity"] [class*="return"],
+[class*="solidity"] [class*="public"],
+[class*="solidity"] [class*="external"],
+[class*="solidity"] [class*="constructor"] {
+  color: #0EA5E9 !important;
+}
+
+/* 截图中的特定元素 */
+[class*="liq_pool"] .token[class*="Fee"],
+[class*="liq_pool"] .token[class*="LiqPool"],
+[class*="UniswapV2Factory"] .token[class*="UniswapV2Factory"],
+[class*="PairCreated"] .token[class*="PairCreated"] {
+  color: #2DD4BF !important; /* 类名使用青色 */
+}
+
+/* 最终的全局覆盖，确保一致性 */
+.token.keyword { color: #0EA5E9 !important; }
+.token.string { color: #4ECCA3 !important; }
+.token.function { color: #2DD4BF !important; }
+.token.number, .token.unit { color: #79DCF2 !important; }
+.token.comment { color: #6C8A95 !important; font-style: italic !important; }
+.token.punctuation { color: #A8B9BF !important; opacity: 0.7 !important; }
+.token.operator { color: #94E2CD !important; }
+
+/* 增强版语法高亮方案 - 更丰富的色彩区分 */
+
+/* 基本语法元素 - 通用规则 */
+.token.keyword {
+  color: var(--syntax-blue) !important;
+  font-weight: 500 !important; 
+}
+
+/* 控制流关键字单独设置颜色 */
+.token.keyword[class*="control"],
+.token[class*="if"],
+.token[class*="else"],
+.token[class*="for"],
+.token[class*="while"],
+.token[class*="return"],
+.token[class*="break"],
+.token[class*="continue"] {
+  color: var(--syntax-light-blue) !important;
+}
+
+/* 函数相关 */
+.token.function {
+  color: var(--syntax-bright-cyan) !important;
+}
+
+/* 字符串 */
+.token.string,
+.token.char {
+  color: var(--syntax-green) !important;
+}
+
+/* 数字和常量 */
+.token.number,
+.token.unit,
+.token.constant,
+.token.boolean {
+  color: var(--syntax-orange) !important;
+}
+
+/* 注释 */
+.token.comment {
+  color: var(--syntax-soft-green) !important;
+  font-style: italic !important;
+  opacity: 0.8 !important;
+}
+
+/* 标点符号 */
+.token.punctuation {
+  color: var(--syntax-gray) !important;
+}
+
+/* 运算符 */
+.token.operator {
+  color: var(--syntax-bright-cyan) !important;
+  font-weight: 500 !important;
+}
+
+/* 变量名 */
+.token.parameter,
+.token.variable {
+  color: var(--syntax-teal) !important;
+}
+
+/* 属性和标签 */
+.token.property,
+.token.tag,
+.token.selector,
+.token.attr-name {
+  color: var(--syntax-lavender) !important;
+}
+
+/* 内置类型 */
+.token.builtin {
+  color: var(--syntax-cyan) !important;
+}
+
+/* 类和类型 */
+.token.class-name,
+.token.type,
+.token.type-definition {
+  color: var(--syntax-cyan) !important;
+}
+
+/* 特殊标识符 */
+.token.entity,
+.token.symbol {
+  color: var(--syntax-purple) !important;
+}
+
+/* 修饰符和装饰器 */
+.token.decorator,
+.token.annotation,
+.token[class*="decorator"],
+.token[class*="annotation"] {
+  color: var(--syntax-pink) !important;
+}
+
+/* 错误与警告 */
+.token.error,
+.token[class*="Error"],
+.token[class*="error"],
+.token[class*="Exception"],
+.token[class*="exception"] {
+  color: var(--syntax-coral) !important;
+}
+
+/* Solidity特定语法增强 */
+
+/* Solidity核心关键字 */
+code[class*="language-solidity"] .token.keyword[class*="pragma"],
+code[class*="language-solidity"] .token.keyword[class*="solidity"],
+code[class*="language-solidity"] .token.keyword[class*="contract"],
+code[class*="language-solidity"] .token.keyword[class*="library"],
+code[class*="language-solidity"] .token.keyword[class*="interface"],
+code[class*="language-solidity"] .token.keyword[class*="import"],
+code[class*="language-solidity"] .token.keyword[class*="using"],
+code[class*="language-solidity"] .token.keyword[class*="struct"] {
+  color: var(--syntax-blue) !important;
+  font-weight: 500 !important;
+}
+
+/* Solidity函数相关关键字 */
+code[class*="language-solidity"] .token.keyword[class*="function"],
+code[class*="language-solidity"] .token.keyword[class*="constructor"],
+code[class*="language-solidity"] .token.keyword[class*="event"] {
+  color: var(--syntax-blue) !important;
+}
+
+/* Solidity可见性修饰符 */
+code[class*="language-solidity"] .token.keyword[class*="public"],
+code[class*="language-solidity"] .token.keyword[class*="private"],
+code[class*="language-solidity"] .token.keyword[class*="internal"],
+code[class*="language-solidity"] .token.keyword[class*="external"] {
+  color: var(--syntax-pink) !important;
+}
+
+/* Solidity状态修饰符 */
+code[class*="language-solidity"] .token.keyword[class*="view"],
+code[class*="language-solidity"] .token.keyword[class*="pure"],
+code[class*="language-solidity"] .token.keyword[class*="payable"],
+code[class*="language-solidity"] .token.keyword[class*="constant"],
+code[class*="language-solidity"] .token.keyword[class*="immutable"] {
+  color: var(--syntax-lavender) !important;
+}
+
+/* Solidity控制流关键字 */
+code[class*="language-solidity"] .token.keyword[class*="if"],
+code[class*="language-solidity"] .token.keyword[class*="else"],
+code[class*="language-solidity"] .token.keyword[class*="for"],
+code[class*="language-solidity"] .token.keyword[class*="while"],
+code[class*="language-solidity"] .token.keyword[class*="do"],
+code[class*="language-solidity"] .token.keyword[class*="break"],
+code[class*="language-solidity"] .token.keyword[class*="continue"],
+code[class*="language-solidity"] .token.keyword[class*="return"] {
+  color: var(--syntax-light-blue) !important;
+}
+
+/* Solidity特殊函数 */
+code[class*="language-solidity"] .token.function[class*="require"],
+code[class*="language-solidity"] .token.function[class*="assert"],
+code[class*="language-solidity"] .token.function[class*="revert"] {
+  color: var(--syntax-coral) !important;
+  font-weight: 500 !important;
+}
+
+/* Solidity类型 */
+code[class*="language-solidity"] .token.keyword[class*="address"],
+code[class*="language-solidity"] .token.keyword[class*="uint"],
+code[class*="language-solidity"] .token.keyword[class*="int"],
+code[class*="language-solidity"] .token.keyword[class*="bool"],
+code[class*="language-solidity"] .token.keyword[class*="bytes"],
+code[class*="language-solidity"] .token.keyword[class*="string"] {
+  color: var(--syntax-cyan) !important;
+}
+
+/* Solidity特殊变量 */
+code[class*="language-solidity"] .token[class*="msg.sender"],
+code[class*="language-solidity"] .token[class*="msg.value"],
+code[class*="language-solidity"] .token[class*="block.timestamp"],
+code[class*="language-solidity"] .token[class*="this"] {
+  color: var(--syntax-purple) !important;
+}
+
+/* Rust特定语法增强 */
+
+/* Rust核心关键字 */
+code[class*="language-rust"] .token.keyword[class*="fn"],
+code[class*="language-rust"] .token.keyword[class*="struct"],
+code[class*="language-rust"] .token.keyword[class*="enum"],
+code[class*="language-rust"] .token.keyword[class*="impl"],
+code[class*="language-rust"] .token.keyword[class*="trait"],
+code[class*="language-rust"] .token.keyword[class*="mod"],
+code[class*="language-rust"] .token.keyword[class*="use"] {
+  color: var(--syntax-blue) !important;
+  font-weight: 500 !important;
+}
+
+/* Rust可见性修饰符 */
+code[class*="language-rust"] .token.keyword[class*="pub"] {
+  color: var(--syntax-pink) !important;
+}
+
+/* Rust控制流关键字 */
+code[class*="language-rust"] .token.keyword[class*="if"],
+code[class*="language-rust"] .token.keyword[class*="else"],
+code[class*="language-rust"] .token.keyword[class*="match"],
+code[class*="language-rust"] .token.keyword[class*="while"],
+code[class*="language-rust"] .token.keyword[class*="for"],
+code[class*="language-rust"] .token.keyword[class*="loop"],
+code[class*="language-rust"] .token.keyword[class*="return"],
+code[class*="language-rust"] .token.keyword[class*="break"],
+code[class*="language-rust"] .token.keyword[class*="continue"] {
+  color: var(--syntax-light-blue) !important;
+}
+
+/* Rust变量声明关键字 */
+code[class*="language-rust"] .token.keyword[class*="let"],
+code[class*="language-rust"] .token.keyword[class*="const"],
+code[class*="language-rust"] .token.keyword[class*="static"] {
+  color: var(--syntax-blue) !important;
+}
+
+/* Rust特殊关键字 */
+code[class*="language-rust"] .token.keyword[class*="self"],
+code[class*="language-rust"] .token.keyword[class*="Self"],
+code[class*="language-rust"] .token.keyword[class*="super"] {
+  color: var(--syntax-purple) !important;
+}
+
+/* Rust宏 */
+code[class*="language-rust"] .token.macro,
+code[class*="language-rust"] .token[class*="macro"] {
+  color: var(--syntax-lavender) !important;
+}
+
+/* Rust属性 */
+code[class*="language-rust"] .token.attribute,
+code[class*="language-rust"] .token[class*="attribute"],
+code[class*="language-rust"] .token[class*="derive"] {
+  color: var(--syntax-pink) !important;
+}
+
+/* Rust结果类型 */
+code[class*="language-rust"] .token[class*="Result"],
+code[class*="language-rust"] .token[class*="Ok"],
+code[class*="language-rust"] .token[class*="Err"] {
+  color: var(--syntax-cyan) !important;
+}
+
+/* Rust特殊函数 */
+code[class*="language-rust"] .token.function[class*="unwrap"],
+code[class*="language-rust"] .token.function[class*="expect"],
+code[class*="language-rust"] .token.function[class*="panic"] {
+  color: var(--syntax-coral) !important;
+}
+
+/* 特殊标识符强制覆盖 */
+[class*="language"] .token[class*="if"],
+[class*="language"] .token[class*="else"],
+[class*="language"] .token[class*="for"],
+[class*="language"] .token[class*="while"],
+[class*="language"] .token[class*="return"] {
+  color: var(--syntax-light-blue) !important;
+}
+
+[class*="language"] .token[class*="public"],
+[class*="language"] .token[class*="private"],
+[class*="language"] .token[class*="protected"],
+[class*="language"] .token[class*="external"],
+[class*="language"] .token[class*="internal"],
+[class*="language"] .token[class*="pub"] {
+  color: var(--syntax-pink) !important;
+}
+
+[class*="language"] .token[class*="true"],
+[class*="language"] .token[class*="false"],
+[class*="language"] .token[class*="null"],
+[class*="language"] .token[class*="undefined"] {
+  color: var(--syntax-yellow) !important;
+}
+
+/* 强调更多的语法元素 */
+.token.punctuation.bracket,
+.token.punctuation.brace,
+.token.punctuation.parenthesis {
+  color: var(--syntax-bright-gray) !important;
+  opacity: 0.9 !important;
+}
+
+/* 确保特殊语言元素被正确高亮 */
+[class*="language"] [class*="require"],
+[class*="language"] [class*="assert"],
+[class*="language"] [class*="revert"] {
+  color: var(--syntax-coral) !important;
+  font-weight: 500 !important;
+}
+
+/* 类型和变量强制高亮 */
+[class*="language"] [class*="uint"],
+[class*="language"] [class*="int"],
+[class*="language"] [class*="bool"],
+[class*="language"] [class*="address"],
+[class*="language"] [class*="bytes"],
+[class*="language"] [class*="string"],
+[class*="language"] [class*="u8"],
+[class*="language"] [class*="u32"],
+[class*="language"] [class*="u64"],
+[class*="language"] [class*="i32"],
+[class*="language"] [class*="i64"],
+[class*="language"] [class*="f32"],
+[class*="language"] [class*="f64"],
+[class*="language"] [class*="usize"],
+[class*="language"] [class*="isize"] {
+  color: var(--syntax-cyan) !important;
 }

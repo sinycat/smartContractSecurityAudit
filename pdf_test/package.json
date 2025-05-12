@@ -1,0 +1,14 @@
+{
+  "name": "markdown-pdf-test",
+  "version": "1.0.0",
+  "description": "Markdown to PDF conversion test",
+  "main": "test.js",
+  "type": "module",
+  "scripts": {
+    "test": "node test.js"
+  },
+  "dependencies": {
+    "marked": "^12.0.0",
+    "puppeteer": "^22.0.0"
+  }
+} 

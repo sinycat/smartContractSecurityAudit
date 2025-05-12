@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>应用PDF生成测试</title>
+  <script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 20px;
+      background: #fff;
+      color: #000;
+    }
+    .container {
+      max-width: 1000px;
+      margin: 0 auto;
+    }
+    #content-editor {
+      width: 100%;
+      height: 300px;
+      padding: 10px;
+      font-family: monospace;
+      border: 1px solid #ddd;
+      margin-bottom: 20px;
+    }
+    button {
+      padding: 10px 15px;
+      margin: 10px 5px;
+      background: #2DD4BF;
+      border: none;
+      border-radius: 4px;
+      color: white;
+      cursor: pointer;
+    }
+    #debug-log {
+      background: #f5f5f5;
+      padding: 10px;
+      border: 1px solid #ddd;
+      margin-top: 20px;
+      height: 200px;
+      overflow: auto;
+      font-family: monospace;
+      font-size: 12px;
+    }
+    #content-wrapper {
+      border: 1px solid #ddd; 
+      padding: 20px;
+      margin: 20px 0;
+      background: white;
+    }
+    .loading {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0,0,0,0.7);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+      display: none;
+    }
+    .loading-text {
+      color: white;
+      font-size: 24px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>应用PDF生成测试</h1>
+    
+    <h3>Markdown内容</h3>
+    <textarea id="content-editor"># 测试标题
+
+## 二级标题
+
+这是一个**测试**段落，包含一些*斜体*文本。
+
+### 三级标题
+
+- 列表项1
+- 列表项2
+- 列表项3
+
+```
+// 代码块示例
+function test() {
+  console.log("Hello");
+}
+```
+
+这是最后一个段落。
+</textarea>
+    
+    <div>
+      <button id="generate-pdf">生成PDF</button>
+      <button id="clear-log">清除日志</button>
+    </div>
+    
+    <div class="loading" id="loading">
+      <div class="loading-text">正在生成PDF，请稍候...</div>
+    </div>
+    
+    <div id="content-wrapper">
+      <!-- PDF内容将在这里动态生成 -->
+    </div>
+    
+    <h3>调试日志</h3>
+    <div id="debug-log"></div>
+  </div>
+  
+  <script>
+    // 调试日志功能
+    function log(message) {
+      console.log('[PDF Debug]', message);
+      const logElement = document.getElementById('debug-log');
+      const entry = document.createElement('div');
+      entry.textContent = new Date().toLocaleTimeString() + ': ' + message;
+      logElement.appendChild(entry);
+      logElement.scrollTop = logElement.scrollHeight;
+    }
+    
+    // 主函数 - 创建内容并生成PDF
+    function generatePdf() {
+      try {
+        log('开始生成PDF过程');
+        
+        // 显示加载动画
+        document.getElementById('loading').style.display = 'flex';
+        
+        // 1. 获取Markdown内容
+        const markdown = document.getElementById('content-editor').value;
+        const content = document.getElementById('content-wrapper');
+        
+        // 2. 使用简单的从Markdown生成的HTML结构
+        let htmlContent = '';
+        
+        // 添加标题
+        const title = markdown.split('\n')[0].replace('# ', '');
+        htmlContent += '<h1 style="color:black; font-size:28px; font-weight:bold; margin:20px 0;">' + title + '</h1>';
+        
+        // 添加正文内容
+        log('添加内容');
+        
+        // 拆分Markdown内容的每一行
+        const mdLines = markdown.split('\n');
+        let inCodeBlock = false;
+        let inList = false;
+        
+        // 简单的Markdown转HTML规则
+        mdLines.forEach(function(line) {
+          if (line.trim() === '') {
+            // 空行
+            htmlContent += '<br>';
+            return;
+          }
+          
+          // 检测代码块
+          if (line.startsWith('```')) {
+            if (inCodeBlock) {
+              htmlContent += '</code></pre>';
+              inCodeBlock = false;
+            } else {
+              htmlContent += '<pre style="background:#f5f5f5; padding:10px; border-radius:5px; color:#333;"><code style="font-family:monospace; font-size:14px; color:#333;">';
+              inCodeBlock = true;
+            }
+            return;
+          }
+          
+          // 在代码块内直接添加行
+          if (inCodeBlock) {
+            htmlContent += line + '\n';
+            return;
+          }
+          
+          // 标题解析
+          if (line.startsWith('# ')) {
+            htmlContent += '<h1 style="color:black; font-size:28px; font-weight:bold; margin:20px 0; border-bottom:1px solid #ddd; padding-bottom:10px;">' + line.substring(2) + '</h1>';
+          } else if (line.startsWith('## ')) {
+            htmlContent += '<h2 style="color:#1b7a70; font-size:24px; font-weight:bold; margin:15px 0;">' + line.substring(3) + '</h2>';
+          } else if (line.startsWith('### ')) {
+            htmlContent += '<h3 style="color:#333; font-size:20px; font-weight:bold; margin:15px 0;">' + line.substring(4) + '</h3>';
+          } 
+          // 列表项
+          else if (line.startsWith('- ') || line.startsWith('* ')) {
+            if (!inList) {
+              htmlContent += '<ul style="color:#333; font-size:16px; margin:10px 0; padding-left:20px;">';
+              inList = true;
+            }
+            htmlContent += '<li style="color:#333; font-size:16px; margin:5px 0;">' + line.substring(2) + '</li>';
+          } 
+          // 有序列表
+          else if (/^\d+\.\s/.test(line)) {
+            if (!inList) {
+              htmlContent += '<ol style="color:#333; font-size:16px; margin:10px 0; padding-left:20px;">';
+              inList = true;
+            }
+            htmlContent += '<li style="color:#333; font-size:16px; margin:5px 0;">' + line.replace(/^\d+\.\s/, '') + '</li>';
+          } 
+          // 结束列表
+          else if (inList && line.trim() !== '') {
+            htmlContent += inList ? '</ul>' : '';
+            inList = false;
+            
+            // 处理普通段落
+            htmlContent += '<p style="color:#333; font-size:16px; line-height:1.6; margin:10px 0;">' + line + '</p>';
+          } 
+          // 普通段落
+          else {
+            htmlContent += '<p style="color:#333; font-size:16px; line-height:1.6; margin:10px 0;">' + line + '</p>';
+          }
+        });
+        
+        // 结束未关闭的列表
+        if (inList) {
+          htmlContent += '</ul>';
+        }
+        
+        // 结束未关闭的代码块
+        if (inCodeBlock) {
+          htmlContent += '</code></pre>';
+        }
+        
+        // 设置内容
+        content.innerHTML = htmlContent;
+        log('内容已设置');
+        
+        // 处理内容中的文本样式（加粗、斜体等）
+        const paragraphs = content.querySelectorAll('p');
+        paragraphs.forEach(function(p) {
+          // 处理加粗 **text**
+          p.innerHTML = p.innerHTML.replace(/\*\*([^*]+)\*\*/g, '<strong style="font-weight:bold; color:#333;">$1</strong>');
+          
+          // 处理斜体 *text*
+          p.innerHTML = p.innerHTML.replace(/\*([^*]+)\*/g, '<em style="font-style:italic; color:#333;">$1</em>');
+          
+          // 处理代码 `code`
+          p.innerHTML = p.innerHTML.replace(/\`([^\`]+)\`/g, '<code style="font-family:monospace; background:#f5f5f5; padding:2px 4px; border-radius:3px; color:#333; font-size:14px;">$1</code>');
+        });
+        
+        // 确保所有元素有显式的颜色样式
+        const allElements = content.querySelectorAll('*');
+        for (let i = 0; i < allElements.length; i++) {
+          const el = allElements[i];
+          if (!el.style.color) {
+            el.style.color = '#333';
+          }
+        }
+        
+        log('内容处理完成');
+        
+        // 3. 延迟执行PDF生成，确保内容已渲染
+        setTimeout(function() {
+          log('延迟后开始Canvas捕获');
+          
+          // 捕获内容为Canvas
+          html2canvas(content, {
+            scale: 4,
+            useCORS: true,
+            logging: true,
+            backgroundColor: 'white',
+            onclone: function(clonedDoc) {
+              log('处理克隆文档');
+              const elements = clonedDoc.querySelectorAll('*');
+              elements.forEach(function(el) {
+                // 确保文本颜色是黑色
+                if (!el.style.color) {
+                  el.style.color = '#333';
+                }
+              });
+            }
+          }).then(function(canvas) {
+            log('Canvas生成成功: ' + canvas.width + 'x' + canvas.height);
+            
+            try {
+              // 创建PDF
+              const jsPDF = window.jspdf.jsPDF;
+              const pdf = new jsPDF('p', 'mm', 'a4');
+              
+              // 获取页面尺寸
+              const pageWidth = pdf.internal.pageSize.getWidth();
+              const pageHeight = pdf.internal.pageSize.getHeight();
+              const margin = 15;
+              
+              // 将Canvas转为JPEG
+              const imgData = canvas.toDataURL('image/jpeg', 0.95);
+              log('图像数据已生成');
+              
+              // 添加图像到PDF
+              pdf.addImage(
+                imgData, 
+                'JPEG', 
+                margin, 
+                margin, 
+                pageWidth - 2 * margin, 
+                (canvas.height * (pageWidth - 2 * margin)) / canvas.width
+              );
+              log('图像已添加到PDF');
+              
+              // 添加页眉页脚
+              pdf.setFontSize(9);
+              pdf.setTextColor(100, 100, 100);
+              pdf.setFont('helvetica');
+              
+              // 页眉
+              const now = new Date();
+              const dateStr = now.toLocaleDateString('en-US', { 
+                year: 'numeric', month: 'short', day: 'numeric',
+                hour: '2-digit', minute: '2-digit'
+              });
+              
+              pdf.text('Generated by Test App', margin, 10);
+              pdf.text(dateStr, pageWidth - margin, 10, { align: 'right' });
+              
+              // 页脚
+              pdf.text('Page 1 of 1', pageWidth / 2, pageHeight - 10, { align: 'center' });
+              log('页眉页脚已添加');
+              
+              // 保存PDF
+              pdf.save('app-test.pdf');
+              log('PDF已保存');
+              
+              // 隐藏加载动画
+              document.getElementById('loading').style.display = 'none';
+              
+              // 显示Canvas预览
+              const preview = document.createElement('div');
+              preview.style.marginTop = '20px';
+              preview.style.border = '1px solid #ddd';
+              preview.style.maxWidth = '100%';
+              preview.style.overflow = 'auto';
+              canvas.style.maxWidth = '100%';
+              preview.appendChild(canvas);
+              document.getElementById('debug-log').before(preview);
+              
+            } catch (pdfError) {
+              log('PDF生成错误: ' + pdfError.message);
+              document.getElementById('loading').style.display = 'none';
+            }
+          }).catch(function(error) {
+            log('Canvas生成错误: ' + error.message);
+            document.getElementById('loading').style.display = 'none';
+          });
+        }, 1000);
+        
+      } catch (error) {
+        log('初始化错误: ' + error.message);
+        document.getElementById('loading').style.display = 'none';
+      }
+    }
+    
+    // 绑定按钮事件
+    document.getElementById('generate-pdf').addEventListener('click', generatePdf);
+    document.getElementById('clear-log').addEventListener('click', function() {
+      document.getElementById('debug-log').innerHTML = '';
+    });
+  </script>
+</body>
+</html> 

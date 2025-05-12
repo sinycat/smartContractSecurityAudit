@@ -8,7 +8,7 @@ export interface ContractBasicInfo {
   implementation?: string;
   isProxy?: boolean;
   proxyType?: string;
-  contractType?: 'ERC20' | 'ERC721' | 'ERC1155' | 'Unknown';
+  contractType?: 'ERC20' | 'ERC721' | 'ERC1155' | 'Program' | 'Account' | 'Unknown';
   
   // Add missing fields
   balance?: string;

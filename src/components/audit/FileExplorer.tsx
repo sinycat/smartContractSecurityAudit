@@ -4,7 +4,7 @@ import { useState, useRef, useEffect } from "react";
 import type { ContractFile } from "@/types/blockchain";
 import { generateReadme } from "@/utils/readme";
 import { generateConfig, formatConfig } from "@/utils/config";
-import { generateABI } from "@/utils/abi";
+import { generateABI, generateIDL } from "@/utils/abi";
 
 interface FileTreeNode {
   name: string;
@@ -76,7 +76,7 @@ function FileTreeView({
         style={{ paddingLeft: `${paddingLeft + 8}px` }}
       >
         <svg
-          className="w-3.5 h-3.5 flex-shrink-0 text-[#FF8B3E] opacity-80"
+          className="w-3.5 h-3.5 flex-shrink-0 text-[#2DD4BF] opacity-80"
           fill="none"
           stroke="currentColor"
           viewBox="0 0 24 24"
@@ -116,7 +116,7 @@ function FileTreeView({
           />
         </svg>
         <svg
-          className="w-3.5 h-3.5 flex-shrink-0 text-[#FF8B3E] opacity-80"
+          className="w-3.5 h-3.5 flex-shrink-0 text-[#2DD4BF] opacity-80"
           fill="none"
           stroke="currentColor"
           viewBox="0 0 24 24"
@@ -152,8 +152,8 @@ interface FileExplorerProps {
   onFileSelect: (file: ContractFile) => void;
   selectedFile?: ContractFile;
   showImplementation?: boolean;
-  contractType: "proxy" | "implementation";
-  onContractTypeChange: (type: "proxy" | "implementation") => void;
+  contractType: "proxy" | "implementation" | "solana";
+  onContractTypeChange: (type: "proxy" | "implementation" | "solana") => void;
   isWrapped: boolean;
   onWrapChange: (wrapped: boolean) => void;
   contractName: string;
@@ -185,7 +185,7 @@ interface FileExplorerProps {
 }
 
 export default function FileExplorer({
-  files,
+  files: initialFiles,
   onFileSelect,
   selectedFile,
   showImplementation,
@@ -212,6 +212,9 @@ export default function FileExplorer({
 }: FileExplorerProps) {
   const [width, setWidth] = useState(300);
   const [isResizing, setIsResizing] = useState(false);
+  const [abiFileContent, setAbiFileContent] = useState<string>("");
+  const [loadingAbi, setLoadingAbi] = useState<boolean>(false);
+  const [files, setFiles] = useState<ContractFile[]>(initialFiles);
 
   // Check if there are proxy and implementation contracts
   const hasProxyContract = files.some((f) => f.path.startsWith("proxy/"));
@@ -242,10 +245,10 @@ export default function FileExplorer({
     files,
     tokenName,
     proxyInfo: {
-      contractName,
-      compiler,
-      optimization,
-      runs,
+      contractName: contractName || '',
+      compiler: compiler || '',
+      optimization: optimization || false,
+      runs: runs || 200,
       evmVersion,
       address,
       chainId,
@@ -257,6 +260,11 @@ export default function FileExplorer({
     implementationInfo: implementationInfo
       ? {
           ...implementationInfo,
+          contractName: implementationInfo.contractName || '',
+          compiler: implementationInfo.compiler || '',
+          optimization: implementationInfo.optimization || false,
+          runs: implementationInfo.runs || 200,
+          evmVersion: implementationInfo.evmVersion || '',
         }
       : undefined,
     implementationAddress,
@@ -303,39 +311,133 @@ export default function FileExplorer({
           ),
         };
 
-  // Add abi.json to the allFiles array
-  const abiFile: ContractFile =
+  // 检测是否为Solana程序
+  const isSolanaProgram = compiler && compiler.includes("Solana") || contractType === 'solana';
+
+  // 根据是否为Solana程序决定文件名
+  const interfaceFileName = isSolanaProgram ? "idl.json" : "abi.json";
+
+  // 在组件加载时获取ABI/IDL
+  useEffect(() => {
+    const fetchInterfaceData = async () => {
+      try {
+        setLoadingAbi(true);
+        let filename = '';
+        let interfaceContent = '';
+
+        // 根据合约类型决定获取ABI还是IDL
+        if (contractType === 'solana' || isSolanaProgram) {
+          // Solana合约 - 获取IDL
+          filename = 'idl.json';
+          interfaceContent = await generateIDL({
+            contractName: contractName || '',
+            address,
+            chainId: chainId,
+            abi,
+          });
+        } else {
+          // 以太坊合约 - 获取ABI
+          filename = 'abi.json';
+          interfaceContent = await generateABI({
+            contractName: contractName || '',
+            address,
+            chainId: chainId,
+            abi,
+          });
+        }
+
+        // 处理initialFiles数组：将Solana合约的abi.json替换为idl.json
+        const updatedFiles = [...initialFiles];
+        
+        // 1. 先查找并过滤掉所有的abi.json和idl.json文件
+        const filteredFiles = updatedFiles.filter(file => {
+          // 对于Solana合约，移除abi.json和idl.json
+          if (contractType === 'solana' || isSolanaProgram) {
+            return !(file.path.endsWith('abi.json') || file.path.endsWith('idl.json'));
+          }
+          // 对于以太坊合约，移除abi.json
+          return !file.path.endsWith('abi.json');
+        });
+        
+        // 2. 添加新的接口文件
+        const interfaceFile = {
+          name: filename,
+          path: filename,
+          content: interfaceContent,
+        };
+        filteredFiles.push(interfaceFile);
+
+        // 设置更新后的文件列表
+        setFiles(filteredFiles);
+        setAbiFileContent(interfaceContent);
+        setLoadingAbi(false);
+      } catch (error) {
+        console.error('Failed to fetch interface data:', error);
+        setLoadingAbi(false);
+      }
+    };
+
+    if (address) {
+      fetchInterfaceData();
+    }
+  }, [address, chainId, contractName, contractType, isSolanaProgram, abi, initialFiles]);
+
+  // Add abi.json or idl.json to the allFiles array
+  const interfaceFile: ContractFile =
     contractType === "proxy"
       ? {
-          name: "abi.json",
-          path: "proxy/abi.json",
-          content: generateABI({
-            contractName,
-            address,
-            chainId,
-            abi, // Directly pass the abi obtained from the parent component
-          }),
+          name: interfaceFileName,
+          path: `proxy/${interfaceFileName}`,
+          content: abiFileContent || JSON.stringify([], null, 2),
         }
       : {
-          name: "abi.json",
-          path: "implementation/abi.json",
-          content: generateABI({
-            contractName: implementationInfo?.contractName || "",
-            address: implementationAddress,
-            chainId,
-            abi: implementationAbi, // Use the abi of the implementation contract
-          }),
+          name: interfaceFileName,
+          path: `implementation/${interfaceFileName}`,
+          content: abiFileContent || JSON.stringify([], null, 2),
         };
+
+  // 添加一个函数，用于确保所有已经存在的文件使用正确的文件名
+  const ensureCorrectFileNames = (inputFiles: ContractFile[]): ContractFile[] => {
+    if (!isSolanaProgram) return inputFiles;
+    
+    return inputFiles.map(file => {
+      // 对于Solana程序，将abi.json转换为idl.json
+      if (file.name === 'abi.json' || file.path.endsWith('/abi.json')) {
+        const newName = file.name.replace('abi.json', 'idl.json');
+        const newPath = file.path.replace('abi.json', 'idl.json');
+        
+        return {
+          ...file,
+          name: newName,
+          path: newPath
+        };
+      }
+      return file;
+    });
+  };
+  
+  // 确保文件列表中的abi.json被转为idl.json（如果是Solana程序）
+  const correctedFiles = ensureCorrectFileNames(files);
+  
+  // 对过滤后的文件进行同样的转换
+  const correctedFilteredFiles = ensureCorrectFileNames(filteredFiles);
 
   // Build allFiles array with deduplication for report files
   const allFiles = [
     // Keep non-report files
-    ...filteredFiles.filter((f) => !f.path.startsWith("report-")),
-    readmeFile,
-    configFile,
-    abiFile,
+    ...correctedFilteredFiles.filter((f) => !f.path.startsWith("report-")),
+    // 只有当原始文件列表中不存在这些文件时才添加它们
+    // README文件
+    ...(correctedFiles.some(f => f.path === "README.md") ? [] : [readmeFile]),
+    // config.json文件 - 检查是否存在任何config.json文件
+    ...(correctedFiles.some(f => f.path.endsWith("config.json")) ? [] : [configFile]), 
+    // abi.json或idl.json文件 - 检查是否存在任何abi.json或idl.json文件
+    ...(correctedFiles.some(f => 
+      (isSolanaProgram && f.path.endsWith("idl.json")) || 
+      (!isSolanaProgram && f.path.endsWith("abi.json"))
+    ) ? [] : [interfaceFile]),
     // Keep all report files without deduplication
-    ...files.filter((f) => f.path.startsWith("report-")),
+    ...correctedFiles.filter((f) => f.path.startsWith("report-")),
   ];
 
   // Build file tree
@@ -348,8 +450,17 @@ export default function FileExplorer({
     };
 
     files.forEach((file) => {
+      // 对于Solana合约，确保所有abi.json文件都改为idl.json
+      let fileName = file.name;
+      let filePath = file.path;
+      
+      if (isSolanaProgram && (fileName === "abi.json" || fileName.endsWith("/abi.json"))) {
+        fileName = fileName.replace("abi.json", "idl.json");
+        filePath = filePath.replace("abi.json", "idl.json");
+      }
+      
       // Remove proxy/ or implementation/ prefixes
-      const cleanPath = file.path.replace(/^(proxy|implementation)\//, "");
+      const cleanPath = filePath.replace(/^(proxy|implementation)\//, "");
       const parts = cleanPath.split("/");
       let current = root;
 
@@ -357,10 +468,11 @@ export default function FileExplorer({
         if (index === parts.length - 1) {
           // File node
           current.children = current.children || [];
+          // 使用可能修改过的文件名
           current.children.push({
-            name: part,
+            name: index === parts.length - 1 ? fileName.split('/').pop() || fileName : part,
             type: "file",
-            path: file.path, // Keep the original path for file selection
+            path: filePath, // Use potentially modified path
             content: file.content,
           });
         } else {
@@ -433,6 +545,11 @@ export default function FileExplorer({
       document.removeEventListener("mouseup", handleMouseUp);
     };
   }, [isResizing]);
+
+  // 添加一个useEffect来同步initialFiles和files状态
+  useEffect(() => {
+    setFiles(initialFiles);
+  }, [initialFiles]);
 
   return (
     <>
@@ -557,8 +674,8 @@ export default function FileExplorer({
 
       {/* Resize Handle */}
       <div
-        className="w-1 hover:w-1 cursor-col-resize bg-transparent hover:bg-[#FF8B3E]/20 
-          active:bg-[#FF8B3E]/40 transition-colors"
+        className="w-1 hover:w-1 cursor-col-resize bg-transparent hover:bg-[#2DD4BF]/20 
+                   active:bg-[#2DD4BF]/40 transition-colors"
         onMouseDown={() => setIsResizing(true)}
       >
         <div className="w-px h-full bg-[#333333]" />

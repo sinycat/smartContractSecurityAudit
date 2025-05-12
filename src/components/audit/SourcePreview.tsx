@@ -3,6 +3,12 @@
 import { useEffect, useRef, useState } from "react";
 import Prism from "prismjs";
 import "prismjs/components/prism-solidity";
+import "prismjs/components/prism-rust";
+import "prismjs/components/prism-bash";
+import "prismjs/components/prism-json";
+import "prismjs/components/prism-markdown";
+import "prismjs/components/prism-yaml";
+import "prismjs/components/prism-toml";
 import "prismjs/themes/prism-tomorrow.css";
 import "prismjs/plugins/line-numbers/prism-line-numbers.css";
 import "prismjs/plugins/line-numbers/prism-line-numbers";
@@ -25,6 +31,8 @@ import { useAIConfig, getModelName, getAIConfig } from "@/utils/ai";
 import type { AIConfig } from "@/types/ai";
 import html2canvas from "html2canvas";
 import { marked } from "marked";
+import { handleSaveAsPdf } from "./PDFExporter";
+import { generateABI, generateIDL } from "@/utils/abi";
 
 interface ContractFile {
   name: string;
@@ -119,7 +127,7 @@ const handleSaveAsImage = async (content: string, fileName: string) => {
     link.click();
   } catch (error) {
     console.error("Error generating image:", error);
-    toast.error("Failed to generate image");
+    toast.error("Failed to generate image: " + (error instanceof Error ? error.message : String(error)));
   } finally {
     document.body.removeChild(tempDiv);
   }
@@ -145,13 +153,20 @@ export default function SourcePreview({
   creator,
   creationTxHash,
 }: SourcePreviewProps) {
+  // 检测是否为Solana程序
+  const isSolanaProgram = compiler && compiler.includes("Solana");
+
   const [files, setFiles] = useState<ContractFile[]>(initialFiles);
   const [selectedFile, setSelectedFile] = useState<ContractFile>(files[0]);
   const [isWrapped, setIsWrapped] = useState(true);
   const [showProxyAlert, setShowProxyAlert] = useState(false);
-  const [contractType, setContractType] = useState<"proxy" | "implementation">(
+  const [contractType, setContractType] = useState<"proxy" | "implementation" | "solana">(
     "proxy"
   );
+  
+  // 根据是否为Solana程序决定接口文件名
+  const interfaceFileName = (isSolanaProgram || contractType === 'solana') ? "idl.json" : "abi.json";
+  
   const [showRawReadme, setShowRawReadme] = useState(false);
   const [showAIConfig, setShowAIConfig] = useState(false);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
@@ -173,11 +188,274 @@ export default function SourcePreview({
     }
   }, []); // Empty dependency array, only run when mounted
 
+  // 组件加载时检查是否为Solana程序并设置contractType
+  useEffect(() => {
+    if (isSolanaProgram) {
+      setContractType("solana");
+    }
+  }, [isSolanaProgram]);
+
   useEffect(() => {
     if (codeRef.current && preRef.current) {
       preRef.current.classList.add("line-numbers");
+      
+      // 根据文件扩展名设置正确的语言
+      if (selectedFile) {
+        // 移除之前的所有语言类
+        const previousLanguage = codeRef.current.className.match(/language-\w+/);
+        if (previousLanguage) {
+          codeRef.current.classList.remove(previousLanguage[0]);
+        }
+        
+        // 获取文件扩展名并设置对应的语言
+        const ext = selectedFile.name.split('.').pop()?.toLowerCase();
+        let language = 'solidity'; // 默认
+        
+        if (ext === 'rs') {
+          language = 'rust';
+        } else if (ext === 'sol') {
+          language = 'solidity';
+        } else if (ext === 'md') {
+          language = 'markdown';
+        } else if (ext === 'json') {
+          language = 'json';
+        } else if (ext === 'info' || ext === 'txt') {
+          language = 'bash'; // 使用bash高亮来显示信息文件
+        } else if (ext === 'toml') {
+          language = 'markup'; // 使用markup来显示TOML文件
+        } else if (ext === 'yaml' || ext === 'yml') {
+          language = 'yaml';
+        }
+        
+        codeRef.current.classList.add(`language-${language}`);
+      }
+      
       Prism.highlightElement(codeRef.current);
       Prism.plugins.lineNumbers.resize(preRef.current);
+      
+      // 添加强制样式应用
+      setTimeout(() => {
+        // 对特定语言的一些元素进行样式强制覆盖
+        if (codeRef.current) {
+          // 获取CSS变量
+          const getComputedColor = (varName: string) => {
+            return getComputedStyle(document.documentElement).getPropertyValue(varName).trim();
+          };
+
+          // 颜色配置
+          const colors = {
+            blue: getComputedColor('--syntax-blue') || '#3B9EFF',
+            lightBlue: getComputedColor('--syntax-light-blue') || '#59BAFF',
+            cyan: getComputedColor('--syntax-cyan') || '#2DD4BF',
+            brightCyan: getComputedColor('--syntax-bright-cyan') || '#06EFE0',
+            green: getComputedColor('--syntax-green') || '#4ADE80',
+            softGreen: getComputedColor('--syntax-soft-green') || '#65D1A7',
+            teal: getComputedColor('--syntax-teal') || '#5FD9CD',
+            lavender: getComputedColor('--syntax-lavender') || '#A389F4',
+            purple: getComputedColor('--syntax-purple') || '#C792EA',
+            pink: getComputedColor('--syntax-pink') || '#FF7B9D',
+            coral: getComputedColor('--syntax-coral') || '#FF7F78',
+            orange: getComputedColor('--syntax-orange') || '#FFB86C',
+            yellow: getComputedColor('--syntax-yellow') || '#FFFFA5',
+            gray: getComputedColor('--syntax-gray') || '#A8B9BF',
+            brightGray: getComputedColor('--syntax-bright-gray') || '#D9E1E4',
+          };
+
+          // 处理所有文本节点，通过内容匹配特定元素
+          const processElementsByContent = () => {
+            const elements = codeRef.current?.querySelectorAll('.token');
+            if (!elements) return;
+            
+            elements.forEach(el => {
+              const text = el.textContent || '';
+              const parentClasses = (el.parentElement?.className || '');
+              const isRust = parentClasses.includes('rust');
+              const isSolidity = parentClasses.includes('solidity');
+              
+              // 控制流关键字
+              const controlKeywords = ['if', 'else', 'for', 'while', 'do', 'switch', 'case', 'break', 'continue', 'return', 'match', 'loop', 'yield'];
+              if (controlKeywords.some(kw => text === kw)) {
+                (el as HTMLElement).style.color = colors.lightBlue;
+              }
+              
+              // 可见性修饰符
+              const visibilityModifiers = ['public', 'private', 'internal', 'external', 'pub', 'protected'];
+              if (visibilityModifiers.some(mod => text === mod)) {
+                (el as HTMLElement).style.color = colors.pink;
+              }
+              
+              // 布尔值和特殊常量
+              const specialConstants = ['true', 'false', 'null', 'undefined', 'None', 'Some', 'Ok', 'Err'];
+              if (specialConstants.some(sc => text === sc)) {
+                (el as HTMLElement).style.color = colors.yellow;
+              }
+              
+              // Rust特定处理
+              if (isRust) {
+                // Rust核心关键字
+                const rustCoreKeywords = ['fn', 'struct', 'enum', 'impl', 'trait', 'mod', 'use', 'type', 'let', 'const', 'static'];
+                if (rustCoreKeywords.some(kw => text === kw)) {
+                  (el as HTMLElement).style.color = colors.blue;
+                  (el as HTMLElement).style.fontWeight = '500';
+                }
+                
+                // Rust特殊标识符
+                const rustSpecialIdentifiers = ['self', 'Self', 'super', 'crate'];
+                if (rustSpecialIdentifiers.some(si => text === si)) {
+                  (el as HTMLElement).style.color = colors.purple;
+                }
+                
+                // Rust属性和宏
+                if (text.startsWith('#') || text.startsWith('derive')) {
+                  (el as HTMLElement).style.color = colors.pink;
+                }
+                
+                // Rust特殊函数
+                const rustSpecialFunctions = ['unwrap', 'expect', 'panic', 'println', 'format', 'vec'];
+                if (el.classList.contains('function') && rustSpecialFunctions.some(sf => text.includes(sf))) {
+                  (el as HTMLElement).style.color = colors.brightCyan;
+                }
+                
+                // Rust错误处理相关
+                if (text.includes('Error') || text.includes('Invalid')) {
+                  (el as HTMLElement).style.color = colors.coral;
+                }
+                
+                // Rust类型
+                const rustTypes = ['u8', 'u16', 'u32', 'u64', 'u128', 'i8', 'i16', 'i32', 'i64', 'i128', 'f32', 'f64', 'bool', 'char', 'str', 'String', 'Vec', 'Option', 'Result'];
+                if (rustTypes.some(t => text === t)) {
+                  (el as HTMLElement).style.color = colors.cyan;
+                }
+              }
+              
+              // Solidity特定处理
+              if (isSolidity) {
+                // Solidity核心关键字
+                const solidityCoreKeywords = ['pragma', 'solidity', 'contract', 'library', 'interface', 'import', 'using', 'struct', 'event', 'enum', 'constructor', 'modifier'];
+                if (solidityCoreKeywords.some(kw => text === kw)) {
+                  (el as HTMLElement).style.color = colors.blue;
+                  (el as HTMLElement).style.fontWeight = '500';
+                }
+                
+                // Solidity可见性修饰符
+                const solidityVisibilityModifiers = ['public', 'private', 'internal', 'external'];
+                if (solidityVisibilityModifiers.some(vm => text === vm)) {
+                  (el as HTMLElement).style.color = colors.pink;
+                }
+                
+                // Solidity状态修饰符
+                const solidityStateModifiers = ['view', 'pure', 'payable', 'constant', 'immutable'];
+                if (solidityStateModifiers.some(sm => text === sm)) {
+                  (el as HTMLElement).style.color = colors.lavender;
+                }
+                
+                // Solidity类型
+                const solidityTypes = ['address', 'uint', 'uint8', 'uint256', 'int', 'bool', 'bytes', 'bytes32', 'string', 'mapping'];
+                if (solidityTypes.some(t => text.includes(t) && !text.includes('.'))) {
+                  (el as HTMLElement).style.color = colors.cyan;
+                }
+                
+                // Solidity特殊函数
+                const soliditySpecialFunctions = ['require', 'assert', 'revert', 'transfer', 'send', 'call'];
+                if (soliditySpecialFunctions.some(sf => text === sf)) {
+                  (el as HTMLElement).style.color = colors.coral;
+                  (el as HTMLElement).style.fontWeight = '500';
+                }
+                
+                // Solidity特殊变量
+                const soliditySpecialVars = ['msg.sender', 'msg.value', 'block.timestamp', 'block.number', 'tx.origin', 'this', 'now'];
+                if (soliditySpecialVars.some(sv => text.includes(sv))) {
+                  (el as HTMLElement).style.color = colors.purple;
+                }
+                
+                // Solidity继承
+                if (text === 'is') {
+                  (el as HTMLElement).style.color = colors.blue;
+                }
+                
+                // Solidity数字或单位
+                if (/^\d+$/.test(text) || ['wei', 'gwei', 'ether', 'seconds', 'minutes', 'hours', 'days', 'weeks'].includes(text)) {
+                  (el as HTMLElement).style.color = colors.orange;
+                }
+              }
+              
+              // 通用元素处理
+              
+              // 函数名
+              if (el.classList.contains('function')) {
+                (el as HTMLElement).style.color = colors.brightCyan;
+              }
+              
+              // 字符串
+              if (el.classList.contains('string')) {
+                (el as HTMLElement).style.color = colors.green;
+              }
+              
+              // 注释
+              if (el.classList.contains('comment')) {
+                (el as HTMLElement).style.color = colors.softGreen;
+                (el as HTMLElement).style.fontStyle = 'italic';
+                (el as HTMLElement).style.opacity = '0.8';
+              }
+              
+              // 标点符号
+              if (el.classList.contains('punctuation')) {
+                (el as HTMLElement).style.color = colors.gray;
+                // 特殊标点符号
+                if (text === '{' || text === '}' || text === '(' || text === ')' || text === '[' || text === ']') {
+                  (el as HTMLElement).style.color = colors.brightGray;
+                  (el as HTMLElement).style.opacity = '0.9';
+                }
+              }
+              
+              // 数字
+              if (el.classList.contains('number')) {
+                (el as HTMLElement).style.color = colors.orange;
+              }
+              
+              // 运算符
+              if (el.classList.contains('operator')) {
+                (el as HTMLElement).style.color = colors.brightCyan;
+              }
+            });
+          };
+          
+          // 处理所有元素的样式
+          const processElementsByClass = () => {
+            // 基本元素
+            const styleMap: {[key: string]: {color: string, weight?: string, style?: string, opacity?: string}} = {
+              '.token.keyword': {color: colors.blue, weight: '500'},
+              '.token.function': {color: colors.brightCyan},
+              '.token.string': {color: colors.green},
+              '.token.number': {color: colors.orange},
+              '.token.comment': {color: colors.softGreen, style: 'italic', opacity: '0.8'},
+              '.token.punctuation': {color: colors.gray, opacity: '0.9'},
+              '.token.operator': {color: colors.brightCyan, weight: '500'},
+              '.token.class-name': {color: colors.cyan},
+              '.token.property': {color: colors.lavender},
+              '.token.builtin': {color: colors.cyan},
+              '.token.variable': {color: colors.teal},
+              '.token.parameter': {color: colors.teal},
+              '.token.boolean': {color: colors.yellow},
+            };
+            
+            // 应用样式
+            Object.entries(styleMap).forEach(([selector, style]) => {
+              const elements = codeRef.current?.querySelectorAll(selector);
+              elements?.forEach(el => {
+                (el as HTMLElement).style.color = style.color;
+                if (style.weight) (el as HTMLElement).style.fontWeight = style.weight;
+                if (style.style) (el as HTMLElement).style.fontStyle = style.style;
+                if (style.opacity) (el as HTMLElement).style.opacity = style.opacity;
+              });
+            });
+          };
+          
+          // 执行样式处理
+          processElementsByClass();
+          processElementsByContent();
+        }
+      }, 100);
     }
   }, [selectedFile]);
 
@@ -264,54 +542,96 @@ export default function SourcePreview({
 
     zip.file("README.md", readmeContent);
 
+    // 使用之前已定义的interfaceFileName变量
     // Check if it's a proxy contract
     const hasProxy = files.some((f) => f.path.startsWith("proxy/"));
     const hasImplementation = files.some((f) =>
       f.path.startsWith("implementation/")
     );
 
-    if (hasProxy && hasImplementation) {
-      // Add proxy contract configuration file and ABI
-      const proxyConfig = generateConfig({
-        contractName,
-        compiler,
-        optimization,
-        runs,
-        evmVersion,
-        creationCode,
-        deployedBytecode,
-      });
-      zip.file("proxy/config.json", formatConfig(proxyConfig));
-      zip.file("proxy/abi.json", JSON.stringify(abi || [], null, 2));
+    // 获取ABI/IDL数据
+    try {
+      // 如果是代理合约与实现合约
+      if (hasProxy && hasImplementation) {
+        // Add proxy contract configuration file and ABI
+        const proxyConfig = generateConfig({
+          contractName,
+          compiler,
+          optimization,
+          runs,
+          evmVersion,
+          creationCode,
+          deployedBytecode,
+        });
+        zip.file("proxy/config.json", formatConfig(proxyConfig));
+        
+        // 获取代理合约接口数据
+        const proxyAbiContent = isSolanaProgram 
+          ? await generateIDL({ contractName, address, chainId, abi })
+          : await generateABI({ contractName, address, chainId, abi });
+        
+        zip.file(`proxy/${interfaceFileName}`, proxyAbiContent);
 
-      // Add implementation contract configuration file and ABI
-      const implConfig = generateConfig({
-        contractName: implementationInfo?.contractName || "",
-        compiler: implementationInfo?.compiler || "",
-        optimization: implementationInfo?.optimization || false,
-        runs: implementationInfo?.runs || 200,
-        evmVersion: implementationInfo?.evmVersion,
-        creationCode: implementationInfo?.creationCode,
-        deployedBytecode: implementationInfo?.deployedBytecode,
-      });
-      zip.file("implementation/config.json", formatConfig(implConfig));
-      zip.file(
-        "implementation/abi.json",
-        JSON.stringify(implementationAbi || [], null, 2)
-      );
-    } else {
-      // Non-proxy contract, only add one configuration file and ABI
-      const config = generateConfig({
-        contractName,
-        compiler,
-        optimization,
-        runs,
-        evmVersion,
-        creationCode,
-        deployedBytecode,
-      });
-      zip.file("config.json", formatConfig(config));
-      zip.file("abi.json", JSON.stringify(abi || [], null, 2));
+        // Add implementation contract configuration file and ABI
+        const implConfig = generateConfig({
+          contractName: implementationInfo?.contractName || "",
+          compiler: implementationInfo?.compiler || "",
+          optimization: implementationInfo?.optimization || false,
+          runs: implementationInfo?.runs || 200,
+          evmVersion: implementationInfo?.evmVersion,
+          creationCode: implementationInfo?.creationCode,
+          deployedBytecode: implementationInfo?.deployedBytecode,
+        });
+        zip.file("implementation/config.json", formatConfig(implConfig));
+        
+        // 获取实现合约接口数据
+        const implAbiContent = isSolanaProgram
+          ? await generateIDL({ 
+              contractName: implementationInfo?.contractName || "", 
+              address: implementationAddress, 
+              chainId, 
+              abi: implementationAbi 
+            })
+          : await generateABI({ 
+              contractName: implementationInfo?.contractName || "", 
+              address: implementationAddress, 
+              chainId, 
+              abi: implementationAbi 
+            });
+        
+        zip.file(
+          `implementation/${interfaceFileName}`,
+          implAbiContent
+        );
+      } else {
+        // Non-proxy contract, only add one configuration file and ABI
+        const config = generateConfig({
+          contractName,
+          compiler,
+          optimization,
+          runs,
+          evmVersion,
+          creationCode,
+          deployedBytecode,
+        });
+        zip.file("config.json", formatConfig(config));
+        
+        // 获取合约接口数据
+        const abiContent = isSolanaProgram
+          ? await generateIDL({ contractName, address, chainId, abi })
+          : await generateABI({ contractName, address, chainId, abi });
+        
+        zip.file(`${interfaceFileName}`, abiContent);
+      }
+    } catch (error) {
+      console.error("获取合约接口数据失败:", error);
+      // 发生错误时使用空数组作为备用
+      if (hasProxy && hasImplementation) {
+        zip.file(`proxy/${interfaceFileName}`, JSON.stringify(abi || [], null, 2));
+        zip.file(`implementation/${interfaceFileName}`, JSON.stringify(implementationAbi || [], null, 2));
+      } else {
+        zip.file(`${interfaceFileName}`, JSON.stringify(abi || [], null, 2));
+      }
     }
 
     try {
@@ -358,10 +678,6 @@ export default function SourcePreview({
       if (!analysisContent.match(/^#\s+/m)) {
         analysisContent = `# Smart Contract Security Analysis Report\n\n${analysisContent}`;
       }
-
-      // // TODO: test
-      // let analysisContent;
-      // analysisContent = getModelName(getAIConfig(config));
 
       // Remove duplicate titles
       analysisContent = removeDuplicateHeaders(analysisContent);
@@ -439,15 +755,44 @@ export default function SourcePreview({
             href="/"
             className="flex items-center gap-2 hover:opacity-80 transition-opacity"
           >
-            <Image
-              src="/mush.png"
-              alt="Mush Audit"
-              width={28}
-              height={28}
-              className="w-7 h-7"
-            />
+            <div className="relative w-8 h-8 flex items-center justify-center bg-[#2DD4BF] rounded-lg overflow-hidden">
+              <svg 
+                className="w-5 h-5 text-[#121212]" 
+                fill="none" 
+                stroke="currentColor" 
+                viewBox="0 0 24 24"
+              >
+                {/* A字母 - 左移 */}
+                <path 
+                  strokeLinecap="round" 
+                  strokeLinejoin="round" 
+                  strokeWidth={2.5} 
+                  d="M1 20L7 4L13 20" 
+                />
+                <path 
+                  strokeLinecap="round" 
+                  strokeLinejoin="round" 
+                  strokeWidth={2.5} 
+                  d="M3 14H11" 
+                />
+                
+                {/* X字母 - 左移 */}
+                <path 
+                  strokeLinecap="round" 
+                  strokeLinejoin="round" 
+                  strokeWidth={2.5} 
+                  d="M15 4L22 20" 
+                />
+                <path 
+                  strokeLinecap="round" 
+                  strokeLinejoin="round" 
+                  strokeWidth={2.5} 
+                  d="M22 4L15 20" 
+                />
+              </svg>
+            </div>
             <span className="text-xl font-bold text-[#E5E5E5]">
-              Mush <span className="text-[#FF8B3E]">Audit</span>
+              <span className="text-[#2DD4BF]">AuditX</span>
             </span>
           </Link>
         </div>
@@ -505,11 +850,10 @@ export default function SourcePreview({
           </button>
           <button
             onClick={handleAnalyzeClick}
-            className="group relative inline-flex items-center gap-2 px-8 py-1.5
-                     bg-[#252526] rounded-lg text-[#FF8B3E] text-sm font-medium
-                     border border-[#FF8B3E]/20
-                     transition-all duration-300 ease-out
-                     hover:bg-[#FF8B3E]/10"
+            className="py-2 px-4 bg-[#252526] rounded-lg text-[#2DD4BF] text-sm font-medium
+                     border border-[#2DD4BF]/20
+                     transition-colors
+                     hover:bg-[#2DD4BF]/10"
           >
             <svg
               className="w-4 h-4"
@@ -564,30 +908,51 @@ export default function SourcePreview({
               {selectedFile.path.endsWith(".md") && (
                 <>
                   {!showRawReadme && (
-                    <button
-                      onClick={() =>
-                        handleSaveAsImage(
-                          selectedFile.content,
-                          selectedFile.name
-                        )
-                      }
-                      className="px-3 py-1 hover:bg-[#333333] text-gray-400 text-xs rounded-md transition-colors flex items-center gap-2"
-                    >
-                      <svg
-                        className="w-4 h-4"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
+                    <>
+                      <button
+                        onClick={() =>
+                          handleSaveAsImage(
+                            selectedFile.content,
+                            selectedFile.name
+                          )
+                        }
+                        className="px-3 py-1 hover:bg-[#333333] text-gray-400 text-xs rounded-md transition-colors flex items-center gap-2"
                       >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"
-                        />
-                      </svg>
-                      Save as Image
-                    </button>
+                        <svg
+                          className="w-4 h-4"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"
+                          />
+                        </svg>
+                        Save as Image
+                      </button>
+                      <button
+                        onClick={() => handleSaveAsPdf(selectedFile.content, selectedFile.name)}
+                        className="px-3 py-1 hover:bg-[#333333] text-gray-400 text-xs rounded-md transition-colors flex items-center gap-2"
+                      >
+                        <svg
+                          className="w-4 h-4"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"
+                          />
+                        </svg>
+                        Save as PDF
+                      </button>
+                    </>
                   )}
                   <button
                     onClick={() => setShowRawReadme(!showRawReadme)}
@@ -623,7 +988,12 @@ export default function SourcePreview({
               )}
               <button
                 onClick={() =>
-                  navigator.clipboard.writeText(selectedFile.content)
+                  navigator.clipboard.writeText(selectedFile.content).then(() => {
+                    toast.success("内容已复制到剪贴板");
+                  }).catch((err) => {
+                    console.error("复制失败:", err);
+                    toast.error("复制失败");
+                  })
                 }
                 className="px-3 py-1 hover:bg-[#333333] text-gray-400 text-xs rounded-md transition-colors flex items-center gap-2"
               >
@@ -657,24 +1027,25 @@ export default function SourcePreview({
                     className="p-4 prose prose-invert max-w-none
                                 prose-headings:text-[#E5E5E5] 
                                 prose-h1:text-3xl prose-h1:mb-8 prose-h1:pb-4 prose-h1:border-b prose-h1:border-[#333333]
-                                prose-h2:text-xl prose-h2:text-[#FF8B3E] prose-h2:mt-8 prose-h2:mb-4
+                                prose-h2:text-xl prose-h2:text-[#2DD4BF] prose-h2:mt-8 prose-h2:mb-4
                                 prose-p:text-[#CCCCCC]
                                 prose-li:text-[#CCCCCC]
                                 prose-strong:text-[#4EC9B0]
-                                prose-code:text-[#CE9178] prose-code:bg-[#1E1E1E]
+                                prose-code:text-[#5EEAD4] prose-code:bg-[#1E1E1E]
                                 [&_ul]:my-0 [&_ul]:pl-4
                                 [&_li]:my-1
                                 [&_pre]:bg-[#252526]
                                 [&_pre]:border [&_pre]:border-[#333333]
                                 [&_pre]:rounded-md
-                                [&_pre]:shadow-sm"
+                                [&_pre]:shadow-sm
+                                [&_blockquote]:border-l-[#2DD4BF] [&_blockquote]:bg-[#2DD4BF]/5
+                                [&_a]:text-[#2DD4BF] [&_a]:no-underline hover:[&_a]:underline"
                   >
                     <ReactMarkdown>{selectedFile.content}</ReactMarkdown>
                   </div>
                 )}
               </div>
-            ) : selectedFile.path.endsWith("config.json") ||
-              selectedFile.path.endsWith("abi.json") ? (
+            ) : selectedFile.path.endsWith(interfaceFileName) ? (
               <pre className="p-4 text-[#CCCCCC] text-sm font-mono whitespace-pre">
                 {selectedFile.content}
               </pre>
@@ -718,30 +1089,48 @@ export default function SourcePreview({
       {isAnalyzing && (
         <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center">
           <div className="bg-[#1E1E1E] rounded-lg p-8 flex flex-col items-center">
-            <div className="relative w-24 h-24 mb-4">
-              <div
-                className="absolute inset-0 border-4 border-t-[#FF8B3E] border-r-[#FF8B3E]/50 border-b-[#FF8B3E]/30 border-l-[#FF8B3E]/10 
-                            rounded-full animate-spin"
-              />
-              <div className="absolute inset-2 bg-[#1E1E1E] rounded-full flex items-center justify-center">
-                <Image
-                  src="/mush.png"
-                  alt="Loading"
-                  width={40}
-                  height={40}
-                  className="animate-bounce-slow"
-                />
+            <div className="relative w-32 h-32 mx-auto mb-8">
+              {/* Outer rotating ring */}
+              <div className="absolute inset-0 border-4 border-t-[#2DD4BF] border-r-[#2DD4BF]/50 border-b-[#2DD4BF]/30 border-l-[#2DD4BF]/10 
+                            rounded-full animate-spin duration-1500" />
+              
+              {/* Middle rotating ring - opposite direction */}
+              <div className="absolute inset-4 border-4 border-r-[#2DD4BF] border-t-[#2DD4BF]/30 border-l-[#2DD4BF]/50 border-b-[#2DD4BF]/10 
+                            rounded-full animate-spin duration-2000 animate-reverse" />
+              
+              {/* Inner glowing circle */}
+              <div className="absolute inset-8 bg-[#2DD4BF]/10 rounded-full flex items-center justify-center
+                            shadow-[0_0_20px_2px_rgba(45,212,191,0.3)] animate-pulse">
+                {/* Code symbol */}
+                <svg className="w-10 h-10 text-[#2DD4BF]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" />
+                </svg>
+              </div>
+              
+              {/* Particles effect */}
+              <div className="absolute -top-2 -left-2 w-3 h-3 bg-[#2DD4BF] rounded-full animate-particle1"></div>
+              <div className="absolute top-1/2 -right-4 w-2 h-2 bg-[#2DD4BF]/70 rounded-full animate-particle2"></div>
+              <div className="absolute -bottom-3 left-1/2 w-2 h-2 bg-[#2DD4BF]/60 rounded-full animate-particle3"></div>
+            </div>
+
+            <div className="space-y-3">
+              <h3 className="text-2xl font-medium text-white">
+                Analyzing Contract
+              </h3>
+              <p className="text-sm text-gray-400">
+                AI model is examining your contract for security issues...
+              </p>
+              <div className="flex justify-center gap-1.5 mt-2">
+                <span className="w-2 h-2 bg-[#2DD4BF]/30 rounded-full animate-pulse"></span>
+                <span className="w-2 h-2 bg-[#2DD4BF]/60 rounded-full animate-pulse delay-100"></span>
+                <span className="w-2 h-2 bg-[#2DD4BF]/90 rounded-full animate-pulse delay-200"></span>
               </div>
             </div>
-            <p className="text-[#E5E5E5] text-lg mb-2">Analyzing Contract</p>
-            <p className="text-gray-400 text-sm mb-4">
-              This may take a few moments...
-            </p>
             <button
               onClick={handleCancelAnalysis}
-              className="px-4 py-2 bg-[#252526] text-[#FF8B3E] rounded-md 
-                       border border-[#FF8B3E]/20
-                       hover:bg-[#FF8B3E]/10 transition-colors
+              className="mt-6 px-4 py-2 bg-[#252526] text-[#2DD4BF] rounded-md 
+                       border border-[#2DD4BF]/20
+                       hover:bg-[#2DD4BF]/10 transition-colors
                        font-medium"
             >
               Cancel Analysis

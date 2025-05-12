@@ -12,7 +12,7 @@ interface ContractBasicInfo {
   implementation?: string;
   isProxy?: boolean;
   proxyType?: string;
-  contractType?: 'ERC20' | 'ERC721' | 'ERC1155' | 'Unknown';
+  contractType?: 'ERC20' | 'ERC721' | 'ERC1155' | 'Program' | 'Account' | 'Unknown';
   balance?: string;
   owner?: string;
   labels?: string[];
@@ -21,8 +21,8 @@ interface ContractBasicInfo {
 
 interface ContractInfoCardProps {
   chainInfo: ContractBasicInfo;
-  chain: string;
-  address: string;
+  chain?: string;
+  address?: string;
 }
 
 export default function ContractInfoCard({ chainInfo, chain, address }: ContractInfoCardProps) {
@@ -30,19 +30,21 @@ export default function ContractInfoCard({ chainInfo, chain, address }: Contract
 
   const handleViewSource = () => {
     const params = new URLSearchParams({
-      address,
-      chain,
+      address: address || '',
+      chain: chain || '',
       ...(chainInfo.implementation && { implementation: chainInfo.implementation }),
       ...(chainInfo.name && { tokenName: chainInfo.name })
     });
     window.open(`/audit/source?${params.toString()}`, '_blank');
   };
 
+  const isSolanaChain = chain && chain.toLowerCase() === 'solana';
+
   return (
     <div className="bg-[#1E1E1E] rounded-lg overflow-hidden mb-6 
-                   border border-[#333333] hover:border-mush-orange/30 
+                   border border-[#333333] hover:border-[#2DD4BF]/30 
                    transition-colors relative group">
-      <div className="absolute inset-0 bg-gradient-to-r from-mush-orange/0 via-mush-orange/5 to-mush-orange/0 
+      <div className="absolute inset-0 bg-gradient-to-r from-[#2DD4BF]/0 via-[#2DD4BF]/5 to-[#2DD4BF]/0 
                      opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none" />
       <div className="relative z-10">
         <div className="flex items-center justify-between px-6 py-4 bg-[#1E1E1E] border-b border-[#333333]">
@@ -54,7 +56,7 @@ export default function ContractInfoCard({ chainInfo, chain, address }: Contract
           </div>
           <div className="flex items-center gap-2">
             {chainInfo.projectName && (
-              <span className="px-2 py-1 text-xs font-medium text-[#FF8B3E] bg-[#FF8B3E]/10 rounded">
+              <span className="px-2 py-1 text-xs font-medium text-[#2DD4BF] bg-[#2DD4BF]/10 rounded">
                 {chainInfo.projectName}
               </span>
             )}
@@ -64,19 +66,19 @@ export default function ContractInfoCard({ chainInfo, chain, address }: Contract
               </span>
             ))}
             {!chainInfo.projectName && (!chainInfo.labels?.length) && chainInfo.contractType && (
-              <span className="px-2 py-1 text-xs font-medium text-[#FF8B3E] bg-[#FF8B3E]/10 rounded">
+              <span className="px-2 py-1 text-xs font-medium text-[#2DD4BF] bg-[#2DD4BF]/10 rounded">
                 {chainInfo.contractType}
               </span>
             )}
-            {chainInfo.isProxy && (
+            {chainInfo.isProxy && chain && address && (
               <a
                 href={`${getExplorerUrl(chain, chainInfo.implementation!)}`}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex items-center gap-1 px-2 py-1 text-xs font-medium text-[#FF8B3E] bg-[#FF8B3E]/10 rounded hover:bg-[#FF8B3E]/20 transition-colors"
+                className="flex items-center gap-1 px-2 py-1 text-xs font-medium text-[#2DD4BF] bg-[#2DD4BF]/10 rounded hover:bg-[#2DD4BF]/20 transition-colors"
               >
                 <span>Proxy Contract</span>
-                <span className="text-[#FF8B3E]/60 font-mono">
+                <span className="text-[#2DD4BF]/60 font-mono">
                   ({chainInfo.implementation?.slice(0, 6)}...{chainInfo.implementation?.slice(-4)})
                 </span>
                 <svg className="w-3 h-3 ml-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -118,37 +120,39 @@ export default function ContractInfoCard({ chainInfo, chain, address }: Contract
             <div>
               <label className="block text-sm text-gray-400 mb-2">Contract Balance</label>
               <div className="text-[#E5E5E5] font-medium font-mono">
-                {formatEtherBalance(chainInfo.balance)} ETH
+                {formatEtherBalance(chainInfo.balance)} {isSolanaChain ? 'SOL' : 'ETH'}
               </div>
             </div>
           )}
         </div>
 
         <div className="px-6 py-4 border-t border-[#333333] flex items-center justify-end gap-3">
-          <a
-            href={getExplorerUrl(chain, address)}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="h-11 inline-flex items-center gap-2 px-5
-                     bg-[#1E1E1E] text-[#CCCCCC] text-base
-                     border border-[#333333] rounded-lg
-                     transition-all duration-300
-                     hover:bg-[#252525]"
-          >
-            View on Explorer
-            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} 
-                    d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
-            </svg>
-          </a>
+          {chain && address && (
+            <a
+              href={getExplorerUrl(chain, address)}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="h-11 inline-flex items-center gap-2 px-5
+                       bg-[#1E1E1E] text-[#CCCCCC] text-base
+                       border border-[#333333] rounded-lg
+                       transition-all duration-300
+                       hover:bg-[#252525]"
+            >
+              View on Explorer
+              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} 
+                      d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+              </svg>
+            </a>
+          )}
 
           <button
             onClick={handleViewSource}
             className="h-11 inline-flex items-center gap-2 px-5
-                     bg-[#1E1E1E] text-mush-green text-base
+                     bg-[#1E1E1E] text-[#2DD4BF] text-base
                      border border-[#333333] rounded-lg
                      transition-all duration-300
-                     hover:bg-mush-green/10 hover:border-mush-green/50
+                     hover:bg-[#2DD4BF]/10 hover:border-[#2DD4BF]/50
                      cursor-pointer"
           >
             View Source →

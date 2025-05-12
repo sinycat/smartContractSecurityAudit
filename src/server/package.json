@@ -1,0 +1,17 @@
+{
+  "name": "auditx-pdf-server",
+  "version": "1.0.0",
+  "description": "AI Report Markdown to PDF API Service",
+  "main": "server.js",
+  "type": "module",
+  "scripts": {
+    "dev": "node server.js",
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "cors": "^2.8.5",
+    "express": "^4.19.2",
+    "marked": "^12.0.0",
+    "puppeteer": "^22.0.0"
+  }
+}

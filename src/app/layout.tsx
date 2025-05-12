@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import localFont from "next/font/local";
 import "./globals.css";
 import { Toaster } from "react-hot-toast";
@@ -19,14 +19,18 @@ const geistMono = localFont({
 });
 
 export const metadata: Metadata = {
-  title: "Mush Audit - Smart Contract Security Platform",
-  description: "AI-powered smart contract security audit platform",
-  viewport: {
-    width: 'device-width',
-    initialScale: 1,
-    maximumScale: 1,
-    viewportFit: 'cover'
-  }
+  title: "AuditX - Smart Contract Security Platform",
+  description: "AI-powered smart contract security analysis and audit platform",
+  icons: {
+    icon: '/auditx-logo.svg',
+  },
+};
+
+export const viewport: Viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  maximumScale: 1,
+  viewportFit: 'cover'
 };
 
 export default function RootLayout({
@@ -38,18 +42,47 @@ export default function RootLayout({
     <html lang="en" className="bg-[#1A1A1A] text-white">
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
         <div className="min-h-screen flex flex-col">
-          <header className="border-b border-[#2A2A2A]">
+          <header className="border-b border-[#2A2A2A] bg-gradient-to-r from-[#1A1A1A] to-[#232323]">
             <nav className="max-w-7xl mx-auto px-4 py-4">
               <Link href="/" className="flex items-center gap-2 hover:opacity-80 transition-opacity">
-                <Image 
-                  src="/mush.png" 
-                  alt="Mush Logo" 
-                  width={32} 
-                  height={32} 
-                  priority
-                />
+                <div className="relative w-8 h-8 flex items-center justify-center bg-[#2DD4BF] rounded-lg overflow-hidden">
+                  <svg 
+                    className="w-5 h-5 text-[#121212]" 
+                    fill="none" 
+                    stroke="currentColor" 
+                    viewBox="0 0 24 24"
+                  >
+                    {/* A字母 - 左移 */}
+                    <path 
+                      strokeLinecap="round" 
+                      strokeLinejoin="round" 
+                      strokeWidth={2.5} 
+                      d="M1 20L7 4L13 20" 
+                    />
+                    <path 
+                      strokeLinecap="round" 
+                      strokeLinejoin="round" 
+                      strokeWidth={2.5} 
+                      d="M3 14H11" 
+                    />
+                    
+                    {/* X字母 - 左移 */}
+                    <path 
+                      strokeLinecap="round" 
+                      strokeLinejoin="round" 
+                      strokeWidth={2.5} 
+                      d="M15 4L22 20" 
+                    />
+                    <path 
+                      strokeLinecap="round" 
+                      strokeLinejoin="round" 
+                      strokeWidth={2.5} 
+                      d="M22 4L15 20" 
+                    />
+                  </svg>
+                </div>
                 <span className="text-xl font-bold text-[#E5E5E5]">
-                  Mush <span className="text-[#FF8B3E]">Audit</span>
+                  <span className="text-[#2DD4BF]">AuditX</span>
                 </span>
               </Link>
             </nav>

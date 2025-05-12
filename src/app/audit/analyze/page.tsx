@@ -68,11 +68,9 @@ function AnalyzeContent() {
   return (
     <div className="min-h-screen bg-[#1E1E1E]">
       {loading ? (
-        <div className="flex items-center justify-center h-screen">
-          <div className="text-center">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#FF8B3E] mb-4"></div>
-            <p className="text-[#E5E5E5]">Analyzing contract...</p>
-          </div>
+        <div className="flex flex-col items-center justify-center h-96">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#2DD4BF] mb-4"></div>
+          <p className="text-gray-400">Loading analysis...</p>
         </div>
       ) : analysis ? (
         <div className="max-w-5xl mx-auto py-8 px-6">
@@ -92,11 +90,11 @@ function AnalyzeContent() {
           {/* Markdown Content */}
           <div className="bg-[#252526] rounded-lg p-6 border border-[#333333]">
             <div className="prose prose-invert max-w-none
-                          prose-headings:text-[#E5E5E5]
-                          prose-h1:text-3xl prose-h1:mb-8
-                          prose-h2:text-2xl prose-h2:text-[#FF8B3E] prose-h2:mt-8 prose-h2:mb-4
+                          prose-headings:text-gray-100 
+                          prose-h1:text-3xl prose-h1:mb-8 prose-h1:pb-4 prose-h1:border-b prose-h1:border-[#333333]
+                          prose-h2:text-2xl prose-h2:text-[#2DD4BF] prose-h2:mt-8 prose-h2:mb-4
                           prose-h3:text-xl prose-h3:text-[#4EC9B0] prose-h3:mt-6 prose-h3:mb-3
-                          prose-p:text-gray-300 prose-p:leading-relaxed
+                          prose-p:text-[#CCCCCC]
                           prose-strong:text-[#4EC9B0]
                           prose-code:text-[#CE9178] prose-code:bg-[#1E1E1E]
                           prose-li:text-gray-300

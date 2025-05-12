@@ -1,0 +1,174 @@
+import fs from 'fs';
+import path from 'path';
+import { fileURLToPath } from 'url';
+import { marked } from 'marked';
+import puppeteer from 'puppeteer';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+// 获取命令行参数，支持自定义md文件名
+const inputFile = process.argv[2] ? process.argv[2] : 'test.md';
+const markdownPath = path.join(__dirname, inputFile);
+
+// 获取当前时间字符串
+function getCurrentTimeString() {
+    const now = new Date();
+    const yyyy = now.getFullYear();
+    const mm = String(now.getMonth() + 1).padStart(2, '0');
+    const dd = String(now.getDate()).padStart(2, '0');
+    const hh = String(now.getHours()).padStart(2, '0');
+    const min = String(now.getMinutes()).padStart(2, '0');
+    return `${yyyy}-${mm}-${dd} ${hh}:${min}`;
+}
+
+// 配置marked选项
+marked.setOptions({
+    gfm: true,
+    breaks: true,
+    headerIds: true,
+    mangle: false,
+    sanitize: false,
+    smartLists: true,
+    smartypants: true,
+    xhtml: false
+});
+
+async function convertMarkdownToPdf() {
+    try {
+        // 读取Markdown文件
+        const markdownContent = fs.readFileSync(markdownPath, 'utf-8');
+        console.log('Markdown file loaded');
+
+        // 转换为HTML
+        const htmlContent = marked.parse(markdownContent);
+        console.log('Converted to HTML');
+
+        // 创建完整的HTML文档
+        const fullHtml = `
+            <!DOCTYPE html>
+            <html>
+            <head>
+                <meta charset="UTF-8">
+                <title>Markdown to PDF Test</title>
+                <style>
+                    body {
+                        font-family: Arial, sans-serif;
+                        line-height: 1.6;
+                        margin: 40px;
+                        color: #333;
+                    }
+                    h1 { color: #000; font-size: 28px; }
+                    h2 { color: #1b7a70; font-size: 24px; }
+                    h3 { color: #333; font-size: 20px; }
+                    p { margin: 10px 0; }
+                    code {
+                        background: #f5f5f5;
+                        padding: 2px 4px;
+                        border-radius: 3px;
+                        font-family: monospace;
+                    }
+                    pre {
+                        background: #f5f5f5;
+                        padding: 10px;
+                        border-radius: 5px;
+                        overflow-x: auto;
+                    }
+                    blockquote {
+                        border-left: 4px solid #2DD4BF;
+                        padding-left: 10px;
+                        color: #555;
+                        background: #f9f9f9;
+                        margin: 10px 0;
+                    }
+                    table {
+                        border-collapse: collapse;
+                        width: 100%;
+                        margin: 15px 0;
+                    }
+                    th, td {
+                        border: 1px solid #ddd;
+                        padding: 8px;
+                        text-align: left;
+                    }
+                    th {
+                        background-color: #f5f5f5;
+                    }
+                </style>
+            </head>
+            <body>
+                ${htmlContent}
+            </body>
+            </html>
+        `;
+
+        // 保存HTML文件
+        const htmlPath = path.join(__dirname, 'test_res', 'output.html');
+        fs.writeFileSync(htmlPath, fullHtml);
+        console.log('HTML file saved');
+
+        // 使用Puppeteer生成PDF
+        const browser = await puppeteer.launch({
+            headless: 'new',
+            args: [
+                '--no-sandbox',
+                '--disable-setuid-sandbox',
+                '--disable-dev-shm-usage',
+                '--disable-accelerated-2d-canvas',
+                '--disable-gpu'
+            ]
+        });
+        const page = await browser.newPage();
+        
+        // 加载HTML内容
+        await page.setContent(fullHtml, {
+            waitUntil: 'networkidle0'
+        });
+
+        // 生成页面截图
+        const screenshotPath = path.join(__dirname, 'test_res', 'output.png');
+        await page.screenshot({ path: screenshotPath, fullPage: true });
+        console.log('Screenshot saved');
+
+        // 生成PDF，添加页眉页脚
+        const pdfPath = path.join(__dirname, 'test_res', 'output.pdf');
+        const timeStr = getCurrentTimeString();
+        await page.pdf({
+            path: pdfPath,
+            format: 'A4',
+            margin: {
+                top: '30mm',
+                right: '20mm',
+                bottom: '20mm',
+                left: '20mm'
+            },
+            printBackground: true,
+            displayHeaderFooter: true,
+            headerTemplate: `
+                <div style="width:100%; font-size:10px; color:#888; padding:0 10px; box-sizing:border-box;">
+                  <span style="float:left;">Generated By AuditX</span>
+                  <span style="float:right;">${timeStr}</span>
+                </div>
+            `,
+            footerTemplate: `
+                <div style="width:100%; text-align:center; font-size:10px; color:#888;">
+                  Page <span class="pageNumber"></span> of <span class="totalPages"></span>
+                </div>
+            `
+        });
+
+        await browser.close();
+        console.log('PDF file generated');
+
+        // 保存原始Markdown内容（用于调试）
+        const markdownCopyPath = path.join(__dirname, 'test_res', 'input.md');
+        fs.writeFileSync(markdownCopyPath, markdownContent);
+        console.log('Markdown file copy saved');
+
+    } catch (error) {
+        console.error('Error during conversion:', error);
+    }
+}
+
+// 执行转换
+convertMarkdownToPdf(); 

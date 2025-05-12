@@ -3,15 +3,20 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "bunx --bun next dev",
-    "build": "bunx --bun next build",
-    "start": "bunx --bun next start",
-    "lint": "bunx --bun next lint"
+    "dev": "next dev",
+    "pdf-server": "cd src/server && node server.js",
+    "dev:all": "concurrently \"next dev\" \"npm run pdf-server\"",
+    "build": "next build",
+    "start": "next start",
+    "start:pdf-server": "cd src/server && NODE_ENV=production node server.js",
+    "start:all": "concurrently \"npm run start\" \"npm run start:pdf-server\"",
+    "lint": "next lint"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.32.1",
     "@headlessui/react": "^2.2.0",
     "@monaco-editor/react": "^4.6.0",
+    "@solana/web3.js": "^1.98.2",
     "@types/cheerio": "^0.22.35",
     "@types/highlight.js": "^10.1.0",
     "@types/html2canvas": "^1.0.0",
@@ -37,6 +42,8 @@
     "@types/node": "^20",
     "@types/react": "^18",
     "@types/react-dom": "^18",
+    "autoprefixer": "^10.4.21",
+    "concurrently": "^8.2.2",
     "eslint": "^8",
     "eslint-config-next": "15.0.3",
     "postcss": "^8",

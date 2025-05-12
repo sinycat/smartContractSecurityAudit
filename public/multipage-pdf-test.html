@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>多页PDF测试</title>
+  <script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 20px;
+      background: #fff;
+      color: #000;
+    }
+    .container {
+      max-width: 800px;
+      margin: 0 auto;
+    }
+    #content {
+      border: 1px solid #ddd;
+      padding: 20px;
+      margin: 20px 0;
+      background: white;
+    }
+    button {
+      padding: 10px 15px;
+      margin: 10px 5px;
+      background: #2DD4BF;
+      border: none;
+      border-radius: 4px;
+      color: white;
+      cursor: pointer;
+    }
+    #log {
+      background: #f5f5f5;
+      padding: 10px;
+      border: 1px solid #ddd;
+      margin-top: 20px;
+      height: 200px;
+      overflow: auto;
+      font-family: monospace;
+      font-size: 12px;
+    }
+    .page-break {
+      margin: 30px 0;
+      border-top: 1px dashed #ccc;
+      text-align: center;
+      color: #999;
+      font-size: 12px;
+      padding: 5px;
+      background: #f9f9f9;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>多页PDF测试</h1>
+    
+    <div>
+      <button id="generate">生成多页PDF</button>
+      <button id="clear-log">清除日志</button>
+    </div>
+    
+    <div id="content">
+      <h1 style="color: black;">第一章：测试标题</h1>
+      <p style="color: black;">这是第一页内容的开始。这里包含一些测试文本，用于测试多页PDF生成功能。</p>
+      
+      <!-- 生成一些测试段落 -->
+      <div id="page1">
+        <h2 style="color: black;">1.1 小节标题</h2>
+        <p style="color: black;">这是一个测试段落，包含一些文本内容。这里添加了更多的文字，使内容变得更长。</p>
+        <p style="color: black;">这是另一个段落，继续添加更多内容。为了测试多页PDF功能，我们需要创建足够长的内容。</p>
+        <ul style="color: black;">
+          <li>列表项1</li>
+          <li>列表项2</li>
+          <li>列表项3</li>
+        </ul>
+        <p style="color: black;">继续添加更多内容，确保第一页有足够的内容。这里是更多的文字内容，用于填充页面。</p>
+        <pre style="background: #f5f5f5; color: black; padding: 10px;">
+// 这是一个代码块
+function test() {
+  console.log("Hello World");
+  return true;
+}
+        </pre>
+      </div>
+      
+      <div class="page-break">-- 预期分页位置 --</div>
+      
+      <div id="page2">
+        <h1 style="color: black;">第二章：第二页内容</h1>
+        <p style="color: black;">这是第二页内容的开始。这里包含另一组测试文本，用于测试多页显示效果。</p>
+        <h2 style="color: black;">2.1 第二页小节</h2>
+        <p style="color: black;">这是第二页的一个段落。我们添加一些内容，使其看起来与真实文档类似。</p>
+        <p style="color: black;">继续添加更多内容到第二页。这些内容应该显示在PDF的第二页。</p>
+        <ol style="color: black;">
+          <li>有序列表项1</li>
+          <li>有序列表项2</li>
+          <li>有序列表项3</li>
+        </ol>
+        <p style="color: black;">这是第二页的更多内容，确保有足够的内容填充页面。</p>
+      </div>
+      
+      <div class="page-break">-- 预期分页位置 --</div>
+      
+      <div id="page3">
+        <h1 style="color: black;">第三章：最后一页</h1>
+        <p style="color: black;">这是最后一页的内容。我们添加一些内容，确保能够测试多页功能。</p>
+        <h2 style="color: black;">3.1 最后小节</h2>
+        <p style="color: black;">这是最后一页的段落内容。测试完成后，我们应该能看到完整的多页PDF文档。</p>
+        <p style="color: black;">添加一些最后的内容，确保测试完整。</p>
+      </div>
+    </div>
+    
+    <div id="log"></div>
+  </div>
+  
+  <script>
+    function log(message) {
+      console.log('[PDF Debug]', message);
+      const logElement = document.getElementById('log');
+      const entry = document.createElement('div');
+      entry.textContent = new Date().toLocaleTimeString() + ': ' + message;
+      logElement.appendChild(entry);
+      logElement.scrollTop = logElement.scrollHeight;
+    }
+    
+    document.getElementById('generate').addEventListener('click', function() {
+      log('开始生成多页PDF');
+      
+      const content = document.getElementById('content');
+      
+      // 移除页面分隔线（仅用于显示，不需要包含在PDF中）
+      const pageBreaks = content.querySelectorAll('.page-break');
+      pageBreaks.forEach(pb => {
+        pb.style.display = 'none';
+      });
+      
+      html2canvas(content, {
+        scale: 3,
+        logging: true,
+        backgroundColor: 'white',
+        onclone: function(clonedDoc) {
+          log('处理克隆文档');
+          const elements = clonedDoc.querySelectorAll('*');
+          elements.forEach(function(el) {
+            if (!el.style.color) {
+              el.style.color = '#000000';
+            }
+          });
+          // 在克隆文档中也隐藏分隔线
+          const pageBreaksInClone = clonedDoc.querySelectorAll('.page-break');
+          pageBreaksInClone.forEach(pb => {
+            pb.style.display = 'none';
+          });
+        }
+      }).then(function(canvas) {
+        log('Canvas生成成功: ' + canvas.width + 'x' + canvas.height);
+        
+        try {
+          const jsPDF = window.jspdf.jsPDF;
+          const pdf = new jsPDF('p', 'mm', 'a4');
+          
+          const pdfWidth = pdf.internal.pageSize.getWidth();
+          const pdfHeight = pdf.internal.pageSize.getHeight();
+          const margin = 15;
+          
+          // 使用JPEG格式
+          const imgData = canvas.toDataURL('image/jpeg', 0.95);
+          log('图像数据生成成功');
+          
+          // 获取内容尺寸
+          const contentWidth = canvas.width;
+          const contentHeight = canvas.height;
+          
+          // 计算每页可以容纳的内容高度
+          const pageContentHeight = (pdfHeight - 2 * margin) * canvas.width / (pdfWidth - 2 * margin);
+          
+          // 计算需要的页数
+          const totalPages = Math.ceil(contentHeight / pageContentHeight);
+          log('总页数: ' + totalPages);
+          
+          // 添加内容到多个页面
+          for (let i = 0; i < totalPages; i++) {
+            // 如果不是第一页，添加新页
+            if (i > 0) {
+              pdf.addPage();
+            }
+            
+            // 计算当前页的内容位置
+            const sourceY = i * pageContentHeight;
+            const sourceHeight = Math.min(pageContentHeight, contentHeight - sourceY);
+            
+            // 添加图像到PDF，指定裁剪区域
+            pdf.addImage(
+              imgData, 
+              'JPEG', 
+              margin, 
+              margin, 
+              pdfWidth - 2 * margin, 
+              (sourceHeight * (pdfWidth - 2 * margin)) / canvas.width,
+              null,
+              null,
+              0,
+              sourceY / canvas.height,
+              1,
+              sourceHeight / canvas.height
+            );
+            
+            // 添加页眉页脚
+            pdf.setFontSize(9);
+            pdf.setTextColor(100, 100, 100);
+            pdf.setFont('helvetica');
+            
+            // 页眉
+            const now = new Date();
+            const dateStr = now.toLocaleDateString('zh-CN', { 
+              year: 'numeric', month: 'numeric', day: 'numeric',
+              hour: '2-digit', minute: '2-digit'
+            });
+            
+            pdf.text('多页PDF测试', margin, 10);
+            pdf.text(dateStr, pdfWidth - margin, 10, { align: 'right' });
+            
+            // 页脚
+            pdf.text('第 ' + (i + 1) + ' 页，共 ' + totalPages + ' 页', pdfWidth / 2, pdfHeight - 10, { align: 'center' });
+          }
+          
+          // 恢复页面分隔线显示
+          pageBreaks.forEach(pb => {
+            pb.style.display = 'block';
+          });
+          
+          log('图像已添加到PDF');
+          
+          // 保存PDF
+          pdf.save('multipage-test.pdf');
+          log('PDF保存成功');
+          
+        } catch (error) {
+          log('PDF生成错误: ' + error.message);
+          // 恢复页面分隔线显示
+          pageBreaks.forEach(pb => {
+            pb.style.display = 'block';
+          });
+        }
+      }).catch(function(error) {
+        log('Canvas生成错误: ' + error.message);
+        // 恢复页面分隔线显示
+        pageBreaks.forEach(pb => {
+          pb.style.display = 'block';
+        });
+      });
+    });
+    
+    document.getElementById('clear-log').addEventListener('click', function() {
+      document.getElementById('log').innerHTML = '';
+    });
+  </script>
+</body>
+</html> 

@@ -22,9 +22,9 @@ export default function ProxyContractAlert({
         rounded-lg border border-[#333333] p-6 w-[480px] z-50 shadow-2xl"
       >
         <div className="flex items-start gap-4">
-          <div className="p-2 bg-[#FF8B3E]/10 rounded-lg">
+          <div className="p-2 bg-[#2DD4BF]/10 rounded-lg">
             <svg
-              className="w-6 h-6 text-[#FF8B3E]"
+              className="w-6 h-6 text-[#2DD4BF]"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
@@ -58,9 +58,9 @@ export default function ProxyContractAlert({
                   onViewImplementation();
                   onClose();
                 }}
-                className="px-4 py-2 bg-[#2D2D2D] hover:bg-[#3D3D3D] text-[#FF8B3E]
-                  rounded-lg text-sm border border-[#FF8B3E]/20 transition-colors
-                  hover:border-[#FF8B3E]/40 hover:bg-[#FF8B3E]/10"
+                className="px-4 py-2 bg-[#2D2D2D] hover:bg-[#3D3D3D] text-[#2DD4BF]
+                  rounded-lg text-sm border border-[#2DD4BF]/20 transition-colors
+                  hover:border-[#2DD4BF]/40 hover:bg-[#2DD4BF]/10"
               >
                 View Implementation
               </button>

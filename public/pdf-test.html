@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PDF生成测试页面</title>
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+  <script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+    button {
+      padding: 10px 15px;
+      margin: 10px;
+      background: #2DD4BF;
+      border: none;
+      border-radius: 4px;
+      color: white;
+      cursor: pointer;
+    }
+    .log {
+      background: #f5f5f5;
+      padding: 10px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      margin: 10px 0;
+      max-height: 200px;
+      overflow: auto;
+    }
+    #content {
+      border: 1px solid #ddd;
+      padding: 20px;
+      margin: 20px 0;
+      background: white;
+    }
+    #content h1 {
+      color: #000000;
+      font-size: 28px;
+    }
+    #content h2 {
+      color: #1b7a70;
+      font-size: 24px;
+    }
+    #content p {
+      color: #333333;
+      font-size: 16px;
+    }
+    #content pre {
+      background-color: #f5f5f5;
+      padding: 10px;
+      border-radius: 4px;
+    }
+    #content code {
+      color: #333333;
+    }
+  </style>
+</head>
+<body>
+  <h1>PDF生成测试页面</h1>
+  
+  <div id="controls">
+    <button id="test1">测试1：基本渲染</button>
+    <button id="test2">测试2：带样式渲染</button>
+    <button id="test3">测试3：完整PDF</button>
+    <button id="clearLog">清除日志</button>
+  </div>
+  
+  <div class="log" id="log"></div>
+  
+  <div id="content">
+    <h1>这是一个测试标题</h1>
+    <h2>这是二级标题</h2>
+    <p>这是一个段落。这里包含了一些<strong>粗体</strong>和<em>斜体</em>文本。</p>
+    <p>这是另一个段落，用于测试行间距和文本渲染。</p>
+    <pre><code>// 这是一段代码
+function test() {
+  console.log("Hello World");
+}
+</code></pre>
+    <ul>
+      <li>列表项目1</li>
+      <li>列表项目2</li>
+      <li>列表项目3</li>
+    </ul>
+  </div>
+  
+  <script>
+    function log(message) {
+      var logElement = document.getElementById('log');
+      var entry = document.createElement('div');
+      entry.textContent = new Date().toLocaleTimeString() + ': ' + message;
+      logElement.appendChild(entry);
+      logElement.scrollTop = logElement.scrollHeight;
+    }
+    
+    // 测试1：基本渲染 - 只显示文本内容
+    document.getElementById('test1').addEventListener('click', function() {
+      log('测试1开始：基本渲染');
+      var content = document.getElementById('content');
+      
+      log('获取内容元素成功');
+      
+      html2canvas(content, {
+        scale: 2,
+        logging: true,
+        backgroundColor: 'white'
+      }).then(function(canvas) {
+        log('Canvas生成成功，尺寸：' + canvas.width + 'x' + canvas.height);
+        
+        // 显示生成的canvas
+        canvas.style.maxWidth = '100%';
+        canvas.style.border = '1px solid #ccc';
+        
+        var canvasContainer = document.createElement('div');
+        canvasContainer.appendChild(canvas);
+        document.body.appendChild(canvasContainer);
+        
+        log('测试1完成：Canvas已添加到页面');
+      }).catch(function(error) {
+        log('错误：' + error.message);
+      });
+    });
+    
+    // 测试2：带样式渲染 - 强制设置样式
+    document.getElementById('test2').addEventListener('click', function() {
+      log('测试2开始：带样式渲染');
+      var content = document.getElementById('content');
+      
+      // 强制设置所有文本颜色
+      var allElements = content.querySelectorAll('*');
+      for (var i = 0; i < allElements.length; i++) {
+        var el = allElements[i];
+        el.style.color = '#000000';
+        
+        if (el.tagName === 'H1') {
+          el.style.color = '#000000';
+          el.style.fontSize = '28px';
+        } else if (el.tagName === 'H2') {
+          el.style.color = '#1b7a70';
+          el.style.fontSize = '24px';
+        } else if (el.tagName === 'P') {
+          el.style.color = '#333333';
+          el.style.fontSize = '16px';
+        } else if (el.tagName === 'CODE' || el.tagName === 'PRE') {
+          el.style.color = '#333333';
+          el.style.fontSize = '15px';
+        }
+      }
+      
+      log('应用样式完成');
+      
+      html2canvas(content, {
+        scale: 3,
+        logging: true,
+        backgroundColor: 'white',
+        onclone: function(clonedDoc) {
+          log('开始处理克隆文档');
+          var elements = clonedDoc.querySelectorAll('#content *');
+          for (var i = 0; i < elements.length; i++) {
+            var el = elements[i];
+            var existingStyle = el.getAttribute('style') || '';
+            el.setAttribute('style', existingStyle + '; font-family: Arial, Helvetica, sans-serif !important; font-weight: normal !important; color: #000000 !important;');
+            
+            // 为特定元素设置样式
+            if (el.tagName === 'H1') {
+              el.setAttribute('style', existingStyle + '; font-size: 28px !important; color: #000000 !important;');
+            } else if (el.tagName === 'H2') {
+              el.setAttribute('style', existingStyle + '; font-size: 24px !important; color: #1b7a70 !important;');
+            } else if (el.tagName === 'P') {
+              el.setAttribute('style', existingStyle + '; font-size: 16px !important; color: #333333 !important;');
+            } else if (el.tagName === 'CODE' || el.tagName === 'PRE') {
+              el.setAttribute('style', existingStyle + '; font-size: 15px !important; color: #333333 !important;');
+            }
+          }
+          log('克隆文档处理完成');
+        }
+      }).then(function(canvas) {
+        log('Canvas生成成功，尺寸：' + canvas.width + 'x' + canvas.height);
+        
+        // 显示生成的canvas
+        canvas.style.maxWidth = '100%';
+        canvas.style.border = '1px solid #ccc';
+        
+        var canvasContainer = document.createElement('div');
+        canvasContainer.appendChild(canvas);
+        document.body.appendChild(canvasContainer);
+        
+        log('测试2完成：Canvas已添加到页面');
+      }).catch(function(error) {
+        log('错误：' + error.message);
+      });
+    });
+    
+    // 测试3：完整PDF
+    document.getElementById('test3').addEventListener('click', function() {
+      log('测试3开始：完整PDF生成');
+      var content = document.getElementById('content');
+      
+      html2canvas(content, {
+        scale: 4,
+        logging: true,
+        backgroundColor: 'white',
+        letterRendering: true,
+        onclone: function(clonedDoc) {
+          log('开始处理克隆文档');
+          var elements = clonedDoc.querySelectorAll('#content *');
+          for (var i = 0; i < elements.length; i++) {
+            var el = elements[i];
+            var existingStyle = el.getAttribute('style') || '';
+            el.setAttribute('style', existingStyle + '; font-family: Arial, Helvetica, sans-serif !important; font-weight: normal !important; color: #000000 !important;');
+            
+            if (el.tagName === 'H1') {
+              el.setAttribute('style', existingStyle + '; font-size: 28px !important; color: #000000 !important;');
+            } else if (el.tagName === 'H2') {
+              el.setAttribute('style', existingStyle + '; font-size: 24px !important; color: #1b7a70 !important;');
+            } else if (el.tagName === 'P') {
+              el.setAttribute('style', existingStyle + '; font-size: 16px !important; color: #333333 !important;');
+            } else if (el.tagName === 'CODE' || el.tagName === 'PRE') {
+              el.setAttribute('style', existingStyle + '; font-size: 15px !important; color: #333333 !important;');
+            }
+          }
+          
+          // 确保内容元素可见且样式正确
+          var contentDiv = clonedDoc.getElementById('content');
+          if (contentDiv) {
+            contentDiv.style.display = 'block';
+            contentDiv.style.color = '#000000';
+            contentDiv.style.backgroundColor = '#FFFFFF';
+            contentDiv.style.fontFamily = 'Arial, Helvetica, sans-serif';
+            contentDiv.style.fontSize = '16px';
+          }
+          log('克隆文档处理完成');
+        }
+      }).then(function(canvas) {
+        log('Canvas生成成功，尺寸：' + canvas.width + 'x' + canvas.height);
+        
+        try {
+          log('开始生成PDF');
+          var jsPDF = window.jspdf.jsPDF;
+          var pdf = new jsPDF('p', 'mm', 'a4');
+          
+          var imgData = canvas.toDataURL('image/jpeg', 0.95);
+          log('图像数据生成成功');
+          
+          var pdfWidth = pdf.internal.pageSize.getWidth();
+          var pdfHeight = pdf.internal.pageSize.getHeight();
+          var margin = 15;
+          
+          // 添加图像
+          pdf.addImage(
+            imgData,
+            'JPEG',
+            margin,
+            margin,
+            pdfWidth - 2*margin,
+            (canvas.height * (pdfWidth - 2*margin)) / canvas.width
+          );
+          log('图像添加到PDF成功');
+          
+          // 添加页眉页脚
+          pdf.setFontSize(9);
+          pdf.setTextColor(100, 100, 100);
+          pdf.setFont('helvetica');
+          pdf.text('Generated by Test', margin, 10);
+          pdf.text(new Date().toLocaleString(), pdfWidth - margin, 10, { align: 'right' });
+          pdf.text('Page 1 of 1', pdfWidth/2, pdfHeight - 10, { align: 'center' });
+          log('页眉页脚添加成功');
+          
+          // 保存PDF
+          pdf.save('test.pdf');
+          log('PDF保存成功');
+        } catch (error) {
+          log('PDF生成错误：' + error.message);
+        }
+      }).catch(function(error) {
+        log('错误：' + error.message);
+      });
+    });
+    
+    // 清除日志
+    document.getElementById('clearLog').addEventListener('click', function() {
+      document.getElementById('log').innerHTML = '';
+    });
+  </script>
+</body>
+</html> 

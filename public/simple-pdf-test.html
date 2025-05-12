@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>纯文本PDF测试</title>
+  <script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 20px;
+      background: #fff;
+      color: #000;
+    }
+    #content {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 20px;
+      border: 1px solid #ddd;
+      background: white;
+    }
+    button {
+      padding: 10px 15px;
+      margin: 10px 5px;
+      background: #2DD4BF;
+      border: none;
+      border-radius: 4px;
+      color: white;
+      cursor: pointer;
+    }
+    #log {
+      background: #f5f5f5;
+      padding: 10px;
+      border: 1px solid #ddd;
+      margin-top: 20px;
+      max-height: 200px;
+      overflow: auto;
+    }
+  </style>
+</head>
+<body>
+  <div id="controls">
+    <button id="generate">生成纯文本PDF</button>
+    <button id="clear-log">清除日志</button>
+  </div>
+  
+  <div id="content">
+    <h1 style="color: black;">纯文本PDF测试</h1>
+    <p style="color: black;">这是一个简单的测试段落，用于测试PDF文本渲染。</p>
+    <p style="color: black;">这是第二个段落，用于测试多行文本。这里有更多的文字，确保文本能正常换行和显示。</p>
+    <p style="color: black;">这是第三个段落，包含一些中文字符，测试中文字体渲染。</p>
+  </div>
+  
+  <div id="log"></div>
+  
+  <script>
+    function log(message) {
+      const logElement = document.getElementById('log');
+      const entry = document.createElement('div');
+      entry.textContent = new Date().toLocaleTimeString() + ': ' + message;
+      logElement.appendChild(entry);
+      logElement.scrollTop = logElement.scrollHeight;
+    }
+    
+    document.getElementById('generate').addEventListener('click', function() {
+      log('开始生成纯文本PDF');
+      
+      const content = document.getElementById('content');
+      
+      html2canvas(content, {
+        scale: 4,
+        logging: true,
+        backgroundColor: 'white',
+        onclone: function(clonedDoc) {
+          log('处理克隆文档');
+          const elements = clonedDoc.querySelectorAll('*');
+          elements.forEach(function(el) {
+            if (!el.style.color) {
+              el.style.color = '#000000';
+            }
+          });
+        }
+      }).then(function(canvas) {
+        log('Canvas生成成功: ' + canvas.width + 'x' + canvas.height);
+        
+        try {
+          const jsPDF = window.jspdf.jsPDF;
+          const pdf = new jsPDF('p', 'mm', 'a4');
+          
+          const pdfWidth = pdf.internal.pageSize.getWidth();
+          const pdfHeight = pdf.internal.pageSize.getHeight();
+          const margin = 15;
+          
+          // 使用JPEG格式
+          const imgData = canvas.toDataURL('image/jpeg', 0.95);
+          log('图像数据生成成功');
+          
+          pdf.addImage(
+            imgData, 
+            'JPEG', 
+            margin, 
+            margin, 
+            pdfWidth - 2 * margin, 
+            (canvas.height * (pdfWidth - 2 * margin)) / canvas.width
+          );
+          log('图像添加到PDF成功');
+          
+          // 添加页眉页脚
+          pdf.setFontSize(9);
+          pdf.setTextColor(100, 100, 100);
+          pdf.setFont('helvetica');
+          pdf.text('纯文本测试', margin, 10);
+          pdf.text(new Date().toLocaleString(), pdfWidth - margin, 10, { align: 'right' });
+          pdf.text('第 1 页', pdfWidth / 2, pdfHeight - 10, { align: 'center' });
+          
+          // 保存PDF
+          pdf.save('simple-text.pdf');
+          log('PDF保存成功');
+          
+        } catch (error) {
+          log('PDF生成错误: ' + error.message);
+        }
+      }).catch(function(error) {
+        log('Canvas生成错误: ' + error.message);
+      });
+    });
+    
+    document.getElementById('clear-log').addEventListener('click', function() {
+      document.getElementById('log').innerHTML = '';
+    });
+  </script>
+</body>
+</html> 

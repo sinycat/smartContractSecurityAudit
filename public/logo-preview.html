@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>AuditX Logo Preview</title>
+  <style>
+    body {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      background-color: #1A1A1A;
+      color: white;
+      font-family: system-ui, -apple-system, sans-serif;
+    }
+    .logo {
+      width: 300px;
+      height: 300px;
+      margin-bottom: 20px;
+    }
+    .controls {
+      display: flex;
+      gap: 10px;
+      margin-top: 20px;
+    }
+    button {
+      padding: 8px 16px;
+      background-color: #2DD4BF;
+      border: none;
+      border-radius: 4px;
+      color: #121212;
+      font-weight: bold;
+      cursor: pointer;
+    }
+    button:hover {
+      background-color: #26b8a6;
+    }
+    h1 {
+      color: #2DD4BF;
+    }
+  </style>
+</head>
+<body>
+  <h1>AuditX Logo Preview</h1>
+  <img src="/auditx-logo.svg" class="logo" alt="AuditX Logo" id="logo">
+  <div class="controls">
+    <button onclick="changeSizeSmaller()">缩小</button>
+    <button onclick="changeSizeLarger()">放大</button>
+  </div>
+
+  <script>
+    let currentSize = 300;
+    const logo = document.getElementById('logo');
+
+    function changeSizeLarger() {
+      currentSize += 50;
+      logo.style.width = currentSize + 'px';
+      logo.style.height = currentSize + 'px';
+    }
+
+    function changeSizeSmaller() {
+      if (currentSize > 100) {
+        currentSize -= 50;
+        logo.style.width = currentSize + 'px';
+        logo.style.height = currentSize + 'px';
+      }
+    }
+  </script>
+</body>
+</html> 

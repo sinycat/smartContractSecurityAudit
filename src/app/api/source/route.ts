@@ -1,289 +1,115 @@
 import { NextRequest, NextResponse } from 'next/server';
 import type { ContractFile } from '@/types/blockchain';
 import { getApiScanConfig } from '@/utils/chainServices';
+import { getSolanaContractInfo, fetchContractSourceCode, fetchProgramSourceFromMultipleSources, fetchEthereumContractABI, fetchSolanaProgramIDL } from '@/utils/blockchain';
+import { CHAINS } from '@/utils/constants';
 
+// 添加新的路由处理函数，专门获取Solana程序IDL
 export async function GET(request: NextRequest) {
   const searchParams = request.nextUrl.searchParams;
   const address = searchParams.get('address');
-  const chain = searchParams.get('chain');
+  const chain = searchParams.get('chain') || 'ethereum';
+  const action = searchParams.get('action'); // 新增: 用于区分是获取源码还是获取IDL
 
-  if (!address || !chain) {
+  if (!address) {
     return NextResponse.json(
-      { error: 'Address and chain are required' },
+      { error: 'Address parameter is required' },
       { status: 400 }
     );
   }
 
-  try {
-    const { url, apiKey } = getApiScanConfig(chain);
-    
-    // // 1. Try to get source code from blockscan
-    // try {
-    //   const blockscanResponse = await fetch(`${blockscanUrl}/${address}`);
-    //   if (blockscanResponse.ok) {
-    //     const blockscanData = await blockscanResponse.json();
-    //     if (blockscanData.result) {
-    //       // Process blockscan response data
-    //       return NextResponse.json({
-    //         files: blockscanData.result.files,
-    //         settings: blockscanData.result.settings,
-    //         contractName: blockscanData.result.name,
-    //         compiler: blockscanData.result.compiler,
-    //         optimization: blockscanData.result.settings?.optimizer?.enabled || false,
-    //         runs: blockscanData.result.settings?.optimizer?.runs || 200
-    //       });
-    //     }
-    //   }
-    // } catch (e) {
-    //   console.log('Failed to fetch from blockscan, falling back to etherscan');
-    // }
+  console.log(`API请求: ${action || 'source'} for ${chain}:${address}`);
 
-    // 2. If blockscan fails, fallback to etherscan
-    const apiUrl = `${url}?module=contract&action=getsourcecode&address=${address}&apikey=${apiKey}`;
-    const response = await fetch(apiUrl);
-    const data = await response.json();
-
-    if (data.status === '1' && data.result[0]) {
-      const result = data.result[0];
+  // 根据action参数决定执行什么操作
+  if (action === 'get_idl' && chain.toLowerCase() === 'solana') {
+    try {
+      // 尝试获取Solana程序的IDL
+      console.log(`后端API: 正在获取Solana程序 ${address} 的IDL...`);
       
-      if (result.SourceCode === '') {
-        return NextResponse.json(
-          { error: 'Contract source code not verified' },
-          { status: 404 }
-        );
-      }
-
-      const files: ContractFile[] = [];
-      const filteredFiles: ContractFile[] = [];
-      let settings = null;
+      // 直接使用更新后的fetchSolanaProgramIDL函数获取IDL
+      const idlData = await fetchSolanaProgramIDL(address);
       
-      // Handle multi-file contract case
-      if (result.SourceCode.startsWith('{')) {
-        try {
-          const sourceString = result.SourceCode.substring(1, result.SourceCode.length - 1);
-          const parsed = JSON.parse(sourceString);
-          
-          // Extract compiler settings
-          if (parsed.settings) {
-            settings = parsed.settings;
-          }
-          
-          // Process source files
-          if (parsed.sources) {
-            Object.entries(parsed.sources).forEach(([path, fileInfo]: [string, any]) => {
-              files.push({
-                name: path.split('/').pop() || path,
-                path: path,
-                content: fileInfo.content
-              });
-            });
-          } else {
-            Object.entries(parsed).forEach(([path, content]: [string, any]) => {
-              files.push({
-                name: path.split('/').pop() || path,
-                path: path,
-                content: typeof content === 'string' ? content : content.content
-              });
-            });
-          }
-        } catch (e) {
-          console.error('Error parsing multi-file contract:', e);
-          files.push({
-            name: `${result.ContractName}.sol`,
-            path: `${result.ContractName}.sol`,
-            content: result.SourceCode
-          });
-        }
+      if (idlData && Array.isArray(idlData) && idlData.length > 0) {
+        console.log(`后端API: 成功获取IDL数据`);
+        return NextResponse.json({ success: true, idl: idlData });
       } else {
-        files.push({
-          name: `${result.ContractName}.sol`,
-          path: `${result.ContractName}.sol`,
-          content: result.SourceCode
+        // 如果未能获取到IDL数据，返回错误信息
+        console.log(`后端API: 未能获取有效的IDL数据`);
+        return NextResponse.json({ 
+          success: false, 
+          idl: [], 
+          message: "无法获取程序IDL" 
         });
       }
-
-      // Create default settings.json
-      if (!settings) {
-        settings = {
-          remappings: [],
-          optimizer: {
-            enabled: result.OptimizationUsed === '1',
-            runs: parseInt(result.Runs) || 200
-          },
-          metadata: {
-            bytecodeHash: "none"
-          },
-          outputSelection: {
-            "*": {
-              "*": [
-                "evm.bytecode",
-                "evm.deployedBytecode",
-                "devdoc",
-                "userdoc",
-                "metadata",
-                "abi"
-              ]
-            }
-          }
-        };
-      }
-
-      // Check if this is a proxy contract
-      const isProxy = result.Implementation && result.Implementation !== '0x0000000000000000000000000000000000000000';
-
-      if (isProxy) {
-        // Process proxy contract source code
-        if (result.SourceCode.startsWith('{')) {
-          try {
-            const sourceString = result.SourceCode.substring(1, result.SourceCode.length - 1);
-            const parsed = JSON.parse(sourceString);
-            
-            if (parsed.sources) {
-              // Add proxy contract files
-              Object.entries(parsed.sources).forEach(([path, fileInfo]: [string, any]) => {
-                filteredFiles.push({
-                  name: path.split('/').pop() || path,
-                  path: `proxy/${path}`,  // Add proxy/ prefix
-                  content: fileInfo.content
-                });
-              });
-            }
-          } catch (e) {
-            filteredFiles.push({
-              name: `${result.ContractName}.sol`,
-              path: `proxy/${result.ContractName}.sol`,  // Add proxy/ prefix
-              content: result.SourceCode
-            });
-          }
-        } else {
-          filteredFiles.push({
-            name: `${result.ContractName}.sol`,
-            path: `proxy/${result.ContractName}.sol`,  // Add proxy/ prefix
-            content: result.SourceCode
+    } catch (error: any) {
+      console.error('后端API: 获取IDL时出错:', error?.message || String(error));
+      return NextResponse.json(
+        { error: 'Error fetching Solana program IDL', details: error?.message || String(error) },
+        { status: 500 }
+      );
+    }
+  } else {
+    try {
+      // 原有的获取源码逻辑
+      if (chain.toLowerCase() === 'solana') {
+        // 使用多源获取函数，尝试从多个来源获取Solana程序源码
+        const solanaContract = await fetchProgramSourceFromMultipleSources(address, chain);
+        
+        if (solanaContract) {
+          // 成功获取Solana源码
+          const idlData = await fetchSolanaProgramIDL(address);
+          return NextResponse.json({
+            files: solanaContract,
+            contractName: address.substring(0, 8) + '...',
+            language: 'rust',
+            chain: 'solana',
+            address,
+            isProxy: false,
+            idl: idlData,
           });
-        }
-
-        // Get implementation contract source code
-        const implUrl = `${url}?module=contract&action=getsourcecode&address=${result.Implementation}&apikey=${apiKey}`;
-        const implResponse = await fetch(implUrl);
-        const implData = await implResponse.json();
-
-        if (implData.status === '1' && implData.result[0]) {
-          const implResult = implData.result[0];
-          
-          if (implResult.SourceCode.startsWith('{')) {
-            try {
-              const sourceString = implResult.SourceCode.substring(1, implResult.SourceCode.length - 1);
-              const parsed = JSON.parse(sourceString);
-              
-              if (parsed.sources) {
-                // Add implementation contract files
-                Object.entries(parsed.sources).forEach(([path, fileInfo]: [string, any]) => {
-                  filteredFiles.push({
-                    name: path.split('/').pop() || path,
-                    path: `implementation/${path}`,  // Add implementation/ prefix
-                    content: fileInfo.content
-                  });
-                });
-              }
-            } catch (e) {
-              filteredFiles.push({
-                name: `${implResult.ContractName}.sol`,
-                path: `implementation/${implResult.ContractName}.sol`,  // Add implementation/ prefix
-                content: implResult.SourceCode
-              });
-            }
-          } else {
-            filteredFiles.push({
-              name: `${implResult.ContractName}.sol`,
-              path: `implementation/${implResult.ContractName}.sol`,  // Add implementation/ prefix
-              content: implResult.SourceCode
-            });
-          }
+        } else {
+          return NextResponse.json(
+            { error: 'Source code not found for Solana program' },
+            { status: 404 }
+          );
         }
       } else {
-        // Process non-proxy contract source code
-        if (result.SourceCode.startsWith('{')) {
-          try {
-            const sourceString = result.SourceCode.substring(1, result.SourceCode.length - 1);
-            const parsed = JSON.parse(sourceString);
-            
-            if (parsed.sources) {
-              // Add source files
-              Object.entries(parsed.sources).forEach(([path, fileInfo]: [string, any]) => {
-                filteredFiles.push({
-                  name: path.split('/').pop() || path,
-                  path: path,  // No prefix for non-proxy contracts
-                  content: fileInfo.content
-                });
-              });
-            }
-          } catch (e) {
-            filteredFiles.push({
-              name: `${result.ContractName}.sol`,
-              path: `${result.ContractName}.sol`,  // No prefix for non-proxy contracts
-              content: result.SourceCode
-            });
-          }
-        } else {
-          filteredFiles.push({
-            name: `${result.ContractName}.sol`,
-            path: `${result.ContractName}.sol`,  // No prefix for non-proxy contracts
-            content: result.SourceCode
-          });
+        // 使用EVM链的源码获取逻辑
+        const contractInfo = await getApiScanConfig(chain);
+        
+        if (!contractInfo) {
+          return NextResponse.json(
+            { error: 'Chain not supported' },
+            { status: 400 }
+          );
         }
-      }
-
-      // Get contract ABI
-      const abiUrl = `${url}?module=contract&action=getabi&address=${address}&apikey=${apiKey}`;
-      const abiResponse = await fetch(abiUrl);
-      const abiData = await abiResponse.json();
-
-      let contractABI = [];
-      let implementationABI = [];
-
-      if (abiData.status === '1' && abiData.result) {
-        try {
-          contractABI = JSON.parse(abiData.result);
-        } catch (e) {
-          console.error('Error parsing ABI:', e);
+        
+        // 获取合约源码
+        const files = await fetchContractSourceCode(chain, address);
+        
+        if (files.length === 0) {
+          return NextResponse.json(
+            { error: 'Source code not found or contract not verified' },
+            { status: 404 }
+          );
         }
+        
+        return NextResponse.json({
+          files,
+          contractName: chain.toUpperCase(),
+          language: 'solidity',
+          chain,
+          address,
+          isProxy: false,
+          abi: await fetchEthereumContractABI(address, chain),
+        });
       }
-
-      // If proxy contract, also get implementation contract ABI
-      if (isProxy && result.Implementation) {
-        const implAbiUrl = `${url}?module=contract&action=getabi&address=${result.Implementation}&apikey=${apiKey}`;
-        const implAbiResponse = await fetch(implAbiUrl);
-        const implAbiData = await implAbiResponse.json();
-
-        if (implAbiData.status === '1' && implAbiData.result) {
-          try {
-            implementationABI = JSON.parse(implAbiData.result);
-          } catch (e) {
-            console.error('Error parsing implementation ABI:', e);
-          }
-        }
-      }
-
-      return NextResponse.json({
-        files: filteredFiles,
-        settings,
-        contractName: result.ContractName,
-        compiler: result.CompilerVersion,
-        optimization: settings.optimizer.enabled,
-        runs: settings.optimizer.runs,
-        abi: contractABI,
-        implementationAbi: implementationABI,
-        // ... other return fields ...
-      });
+    } catch (error) {
+      console.error('Error fetching contract source:', error);
+      return NextResponse.json(
+        { error: 'Error fetching contract source' },
+        { status: 500 }
+      );
     }
-    
-    throw new Error('Failed to fetch contract source');
-  } catch (error) {
-    console.error('Error:', error);
-    return NextResponse.json(
-      { error: 'Failed to fetch contract source' },
-      { status: 500 }
-    );
   }
 } 
